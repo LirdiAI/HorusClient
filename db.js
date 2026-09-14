@@ -1,0 +1,261 @@
+const path = require('node:path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+const { createClient } = require('@supabase/supabase-js');
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error('Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY in .env');
+}
+
+const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  db: { schema: 'public' }
+});
+
+const now = () => new Date().toISOString();
+
+// Проверка доступности и готовности схемы
+async function ping() {
+  const { error } = await sb.from('site_cfg').select('key').limit(1);
+  return !error;
+}
+
+/* ---------------- users ---------------- */
+
+function users() {
+  return sb.from('users');
+}
+
+async function getUserById(id) {
+  const { data, error } = await users().select('*').eq('id', id).maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
+async function getUserByLogin(login) {
+  const { data, error } = await users().select('*').ilike('login', login).maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
+async function getUserByEmail(email) {
+  const { data, error } = await users().select('*').ilike('email', email).maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
+async function uidExists(uid) {
+  const { data, error } = await users().select('id').eq('uid', uid).maybeSingle();
+  if (error) throw error;
+  return !!data;
+}
+
+async function loginExists(login) {
+  const { data, error } = await users().select('id').ilike('login', login).maybeSingle();
+  if (error) throw error;
+  return !!data;
+}
+
+async function emailExists(email, excludeId) {
+  let q = users().select('id').ilike('email', email);
+  if (excludeId) q = q.neq('id', excludeId);
+  const { data, error } = await q.maybeSingle();
+  if (error) throw error;
+  return !!data;
+}
+
+async function insertUser(u) {
+  const { data, error } = await users().insert({
+    login: u.login, email: u.email, pass_hash: u.pass_hash, uid: u.uid, created_at: u.created_at
+  }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function updateUserPass(id, hash) {
+  const { error } = await users().update({ pass_hash: hash }).eq('id', id);
+  if (error) throw error;
+}
+
+async function updateUserEmail(id, email) {
+  const { error } = await users().update({ email }).eq('id', id);
+  if (error) throw error;
+}
+
+async function bindHwid(id, hwid) {
+  const { error } = await users().update({ hwid }).eq('id', id);
+  if (error) throw error;
+}
+
+async function unbindHwid(id) {
+  const { error } = await users().update({ hwid: null }).eq('id', id);
+  if (error) throw error;
+}
+
+async function resetHwid(id, resetAt) {
+  const { error } = await users().update({ hwid: null, last_hwid_reset: resetAt }).eq('id', id);
+  if (error) throw error;
+}
+
+async function hwidTaken(hwid, excludeId) {
+  let q = users().select('login').eq('hwid', hwid);
+  if (excludeId) q = q.neq('id', excludeId);
+  const { data, error } = await q.maybeSingle();
+  if (error) throw error;
+  return data ? data.login : null;
+}
+
+/* ---------------- sessions ---------------- */
+
+async function insertSession(s) {
+  const { error } = await sb.from('sessions').insert({
+    token: s.token, user_id: s.user_id, created_at: s.created_at, expires_at: s.expires_at
+  });
+  if (error) throw error;
+}
+
+async function getSession(token) {
+  const { data, error } = await sb.from('sessions').select('*').eq('token', token).maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
+async function deleteSession(token) {
+  await sb.from('sessions').delete().eq('token', token);
+}
+
+async function deleteSessionsForUser(userId) {
+  await sb.from('sessions').delete().eq('user_id', userId);
+}
+
+/* ---------------- subs ---------------- */
+
+async function getSubs(userId) {
+  const { data, error } = await sb.from('subs').select('*').eq('user_id', userId).order('id', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function revokePromoSubs(userId) {
+  await sb.from('subs').update({ status: 'revoked' })
+    .eq('user_id', userId).eq('status', 'active').eq('source', 'promo');
+}
+
+async function insertSub(s) {
+  const { error } = await sb.from('subs').insert({
+    user_id: s.user_id, plan: s.plan, status: s.status || 'active',
+    source: s.source, purchased_at: s.purchased_at, expires_at: s.expires_at || null
+  });
+  if (error) throw error;
+}
+
+/* ---------------- hw_resets ---------------- */
+
+async function getLastHwReset(userId) {
+  const { data, error } = await sb.from('hw_resets').select('*').eq('user_id', userId).order('id', { ascending: false }).limit(1).maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
+async function insertHwReset(userId, resetAt) {
+  const { error } = await sb.from('hw_resets').insert({ user_id: userId, reset_at: resetAt });
+  if (error) throw error;
+}
+
+/* ---------------- promo_codes ---------------- */
+
+async function getPromoByCode(code) {
+  const { data, error } = await sb.from('promo_codes').select('*').eq('code', code).maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
+async function promoCodeExists(code) {
+  return !!(await getPromoByCode(code));
+}
+
+async function insertPromo(p) {
+  const { error } = await sb.from('promo_codes').insert({
+    code: p.code, plan: p.plan, max_uses: p.max_uses, days: p.days || 0,
+    created_by: p.created_by, created_at: p.created_at
+  });
+  if (error) throw error;
+}
+
+async function listPromos() {
+  const { data, error } = await sb.from('promo_codes').select('id, code, plan, max_uses, days, used_count, created_at').order('id', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function bumpPromoUsed(id, usedCount) {
+  const { error } = await sb.from('promo_codes').update({ used_count: usedCount }).eq('id', id);
+  if (error) throw error;
+}
+
+async function deletePromo(id) {
+  const { error } = await sb.from('promo_codes').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ---------------- orders ---------------- */
+
+async function insertOrder(o) {
+  const { data, error } = await sb.from('orders').insert({ user_id: o.user_id, plan: o.plan, status: 'pending', created_at: o.created_at }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+/* ---------------- tickets ---------------- */
+
+async function insertTicket(t) {
+  const { data, error } = await sb.from('tickets').insert({
+    user_id: t.user_id, type: t.type, subject: t.subject, message: t.message, created_at: t.created_at
+  }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+/* ---------------- site_cfg ---------------- */
+
+async function getAllCfg() {
+  const { data, error } = await sb.from('site_cfg').select('*');
+  if (error) throw error;
+  return data || [];
+}
+
+async function getCfg(key) {
+  const { data, error } = await sb.from('site_cfg').select('value').eq('key', key).maybeSingle();
+  if (error) throw error;
+  return data ? data.value : null;
+}
+
+/* ---------------- stats ---------------- */
+
+async function countUsers() {
+  const { count, error } = await sb.from('users').select('*', { count: 'exact', head: true });
+  if (error) throw error;
+  return count || 0;
+}
+
+async function countSales() {
+  const { count, error } = await sb.from('subs').select('*', { count: 'exact', head: true }).neq('source', 'key');
+  if (error) throw error;
+  return count || 0;
+}
+
+module.exports = {
+  sb, now,
+  ping,
+  getUserById, getUserByLogin, getUserByEmail,
+  uidExists, loginExists, emailExists, insertUser,
+  updateUserPass, updateUserEmail, bindHwid, unbindHwid, resetHwid, hwidTaken,
+  insertSession, getSession, deleteSession, deleteSessionsForUser,
+  getSubs, revokePromoSubs, insertSub,
+  getLastHwReset, insertHwReset,
+  getPromoByCode, promoCodeExists, insertPromo, listPromos, bumpPromoUsed, deletePromo,
+  insertOrder, insertTicket,
+  getAllCfg, getCfg,
+  countUsers, countSales
+};
