@@ -439,6 +439,18 @@ app.get('/api/launcher/latest', (req, res) => {
   });
 });
 
+/* ============ HEALTH ============ */
+
+app.get('/api/health', async (req, res) => {
+  try {
+    const up = await D.ping();
+    if (!up) return fail(res, 'DB unavailable', 503);
+    send(res, 200, { ok: true });
+  } catch {
+    fail(res, 'DB unavailable', 503);
+  }
+});
+
 /* ============ SPA fallback + start ============ */
 
 app.use((err, req, res, next) => {

@@ -16,7 +16,7 @@
         desc: ['Всё из Kamiki', 'Ранние обновления', 'Сброс HWID раз в месяц', 'Приоритетная поддержка']
       }
     ],
-    purchaseNote: 'Оплата скоро появится. Для покупки напишите в Discord или Telegram.',
+    purchaseNote: 'Покупка через FunPay. Выберите тариф и переходите к оплате.',
     community: { discord: { members: 1421, url: 'https://discord.gg/sGjbnrdBfw' }, telegram: { members: 987, url: 'https://t.me/HorusClVS' } }
   };
 
@@ -285,19 +285,8 @@ renderNav();
     }).catch(() => {});
   }
 
-  async function startPurchase(plan) {
-    if (!state.me) {
-      sessionStorage.setItem('pendingBuy', plan);
-      toast('Войдите, чтобы купить доступ');
-      location.hash = '#/login';
-      return;
-    }
-    try {
-      const r = await api('/api/purchase', { method: 'POST', body: JSON.stringify({ plan }) });
-      toast(r.message || 'Заявка создана');
-    } catch (e) {
-      toast(e.message, 'error');
-    }
+async function startPurchase(plan) {
+    window.open('https://funpay.com/lots/offer?id=77228605', '_blank', 'noopener');
   }
 
   /* ================= AUTH ================= */
