@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: webhorusai
+    name: horusclient
     runtime: node
     plan: free
     buildCommand: npm install
