@@ -232,7 +232,7 @@ renderNav();
           <div class="launch-window">
             <div class="lw-top">
               <div class="lw-ava">${icon.eye}</div>
-              <div><div class="lw-user">HorusLauncher</div><div class="lw-sub">Версия 1.0.0 · stable</div></div>
+              <div><div class="lw-user">HorusLauncher</div><div class="lw-sub">Версия <span id="lwVersion">1.0.0</span> · stable</div></div>
             </div>
             <div class="lw-bar"><i></i></div>
             <div class="lw-row"><span>Скачивание</span><b>82% · 1.21.4</b></div>
@@ -244,6 +244,7 @@ renderNav();
               ? `<span class="btn btn-gold" style="margin-left:auto;opacity:.55;cursor:not-allowed" title="Подписка заморожена">Скачать невозможно</span>`
               : `<a href="#download" class="btn btn-gold" style="margin-left:auto" data-scroll-dl>Скачать</a>`}
           </div>
+          <div class="com-count" style="margin-top:12px">Сейчас онлайн: <b id="lwOnline">—</b></div>
         </div>
         <div>
           <span class="eyebrow" style="margin-bottom:14px">${icon.layers} Системные требования</span>
@@ -298,6 +299,15 @@ function bindLanding(app) {
     btn.addEventListener('click', () => {
       $('#navLinks').classList.toggle('open');
     });
+    // Онлайн-статус лаунчера и последняя версия
+    api('/api/launcher/status').then(s => {
+      const el = $('#lwOnline');
+      if (el && s && typeof s.online === 'number') el.textContent = fmtNum(s.online);
+    }).catch(() => {});
+    api('/api/launcher/latest').then(l => {
+      const el = $('#lwVersion');
+      if (el && l && l.version) el.textContent = esc(l.version);
+    }).catch(() => {});
     api('/api/stats').then(d => {
       const el = $('#statUsers');
       if (el && d && d.users != null) el.textContent = fmtNum(d.users);
@@ -310,6 +320,22 @@ async function startPurchase(plan) {
 
   function hasSub() {
     return !!(state.me && state.me.subscription && state.me.subscription.status === 'active');
+  }
+
+  /* Баннер-таймер окончания подписки: за 3 дня и меньше — предупреждение */
+  function subExpiryBanner(sub) {
+    if (!sub || sub.status !== 'active' || sub.forever || !sub.expiresAt) return '';
+    const left = new Date(sub.expiresAt).getTime() - Date.now();
+    if (left > 3 * 24 * 60 * 60 * 1000) return '';
+    const days = Math.max(0, Math.ceil(left / (24 * 60 * 60 * 1000)));
+    const hours = left > 0 ? Math.floor((left % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000)) : 0;
+    let txt;
+    if (left <= 0) txt = '<b>Подписка истекла.</b>';
+    else if (days === 0) txt = 'До конца подписки осталось <b>' + hours + ' ч.</b>';
+    else if (days === 1) txt = 'Остался <b>1 день</b> подписки.';
+    else txt = 'Осталось <b>' + days + ' дня</b>.';
+    return `<div class="warn warn-sub" data-sub-warn>⏳ ${txt} Подписка закончится скоро — продлите, чтобы продолжить играть.
+      <span style="display:block;margin-top:8px"><a href="#/cabinet/buy" data-cab="buy" class="btn btn-gold btn-sm">Продлить подписку</a></span></div>`;
   }
 
   /* Проверка доступа к скачиванию: только с активной подпиской */
@@ -670,6 +696,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
         <div class="page-sub">Текущая подписка на аккаунт</div>
       </div>
       ${u.subscription ? '' : `<a href="#/cabinet/buy" data-cab="buy" class="btn btn-gold">Купить доступ</a>`}</div>
+       ${subExpiryBanner(u.subscription)}
        ${u.subscription
         ? `<div class="sub-name">${esc(u.subscription.name)}</div>
            ${u.subscription.status === 'frozen'
@@ -696,6 +723,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
         <div class="page-title">Подписки</div>
         <div class="page-sub">Ваши подписки и продление</div>
       </div></div>
+      ${subExpiryBanner(u.subscription)}
       ${u.subscription ? `
         <div class="plan featured" style="max-width:520px;border-color:rgba(55,211,154,0.45)">
           <span class="stb stb-ok" style="position:absolute;top:18px;right:16px">${icon.check} Активна</span>
@@ -839,6 +867,22 @@ function viewRedeem() {
         <input id="modSearch" type="text" placeholder="Поиск по логину..." autocomplete="off" spellcheck="false">
       </div>
       <div id="modUsersList"><div class="empty" style="padding:18px 0">Загрузка пользователей...</div></div>
+    </div>
+    <div class="page-card" style="max-width:820px">
+      <div class="page-head"><div>
+        <div class="page-title">Лаунчер и новости</div>
+        <div class="page-sub">Объявление в лаунчере и версии, видимые всем пользователям</div>
+      </div></div>
+      <form id="launcherMetaForm">
+        <div class="field"><label>Объявление (показывается в лаунчере; пусто — убрать)</label>
+          <textarea name="announceText" maxlength="1000" placeholder="Например: вышло обновление 1.21.4 — изменился список модулей..."></textarea></div>
+        <div class="field" style="display:inline-block;width:calc(50% - 6px);margin-right:12px"><label>Версия лаунчера</label>
+          <input name="launcherVersion" maxlength="20" placeholder="1.0.0"></div>
+        <div class="field" style="display:inline-block;width:calc(50% - 6px)"><label>Версия клиента (Minecraft)</label>
+          <input name="gameVersion" maxlength="20" placeholder="1.21.4"></div>
+        <button type="submit" class="btn btn-gold">Сохранить</button>
+        <div id="launcherMetaResult"></div>
+      </form>
     </div>`;
   }
 
@@ -993,6 +1037,27 @@ if (section === 'redeem' && $('#promoForm')) {
     }
     if (section === 'mod' && isOwner()) {
       loadModUsers();
+      loadLauncherMeta();
+      const form = $('#launcherMetaForm');
+      if (form) form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button');
+        btn.disabled = true;
+        const box = $('#launcherMetaResult');
+        try {
+          const r = await api('/api/admin/launcher-meta', { method: 'POST', body: JSON.stringify({
+            announceText: String(e.target.announceText.value || ''),
+            launcherVersion: String(e.target.launcherVersion.value || ''),
+            gameVersion: String(e.target.gameVersion.value || '')
+          }) });
+          toast('Настройки сохранены', 'success');
+          if (box) { box.className = 'okbox'; box.textContent = 'Объявление и версии обновлены.'; }
+        } catch (err) {
+          toast(err.message, 'error');
+          if (box) { box.className = 'okbox err'; box.textContent = err.message; }
+        }
+        btn.disabled = false;
+      });
     }
     if (section === 'device' && $('[data-hwid-reset]', main)) {
       $('[data-hwid-reset]', main).addEventListener('click', async (e) => {
@@ -1184,6 +1249,22 @@ if (section === 'redeem' && $('#promoForm')) {
         }
       }));
     } catch (err) { el.innerHTML = '<div class="empty">Ошибка загрузки</div>'; }
+  }
+
+  async function loadLauncherMeta() {
+    const form = $('#launcherMetaForm');
+    if (!form) return;
+    try {
+      const [a, l] = await Promise.all([
+        api('/api/announce').catch(() => ({ items: [] })),
+        api('/api/launcher/latest').catch(() => ({}))
+      ]);
+      const items = Array.isArray(a.items) ? a.items : [];
+      const text = items.length ? items[0].text : '';
+      form.announceText.value = text || '';
+      form.launcherVersion.value = (l && l.version) || '';
+      form.gameVersion.value = (l && l.gameVersion) || '';
+    } catch {}
   }
 
   async function loadModUsers() {

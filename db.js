@@ -178,6 +178,14 @@ async function listUsers() {
   return data || [];
 }
 
+// Активные подписки с датой окончания (для напоминаний об истечении в Telegram)
+async function getActiveSubsWithExpiry() {
+  const { data, error } = await sb.from('subs').select('user_id, plan, status, expires_at')
+    .eq('status', 'active').not('expires_at', 'is', null);
+  if (error) throw error;
+  return data || [];
+}
+
 // Все подписки (для определения заморозки каждого пользователя)
 async function listAllSubs() {
   const { data, error } = await sb.from('subs')
@@ -395,6 +403,37 @@ async function clearTgReset(userId) {
   await deleteCfg(`tg_reset:${userId}`);
 }
 
+// Подтверждение привязки HWID через Telegram (кнопка «Это не я»):
+//   tg_hwc:<userId> -> JSON {hwid, code, exp}
+async function setTgHwCancel(userId, payload) {
+  await setCfg(`tg_hwc:${userId}`, JSON.stringify(payload));
+}
+
+async function getTgHwCancel(userId) {
+  const raw = await getCfg(`tg_hwc:${userId}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+async function clearTgHwCancel(userId) {
+  await deleteCfg(`tg_hwc:${userId}`);
+}
+
+async function findTgHwCancelByCode(code) {
+  const all = await getAllCfg();
+  for (const row of all) {
+    if (!String(row.key || '').startsWith('tg_hwc:')) continue;
+    try {
+      const parsed = JSON.parse(row.value);
+      if (parsed.code && String(parsed.code).toUpperCase() === String(code).toUpperCase()) {
+        const userId = Number(String(row.key).split(':')[1]);
+        if (Number.isInteger(userId)) return { userId, ...parsed };
+      }
+    } catch { /* пропускаем битые записи */ }
+  }
+  return null;
+}
+
 /* ---------------- stats ---------------- */
 
 async function countUsers() {
@@ -416,7 +455,7 @@ module.exports = {
   uidExists, loginExists, emailExists, insertUser,
   updateUserPass, updateUserEmail, bindHwid, unbindHwid, resetHwid, hwidTaken,
   insertSession, getSession, deleteSession, deleteSessionsForUser,
-  getSubs, revokePromoSubs, insertSub, freezeSub, unfreezeSub, listUsers, listAllSubs,
+  getSubs, revokePromoSubs, insertSub, freezeSub, unfreezeSub, listUsers, listAllSubs, getActiveSubsWithExpiry,
   getLastHwReset, insertHwReset,
   getPromoByCode, promoCodeExists, insertPromo, listPromos, bumpPromoUsed, deletePromo,
   insertOrder, insertTicket,
@@ -424,5 +463,6 @@ module.exports = {
   getTgByUserId, getUserIdByTg, checkTgTaken, bindTg, unbindTg,
   setTgPending, getTgPending, findTgPendingByCode, clearTgPending,
   setTgReset, getTgReset, getTgResetByUid, findTgResetByCode, clearTgReset,
+  setTgHwCancel, getTgHwCancel, clearTgHwCancel, findTgHwCancelByCode,
   countUsers, countSales
 };

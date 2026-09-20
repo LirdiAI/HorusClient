@@ -392,10 +392,19 @@ app.get('/api/forgot/status', ah(async (req, res) => {
 app.post('/api/hwid/bind', requireAuth, ah(async (req, res) => {
   const hwid = String(req.body?.hwid || '').trim();
   if (!hwid || hwid.length > 64) return fail(res, 'Некорректный HWID');
+  const fresh = !req.user.hwid; // новая привязка (впервые) или смена устройства
   if (req.user.hwid && req.user.hwid !== hwid) return fail(res, 'Устройство уже привязано. Сбросьте привязку в кабинете.');
   const taken = await D.hwidTaken(hwid, req.user.id);
   if (taken) return fail(res, 'Это устройство уже привязано к другому аккаунту');
   await D.bindHwid(req.user.id, hwid);
+
+  // Если это новая привязка и у пользователя привязан Telegram — оповещаем + кнопка «Это не я»
+  if (fresh && TGBot.isEnabled()) {
+    const code = genTgCode();
+    await D.setTgHwCancel(req.user.id, { hwid, code, exp: Date.now() + 10 * 60 * 1000 });
+    await TGBot.sendHwidAlert(req.user.id, hwid, code);
+  }
+
   const user = await D.getUserById(req.user.id);
   send(res, 200, { ok: true, user: await publicUser(user) });
 }));
@@ -584,6 +593,17 @@ app.post('/api/support', requireAuth, ah(async (req, res) => {
   if (!subject || subject.length > 100) return fail(res, 'Тема: 1-100 символов');
   if (!message || message.length < 10 || message.length > 2000) return fail(res, 'Сообщение: 10-2000 символов');
   const ticket = await D.insertTicket({ user_id: req.user.id, type, subject, message, created_at: now() });
+
+  // Уведомляем владельца в Telegram
+  if (TGBot.isEnabled()) {
+    TGBot.sendTgToOwner(
+      '📩 Новое обращение #' + ticket.id + ' («' + TICKET_TYPES[type] + '»)\n' +
+      'От: <b>@' + req.user.login + '</b> (UID ' + req.user.uid + ')\n' +
+      'Тема: <b>' + subject.slice(0, 120) + '</b>\n\n' +
+      message.slice(0, 500)
+    ).catch(() => {});
+  }
+
   send(res, 200, { ok: true, ticketId: ticket.id, typeName: TICKET_TYPES[type] });
 }));
 
@@ -632,16 +652,58 @@ app.get('/api/community', ah(async (req, res) => {
 
 /* ============ LAUNCHER ============ */
 
-app.get('/api/launcher/latest', requireAuth, async (req, res) => {
-  const active = (await D.getSubs(req.user.id)).find(s => s.status === 'active');
-  if (!active) return fail(res, 'Скачивание доступно только с активной подпиской', 403);
+// Последняя версия лаунчера/клиента — публично (без подписки), чтобы можно было
+// проверить обновление ДО входа в аккаунт. Значения хранятся в site_cfg.
+app.get('/api/launcher/latest', ah(async (req, res) => {
+  const cfg = Object.fromEntries((await D.getAllCfg()).map(r => [r.key, r.value]));
   send(res, 200, {
     ok: true,
-    version: '1.0.0',
+    version: cfg.launcher_version || '1.0.0',
     url: '#download',
-    gameVersion: '1.21.4',
+    gameVersion: cfg.game_version || '1.21.4',
     build: 'stable'
   });
+}));
+
+// Объявления для лаунчера (лента новостей в шапке приложения)
+app.get('/api/announce', ah(async (req, res) => {
+  const raw = await D.getCfg('announce');
+  let items = [];
+  try { items = raw ? JSON.parse(raw) : []; } catch { items = []; }
+  send(res, 200, { ok: true, items: Array.isArray(items) ? items : [] });
+}));
+
+// Владелец задаёт версии и объявления: { announceText?, launcherVersion?, gameVersion? }
+app.post('/api/admin/launcher-meta', requireAuth, ah(async (req, res) => {
+  if (!requireOwner(req, res)) return;
+  const body = req.body || {};
+  if (body.announceText !== undefined) {
+    const text = String(body.announceText).trim().slice(0, 1000);
+    const items = text ? [{ id: Date.now(), text, date: now() }] : [];
+    await D.setCfg('announce', JSON.stringify(items));
+  }
+  if (body.launcherVersion !== undefined) await D.setCfg('launcher_version', String(body.launcherVersion).trim() || '1.0.0');
+  if (body.gameVersion !== undefined) await D.setCfg('game_version', String(body.gameVersion).trim() || '1.21.4');
+  send(res, 200, { ok: true });
+}));
+
+// Онлайн-статус лаунчеров. Лаунчер шлёт heartbeat раз в минуту (см. ниже).
+const launcherSeen = new Map(); // userId -> lastSeenMs
+const LAUNCHER_ONLINE_TTL = 3 * 60 * 1000; // считаем онлайн 3 минуты
+
+// Heartbeat от лаунчера — пока он запущен и вы залогинены
+app.post('/api/launcher/heartbeat', requireAuth, (req, res) => {
+  launcherSeen.set(req.user.id, Date.now());
+  send(res, 200, { ok: true });
+});
+
+// Публичный статус: сколько лаунчеров сейчас онлайн
+app.get('/api/launcher/status', (req, res) => {
+  const nowT = Date.now();
+  for (const [id, ts] of launcherSeen) {
+    if (nowT - ts > LAUNCHER_ONLINE_TTL) launcherSeen.delete(id);
+  }
+  send(res, 200, { ok: true, online: launcherSeen.size });
 });
 
 /* ============ HEALTH ============ */
