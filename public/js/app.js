@@ -7,13 +7,18 @@
     me: null,
     plans: [
       {
-        key: 'kamiki', name: 'HorusClient Kamiki', tag: 'Базовый', price: 199, currency: '₽', forever: true,
+        key: 'kamiki', name: 'Kamiki', tag: 'Базовый', price: 199, currency: '₽', forever: true,
         desc: ['Базовый доступ к клиенту', 'Все будущие обновления', 'Поддержка 24/7']
       },
       {
-        key: 'alpha', name: 'HorusClient Alpha', tag: 'Расширенный', price: 349, currency: '₽', forever: true,
+        key: 'alpha', name: 'Alpha', tag: 'Расширенный', price: 349, currency: '₽', forever: true,
         featured: true,
         desc: ['Всё из Kamiki', 'Ранние обновления', 'Сброс HWID раз в месяц', 'Приоритетная поддержка']
+      },
+      {
+        key: 'hwid_reset', name: 'Сброс HWID', tag: 'Услуга', price: 100, currency: '₽', forever: false,
+        cta: 'Купить сброс',
+        desc: ['Разовое снятие привязки к устройству', 'Новый HWID можно привязать сразу']
       }
     ],
     purchaseNote: 'Покупка через FunPay. Выберите тариф и переходите к оплате.',
@@ -264,7 +269,7 @@ renderNav();
           <span class="forever">${p.forever ? 'Действует: Навсегда' : ''}</span>
         </div>
         <ul class="plan-feats">${p.desc.map(d => `<li>${icon.check}<span>${esc(d)}</span></li>`).join('')}</ul>
-        <button class="btn btn-block ${p.featured ? 'btn-gold' : 'btn-dark'}" data-buy="${p.key}">Купить доступ</button>
+        <button class="btn btn-block ${p.featured ? 'btn-gold' : 'btn-dark'}" data-buy="${p.key}">${esc(p.cta || 'Купить доступ')}</button>
       </div>`).join('');
   }
 
@@ -507,7 +512,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
       </div>
       ${u.subscription ? '' : `<a href="#/cabinet/buy" data-cab="buy" class="btn btn-gold">Купить доступ</a>`}</div>
        ${u.subscription
-        ? `<div class="sub-name">HorusClient ${esc(u.subscription.name.replace('HorusClient ', ''))}</div>
+        ? `<div class="sub-name">${esc(u.subscription.name)}</div>
            <div class="sub-status active">${icon.check} Активна · ${esc(u.subscription.tag)}</div>
            <div class="sub-rows">
              <div class="sub-row"><span>Действует</span><b>${u.subscription.forever ? 'Навсегда' : fmtDate(u.subscription.expiresAt)}</b></div>
@@ -629,15 +634,16 @@ function viewRedeem() {
           <div class="dd" id="planDD">
             <input type="hidden" name="plan" value="kamiki">
             <button type="button" class="dd-head" id="planDDHead">
-              <span class="dd-txt">HorusClient Kamiki</span>
+              <span class="dd-txt">Kamiki</span>
               <span class="dd-caret"></span>
             </button>
             <div class="dd-menu">
-              <div class="dd-item selected" data-plan-value="kamiki">HorusClient Kamiki</div>
-              <div class="dd-item" data-plan-value="alpha">HorusClient Alpha</div>
+              <div class="dd-item selected" data-plan-value="kamiki">Kamiki</div>
+              <div class="dd-item" data-plan-value="alpha">Alpha</div>
+              <div class="dd-item" data-plan-value="hwid_reset">Сброс HWID</div>
             </div>
           </div></div>
-        <div class="field"><label>Срок подписки (дней)</label>
+        <div class="field" id="daysField"><label>Срок подписки (дней)</label>
           <input name="days" type="number" min="0" max="3650" value="0" required>
           <div class="hint">0 — навсегда. Иначе подписка истечёт через указанный срок</div></div>
         <div class="field"><label>Сколько раз можно активировать</label>
@@ -741,6 +747,11 @@ if (section === 'redeem' && $('#promoForm')) {
           dd.querySelector('input[name="plan"]').value = item.dataset.planValue;
           dd.querySelector('.dd-txt').textContent = item.textContent.trim();
           $$('.dd-item', dd).forEach(i => i.classList.toggle('selected', i === item));
+          if (item.dataset.planValue === 'hwid_reset') {
+            $$('#daysField', main).forEach(f => f.style.display = 'none');
+          } else {
+            $$('#daysField', main).forEach(f => f.style.display = '');
+          }
           dd.classList.remove('open');
         }));
       }
@@ -762,7 +773,8 @@ if (section === 'redeem' && $('#promoForm')) {
           e.target.days.value = '0';
           if (dd) {
             dd.querySelector('input[name="plan"]').value = 'kamiki';
-            dd.querySelector('.dd-txt').textContent = 'HorusClient Kamiki';
+            dd.querySelector('.dd-txt').textContent = 'Kamiki';
+            $$('#daysField', main).forEach(f => f.style.display = '');
             $$('.dd-item', dd).forEach(i => i.classList.toggle('selected', i.dataset.planValue === 'kamiki'));
           }
           loadPromoList();
@@ -850,7 +862,7 @@ if (section === 'redeem' && $('#promoForm')) {
       const r = await api('/api/promo/list');
       if (!r.codes.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">Пока нет промокодов</div>'; return; }
       el.innerHTML = r.codes.map(c => {
-        const planLabel = c.plan === 'alpha' ? 'Alpha' : 'Kamiki';
+        const planLabel = c.plan === 'alpha' ? 'Alpha' : c.plan === 'hwid_reset' ? 'Сброс HWID' : 'Kamiki';
         const fullyUsed = c.used_count >= c.max_uses;
         const dur = c.days > 0 ? ` · ${c.days} дн.` : '';
         return `<div class="panel-row" style="border-bottom:1px solid var(--line)">

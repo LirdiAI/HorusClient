@@ -146,11 +146,14 @@ async function requireAuth(req, res, next) {
 }
 
 const PLANS = [
-  { key: 'kamiki', name: 'HorusClient Kamiki', tag: 'Базовый', price: 199, currency: '₽', forever: true,
+  { key: 'kamiki', name: 'Kamiki', tag: 'Базовый', price: 199, currency: '₽', forever: true,
     desc: ['Базовый доступ к клиенту', 'Все будущие обновления', 'Поддержка 24/7'] },
-  { key: 'alpha', name: 'HorusClient Alpha', tag: 'Расширенный', price: 349, currency: '₽', forever: true,
+  { key: 'alpha', name: 'Alpha', tag: 'Расширенный', price: 349, currency: '₽', forever: true,
     featured: true,
-    desc: ['Всё из Kamiki', 'Ранние обновления', 'Сброс HWID раз в месяц', 'Приоритетная поддержка'] }
+    desc: ['Всё из Kamiki', 'Ранние обновления', 'Сброс HWID раз в месяц', 'Приоритетная поддержка'] },
+  { key: 'hwid_reset', name: 'Сброс HWID', tag: 'Услуга', price: 100, currency: '₽', forever: false,
+    cta: 'Купить сброс',
+    desc: ['Разовое снятие привязки к устройству', 'Новый HWID можно привязать сразу'] }
 ];
 
 async function publicUser(u) {
@@ -348,6 +351,14 @@ app.post('/api/promo/redeem', requireAuth, ah(async (req, res) => {
   const rec = await D.getPromoByCode(code);
   if (!rec) return fail(res, 'Промокод не найден');
   if (rec.used_count >= rec.max_uses) return fail(res, 'Промокод больше не действует');
+  if (rec.plan === 'hwid_reset') {
+    if (!req.user.hwid) return fail(res, 'Устройство ещё не привязано');
+    await D.insertHwReset(req.user.id, now());
+    await D.resetHwid(req.user.id, now());
+    await D.bumpPromoUsed(rec.id, rec.used_count + 1);
+    const user = await D.getUserById(req.user.id);
+    return send(res, 200, { ok: true, user: await publicUser(user), message: 'Привязка HWID сброшена! Войдите в лаунчер заново.' });
+  }
   await D.revokePromoSubs(req.user.id);
   const expires_at = rec.days > 0 ? new Date(Date.now() + rec.days * 86400000).toISOString() : null;
   await D.insertSub({ user_id: req.user.id, plan: rec.plan, status: 'active', source: 'promo', purchased_at: now(), expires_at });
