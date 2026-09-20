@@ -3,6 +3,8 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
+  let modUsersCache = null;
+
   const state = {
     me: null,
     plans: [
@@ -678,6 +680,10 @@ function viewRedeem() {
         <div class="page-title">Модификация</div>
         <div class="page-sub">Пользователи сайта: аккаунты, подписки и заморозка доступа</div>
       </div></div>
+      <div class="mod-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+        <input id="modSearch" type="text" placeholder="Поиск по логину..." autocomplete="off" spellcheck="false">
+      </div>
       <div id="modUsersList"><div class="empty" style="padding:18px 0">Загрузка пользователей...</div></div>
     </div>`;
   }
@@ -964,10 +970,12 @@ if (section === 'redeem' && $('#promoForm')) {
   async function loadModUsers() {
     const el = $('#modUsersList');
     if (!el) return;
-    try {
-      const r = await api('/api/admin/users');
-      if (!r.users.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">Пока нет пользователей</div>'; return; }
-      el.innerHTML = r.users.map(u => {
+    const input = $('#modSearch');
+    const render = (users, q) => {
+      const query = (q || '').trim().toLowerCase();
+      const filtered = query ? users.filter(u => u.login.toLowerCase().includes(query)) : users;
+      if (!filtered.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">' + (query ? 'Никто не найден по запросу <b>' + esc(query) + '</b>' : 'Пока нет пользователей') + '</div>'; return; }
+      el.innerHTML = filtered.map(u => {
         const sub = u.subscription;
         const frozen = sub && sub.status === 'frozen';
         const planName = sub ? esc(sub.name) : '<span style="color:var(--muted-2)">Нет подписки</span>';
@@ -1003,6 +1011,15 @@ if (section === 'redeem' && $('#promoForm')) {
           loadModUsers();
         } catch (err) { toast(err.message, 'error'); btn.disabled = false; }
       }));
+    };
+    if (input) {
+      input.oninput = () => render(modUsersCache || [], input.value);
+      input.focus();
+    }
+    try {
+      const r = await api('/api/admin/users');
+      modUsersCache = r.users;
+      render(r.users, input ? input.value : '');
     } catch (err) { el.innerHTML = '<div class="empty">Ошибка загрузки</div>'; }
   }
 

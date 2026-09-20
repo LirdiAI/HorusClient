@@ -514,6 +514,29 @@ html { scroll-padding-top: 76px; }
 /* тосты: плавнее */
 .toast { transition: opacity .35s ease; }
 
+/* модальное подтверждение */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 100; background: rgba(4,7,14,0.6); backdrop-filter: blur(4px); opacity: 0; transition: opacity .2s ease; }
+.modal-overlay.show { opacity: 1; }
+.modal-overlay.hide { opacity: 0; }
+.modal-overlay .modal-card { position: fixed; top: 50%; left: 50%; z-index: 101; width: 360px; max-width: calc(100vw - 40px); background: var(--panel-solid); border: 1px solid var(--line-strong); border-radius: 16px; box-shadow: 0 30px 90px -18px rgba(0,0,0,0.85); overflow: hidden; transform: translate(-50%, -50%) scale(.94); transition: transform .22s ease, opacity .22s ease; }
+.modal-overlay.show .modal-card { transform: translate(-50%, -50%) scale(1); }
+.modal-overlay.hide .modal-card { transform: translate(-50%, -50%) scale(.94); }
+.modal-card.modal-danger { border-top: 3px solid var(--red); }
+.modal-head { display: flex; align-items: center; gap: 12px; padding: 15px 20px; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--line); }
+.modal-head.mod-danger { background: rgba(255,95,109,0.08); }
+.modal-ic { width: 38px; height: 38px; min-width: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255,95,109,0.14); color: var(--red); font-size: 18px; }
+.modal-card:not(.modal-danger) .modal-ic { background: rgba(55,211,154,0.14); color: var(--green); }
+.modal-title { font-family: var(--font-h); font-weight: 700; font-size: 15px; letter-spacing: .3px; }
+.modal-text { color: var(--muted); font-size: 13.5px; line-height: 1.55; padding: 18px 20px 6px; }
+.modal-btns { display: flex; gap: 10px; justify-content: flex-end; padding: 14px 20px 18px; }
+
+/* поиск по логину в модификации */
+.mod-search { position: relative; margin-bottom: 6px; }
+.mod-search svg { position: absolute; left: 13px; top: 50%; width: 17px; height: 17px; transform: translateY(-50%); color: var(--muted-2); pointer-events: none; }
+.mod-search input { width: 100%; padding: 11px 14px 11px 40px; background: rgba(255,255,255,0.045); border: 1px solid var(--line-strong); border-radius: 12px; color: var(--text); font-family: var(--font-b); font-size: 14px; outline: none; transition: border-color .2s, box-shadow .2s; }
+.mod-search input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(168,85,247,0.15); }
+.mod-search input::placeholder { color: var(--muted-2); }
+
 /* якорные секции не липнут под навбаров */
 .section, .hero { scroll-margin-top: 70px; }
 
