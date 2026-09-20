@@ -166,7 +166,7 @@ renderNav();
         <p class="lead">Современный клиент с расширенным функционалом: защита, комбат-модули, рендер,
           дискорд-статус и свой лаунчер. Одна подписка — все обновления.</p>
         <div class="hero-cta">
-          <a href="${state.me ? (state.me.subscription ? '#launcher' : '#/cabinet/buy') : '#/register'}" class="btn btn-gold btn-lg">${state.me ? (state.me.subscription ? 'Скачать клиент' : 'Купить доступ') : 'Скачать лаунчер'}</a>
+          <a href="${state.me ? (hasSub() ? '#launcher' : '#/cabinet/buy') : '#/register'}" class="btn btn-gold btn-lg">${state.me ? (hasSub() ? 'Скачать клиент' : 'Купить доступ') : 'Скачать лаунчер'}</a>
           <a href="#/pricing" class="btn btn-ghost btn-lg">Купить доступ</a>
         </div>
         <div class="hero-stats">
@@ -302,15 +302,18 @@ async function startPurchase(plan) {
   }
 
   function hasSub() {
-    return !!(state.me && state.me.subscription);
+    return !!(state.me && state.me.subscription && state.me.subscription.status === 'active');
   }
 
   /* Проверка доступа к скачиванию: только с активной подпиской */
   function requireSub() {
     if (hasSub()) return true;
     if (!state.me) {
-      toast('Войдите в аккаунт, чтобы скачать клиент');
+      toast('Войдите в аккаунт, чтобы скачать лаунчер');
       location.hash = '#/login';
+    } else if (state.me.subscription) {
+      toast('Подписка заморожена — скачивание недоступно', 'error');
+      location.hash = '#/cabinet/buy';
     } else {
       toast('Скачивание доступно только с подпиской', 'error');
       location.hash = '#/cabinet/buy';
@@ -505,7 +508,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
           <div class="pv mono">${u.hwid ? esc(u.hwid) : '<span class="badge badge-gray">Не привязано</span>'}</div></div>
       </div>
       <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
-        ${u.subscription
+        ${u.subscription && u.subscription.status === 'active'
           ? `<a href="#/launcher" class="btn btn-gold btn-lg">${icon.layers} Скачать клиент</a>`
           : `<a href="#/cabinet/buy" data-cab="buy" class="btn btn-gold btn-lg">${icon.crown} Купить доступ</a>`}
       </div>
