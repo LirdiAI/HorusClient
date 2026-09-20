@@ -23,7 +23,7 @@
         desc: ['Базовый доступ к клиенту', 'Все будущие обновления', 'Поддержка 24/7']
       },
       {
-        key: 'alpha', name: 'Alpha 1.21.4', tag: 'Расширенный · Навсегда', price: 349, currency: '₽', forever: true,
+        key: 'alpha', name: 'Alpha 1.21.4', tag: 'Докупка · Навсегда', price: 199, currency: '₽', forever: true,
         featured: true, requires: 'kamiki', requiresForever: true,
         desc: ['Докупка к Kamiki 1.21.4', 'Ранние обновления', 'Сброс HWID раз в месяц', 'Приоритетная поддержка']
       },

@@ -158,7 +158,7 @@ const PLANS = [
     desc: ['Базовый доступ на 365 дней', 'Выгода: ~0.55 ₽ в день', 'Продление из кабинета'] },
   { key: 'kamiki', name: 'Kamiki 1.21.4', tag: 'Базовый · Навсегда', price: 300, currency: '₽', forever: true,
     desc: ['Базовый доступ к клиенту', 'Все будущие обновления', 'Поддержка 24/7'] },
-  { key: 'alpha', name: 'Alpha 1.21.4', tag: 'Расширенный · Навсегда', price: 349, currency: '₽', forever: true,
+  { key: 'alpha', name: 'Alpha 1.21.4', tag: 'Докупка · Навсегда', price: 199, currency: '₽', forever: true,
     featured: true, requires: 'kamiki', requiresForever: true,
     desc: ['Докупка к Kamiki 1.21.4', 'Ранние обновления', 'Сброс HWID раз в месяц', 'Приоритетная поддержка'] },
   { key: 'tester', name: 'Набор Тестера', tag: 'Набор · 30 дней', price: 129, currency: '₽', forever: false, days: 30, pack: true,
@@ -585,7 +585,16 @@ app.get('/api/plans', ah(async (req, res) => {
 
 app.post('/api/purchase', requireAuth, ah(async (req, res) => {
   const plan = String(req.body?.plan || '');
-  if (!PLANS.find(p => p.key === plan)) return fail(res, 'Неизвестный тариф');
+  const p = PLANS.find(x => x.key === plan);
+  if (!p) return fail(res, 'Неизвестный тариф');
+  if (p.requires) {
+    const subs = await D.getSubs(req.user.id);
+    const reqPlan = p.requires;
+    const hasReq = subs.some(s => s.plan === reqPlan && s.status === 'active'
+      && (!p.requiresForever || !s.expires_at));
+    if (!hasReq) return fail(res, 'Для покупки «' + p.name + '» нужен активный тариф «'
+      + (PLANS.find(x => x.key === reqPlan)?.name || reqPlan) + '» ' + (p.requiresForever ? '(навсегда)' : ''));
+  }
   const order = await D.insertOrder({ user_id: req.user.id, plan, created_at: now() });
   const cfgNote = await D.getCfg('purchase_note');
   send(res, 200, { ok: true, orderId: order.id, message: cfgNote || '' });
