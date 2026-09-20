@@ -198,7 +198,7 @@ renderNav();
         <div class="preview-card">
           <div class="preview-titlebar"><span class="pc"></span><span class="pc"></span><span class="pc"></span><span class="pt">HORUSCLIENT</span></div>
           <div class="preview-body">
-            <div class="preview-watermark"><img src="img/logo.svg" class="w-eye" alt=""><span>Horus<b>Client</b>&nbsp;&nbsp;1.21.4</span></div>
+            <div class="preview-watermark"><img src="img/logo.png" class="w-eye" alt=""><span>Horus<b>Client</b>&nbsp;&nbsp;1.21.4</span></div>
             <div>
               <span class="preview-chip"><span class="ok">${icon.check}</span> Streamer Mode</span>
               <span class="preview-chip"><span class="ok">${icon.check}</span> BanBypass</span>
