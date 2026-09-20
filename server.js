@@ -254,15 +254,6 @@ app.post('/api/change-password', requireAuth, ah(async (req, res) => {
   send(res, 200, { ok: true, message: 'Пароль изменён. Войдите заново.' });
 }));
 
-app.post('/api/change-email', requireAuth, ah(async (req, res) => {
-  const { email, password } = req.body || {};
-  if (!await verifyPassword(password || '', req.user.pass_hash)) return fail(res, 'Пароль неверен');
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || '')) return fail(res, 'Некорректная почта');
-  if (await D.emailExists(email, req.user.id)) return fail(res, 'Почта уже используется');
-  await D.updateUserEmail(req.user.id, email);
-  send(res, 200, { ok: true, user: await publicUser(req.user) });
-}));
-
 /* ============ HWID ============ */
 
 app.post('/api/hwid/bind', requireAuth, ah(async (req, res) => {

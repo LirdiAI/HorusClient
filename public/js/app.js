@@ -701,14 +701,6 @@ function viewRedeem() {
         <div class="page-sub">Управление доступом к аккаунту</div>
       </div></div>
 
-      <form id="emailForm" class="mt-16">
-        <div class="page-head" style="margin-bottom:8px"><div><div class="pt" style="font-weight:700;font-size:15px">Сменить почту</div></div></div>
-        <div class="field"><label>Новая почта</label><input name="email" type="email" placeholder="mail@example.com" required></div>
-        <div class="field"><label>Пароль</label><input name="password" type="password" placeholder="••••••••" required></div>
-        <button type="submit" class="btn btn-dark">Сохранить почту</button>
-      </form>
-    </div>
-
     <div class="page-card" style="max-width:620px">
       <div class="page-head"><div><div class="page-title" style="font-size:17px">Пароль</div></div></div>
       <form id="passForm">
@@ -835,19 +827,6 @@ if (section === 'redeem' && $('#promoForm')) {
       });
     }
     if (section === 'security') {
-      $('#emailForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = e.target.querySelector('button');
-        btn.disabled = true;
-        try {
-          const r = await api('/api/change-email', {
-            method: 'POST', body: JSON.stringify({ email: e.target.email.value.trim(), password: e.target.password.value })
-          });
-          state.me = r.user; toast('Почта обновлена', 'success');
-          e.target.reset();
-        } catch (err) { toast(err.message, 'error'); }
-        btn.disabled = false;
-      });
       $('#passForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('button');
