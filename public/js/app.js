@@ -166,7 +166,7 @@ renderNav();
         <p class="lead">Современный клиент с расширенным функционалом: защита, комбат-модули, рендер,
           дискорд-статус и свой лаунчер. Одна подписка — все обновления.</p>
         <div class="hero-cta">
-          <a href="${state.me ? (hasSub() ? '#launcher' : '#/cabinet/buy') : '#/register'}" class="btn btn-gold btn-lg">${state.me ? (hasSub() ? 'Скачать клиент' : 'Купить доступ') : 'Скачать лаунчер'}</a>
+          <a href="${state.me ? ((hasSub() || state.me.subscription) ? '#launcher' : '#/cabinet/buy') : '#/register'}" class="btn btn-gold btn-lg">${!state.me ? 'Скачать лаунчер' : (hasSub() ? 'Скачать клиент' : (state.me.subscription ? 'Скачать невозможно' : 'Купить доступ'))}</a>
           <a href="#/pricing" class="btn btn-ghost btn-lg">Купить доступ</a>
         </div>
         <div class="hero-stats">
@@ -233,9 +233,11 @@ renderNav();
             <div class="lw-row"><span>Скачивание</span><b>82% · 1.21.4</b></div>
           </div>
           <div class="dl-card">
-            <div class="fc-icon">${icon.zap}</div>
+            <span style="display:flex;align-items:center"><span>${icon.zap}</span></span>
             <div><div style="font-weight:700">Лаунчер для Windows</div><div class="muted" style="font-size:12.5px">exe · ~12 МБ</div></div>
-            <a href="#download" class="btn btn-gold" style="margin-left:auto" data-scroll-dl>Скачать</a>
+            ${(state.me && state.me.subscription && !hasSub())
+              ? `<span class="btn btn-gold" style="margin-left:auto;opacity:.55;cursor:not-allowed" title="Подписка заморожена">Скачать невозможно</span>`
+              : `<a href="#download" class="btn btn-gold" style="margin-left:auto" data-scroll-dl>Скачать</a>`}
           </div>
         </div>
         <div>
@@ -510,7 +512,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
       <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
         ${u.subscription && u.subscription.status === 'active'
           ? `<a href="#/launcher" class="btn btn-gold btn-lg">${icon.layers} Скачать клиент</a>`
-          : `<a href="#/cabinet/buy" data-cab="buy" class="btn btn-gold btn-lg">${icon.crown} Купить доступ</a>`}
+          : (u.subscription ? `<span class="btn btn-gold btn-lg" style="opacity:.55;cursor:not-allowed;pointer-events:none">${icon.x} Скачать невозможно</span>` : `<a href="#/cabinet/buy" data-cab="buy" class="btn btn-gold btn-lg">${icon.crown} Купить доступ</a>`)}
       </div>
     </div>
     <div class="page-card">
