@@ -150,6 +150,43 @@ async function insertSub(s) {
   if (error) throw error;
 }
 
+// Заморозка: меняем статус активной подписки пользователя на 'frozen'
+async function freezeSub(userId) {
+  const { error } = await sb.from('subs').update({ status: 'frozen' })
+    .eq('user_id', userId).eq('status', 'active');
+  if (error) throw error;
+}
+
+// Разморозка: возвращаем самую свежую замороженную подписку в статус 'active'
+async function unfreezeSub(userId) {
+  const { data, error } = await sb.from('subs')
+    .select('id').eq('user_id', userId).eq('status', 'frozen')
+    .order('id', { ascending: false }).limit(1).maybeSingle();
+  if (error) throw error;
+  if (!data) return false;
+  const { error: upErr } = await sb.from('subs').update({ status: 'active' }).eq('id', data.id);
+  if (upErr) throw upErr;
+  return true;
+}
+
+// Все пользователи (без паролей) для панели владельца
+async function listUsers() {
+  const { data, error } = await sb.from('users')
+    .select('id, login, email, uid, hwid, created_at')
+    .order('id', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+// Все подписки (для определения заморозки каждого пользователя)
+async function listAllSubs() {
+  const { data, error } = await sb.from('subs')
+    .select('user_id, plan, status, source, purchased_at, expires_at')
+    .order('id', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
 /* ---------------- hw_resets ---------------- */
 
 async function getLastHwReset(userId) {
@@ -252,7 +289,7 @@ module.exports = {
   uidExists, loginExists, emailExists, insertUser,
   updateUserPass, updateUserEmail, bindHwid, unbindHwid, resetHwid, hwidTaken,
   insertSession, getSession, deleteSession, deleteSessionsForUser,
-  getSubs, revokePromoSubs, insertSub,
+  getSubs, revokePromoSubs, insertSub, freezeSub, unfreezeSub, listUsers, listAllSubs,
   getLastHwReset, insertHwReset,
   getPromoByCode, promoCodeExists, insertPromo, listPromos, bumpPromoUsed, deletePromo,
   insertOrder, insertTicket,

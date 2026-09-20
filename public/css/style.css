@@ -102,6 +102,7 @@ input, textarea, [contenteditable="true"] { user-select: text; -webkit-user-sele
 .btn-lg { padding: 15px 30px; font-size: 15.5px; border-radius: 14px; }
 .btn-block { width: 100%; }
 .btn[disabled] { opacity: 0.5; pointer-events: none; }
+.btn.copied { background: rgba(55,211,154,0.14); border-color: rgba(55,211,154,0.5); color: var(--green); }
 .btn-spin svg { animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 

@@ -63,7 +63,8 @@
     zap: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>',
     cooldown: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
 shieldFx: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l8 3.5v6c0 5-3.4 8.8-8 10.5-4.6-1.7-8-5.5-8-10.5v-6z"/><path d="M9 12l2 2 4-4"/></svg>',
-    trash: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></svg>'
+    trash: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></svg>',
+    copy: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>'
   };
 
   /* ---------- network ---------- */
@@ -388,6 +389,7 @@ async function startPurchase(plan) {
     redeem: { icon: 'key', title: 'Ввести промокод' },
     security: { icon: 'shield', title: 'Безопасность' },
     promo: { icon: 'spark', title: 'Раздача' },
+    mod: { icon: 'shield', title: 'Модификация' },
     support: { icon: 'support', title: 'Поддержка' },
     idea: { icon: 'idea', title: 'Предложить идею' },
     bug: { icon: 'bug', title: 'Сообщить о баге' }
@@ -433,7 +435,7 @@ ${sbGroup('Мой кабинет', [
           ['buy', 'cart', 'Купить доступ'],
           ['redeem', 'key', 'Ввести промокод'],
           ['security', 'shield', 'Безопасность'],
-          ...(isOwner() ? [['promo', 'spark', 'Раздача']] : [])
+          ...(isOwner() ? [['mod', 'shield', 'Модификация'], ['promo', 'spark', 'Раздача']] : [])
         ])}
         ${sbGroup('Помощь', [
           ['support', 'support', 'Поддержка'],
@@ -478,6 +480,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
     else if (section === 'buy') main.innerHTML = viewBuy();
     else if (section === 'redeem') main.innerHTML = viewRedeem();
     else if (section === 'promo' && isOwner()) main.innerHTML = viewPromo();
+    else if (section === 'mod' && isOwner()) main.innerHTML = viewMod();
     else if (section === 'security') main.innerHTML = viewSecurity();
     else main.innerHTML = viewSupport(section, ap);
     bindSection(section, main, ap);
@@ -513,11 +516,18 @@ if (section === 'profile') main.innerHTML = viewProfile();
       ${u.subscription ? '' : `<a href="#/cabinet/buy" data-cab="buy" class="btn btn-gold">Купить доступ</a>`}</div>
        ${u.subscription
         ? `<div class="sub-name">${esc(u.subscription.name)}</div>
-           <div class="sub-status active">${icon.check} Активна · ${esc(u.subscription.tag)}</div>
-           <div class="sub-rows">
-             <div class="sub-row"><span>Действует</span><b>${u.subscription.forever ? 'Навсегда' : fmtDate(u.subscription.expiresAt)}</b></div>
-             <div class="sub-row"><span>Дата покупки</span><b>${fmtDate(u.subscription.purchasedAt)}</b></div>
-           </div>`
+           ${u.subscription.status === 'frozen'
+            ? `<div class="sub-status" style="color:var(--red)">${icon.x} Заморожена владельцем</div>
+               <div class="sub-rows">
+                 <div class="sub-row"><span>Действует</span><b>${u.subscription.forever ? 'Навсегда' : fmtDate(u.subscription.expiresAt)}</b></div>
+                 <div class="sub-row"><span>Дата покупки</span><b>${fmtDate(u.subscription.purchasedAt)}</b></div>
+               </div>
+               <div class="warn" style="margin-top:14px">Подписка заморожена — запуск клиента заблокирован. Обратитесь в поддержку Discord.</div>`
+            : `<div class="sub-status active">${icon.check} Активна · ${esc(u.subscription.tag)}</div>
+               <div class="sub-rows">
+                 <div class="sub-row"><span>Действует</span><b>${u.subscription.forever ? 'Навсегда' : fmtDate(u.subscription.expiresAt)}</b></div>
+                 <div class="sub-row"><span>Дата покупки</span><b>${fmtDate(u.subscription.purchasedAt)}</b></div>
+               </div>`}`
         : `<div class="empty">${icon.crown}<b>Подписка не активна</b>Нажмите «Купить доступ» или активируйте промокод.</div>`}
     </div>`;
   }
@@ -661,6 +671,17 @@ function viewRedeem() {
     </div>`;
   }
 
+  function viewMod() {
+    return `
+    <div class="page-card" style="max-width:820px">
+      <div class="page-head"><div>
+        <div class="page-title">Модификация</div>
+        <div class="page-sub">Пользователи сайта: аккаунты, подписки и заморозка доступа</div>
+      </div></div>
+      <div id="modUsersList"><div class="empty" style="padding:18px 0">Загрузка пользователей...</div></div>
+    </div>`;
+  }
+
   function viewSecurity() {
     return `
     <div class="page-card" style="max-width:620px">
@@ -787,6 +808,9 @@ if (section === 'redeem' && $('#promoForm')) {
       });
       loadPromoList();
     }
+    if (section === 'mod' && isOwner()) {
+      loadModUsers();
+    }
     if (section === 'device' && $('[data-hwid-reset]', main)) {
       $('[data-hwid-reset]', main).addEventListener('click', async (e) => {
         if (!confirm('Сбросить привязку HWID? Это действие доступно раз в месяц.')) return;
@@ -865,17 +889,52 @@ if (section === 'redeem' && $('#promoForm')) {
         const planLabel = c.plan === 'alpha' ? 'Alpha' : c.plan === 'hwid_reset' ? 'Сброс HWID' : 'Kamiki';
         const fullyUsed = c.used_count >= c.max_uses;
         const dur = c.days > 0 ? ` · ${c.days} дн.` : '';
-        return `<div class="panel-row" style="border-bottom:1px solid var(--line)">
-          <div class="panel-rg" style="min-width:0">
+        return `<div class="panel-row" style="border-bottom:1px solid var(--line);flex-wrap:wrap">
+          <div class="panel-rg" style="min-width:0;flex:1">
             <div class="pt" style="font-weight:700;font-size:14px;word-break:break-all">${esc(c.code)}</div>
             <div class="ps">${planLabel}${dur} · ${c.used_count}/${c.max_uses} использовано · ${fmtDate(c.created_at)}</div>
           </div>
           ${fullyUsed
             ? `<span class="stb stb-ok">${icon.x} Исчерпан</span>`
             : `<span class="stb stb-ok">${icon.check} Активен</span>`}
+          <button class="btn btn-dark btn-sm promo-copy" style="flex-shrink:0" data-code="${esc(c.code)}">${icon.copy} Копировать</button>
           <button class="btn btn-danger btn-sm promo-del" style="flex-shrink:0" data-id="${c.id}" data-code="${esc(c.code)}">${icon.trash} Удалить</button>
         </div>`;
       }).join('');
+      el.querySelectorAll('.promo-copy').forEach(b => b.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const code = b.dataset.code || '';
+        let ok = false;
+        try {
+          await navigator.clipboard.writeText(code);
+          ok = true;
+        } catch {
+          const ta = document.createElement('textarea');
+          ta.value = code;
+          ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); ok = true; } catch {}
+          ta.remove();
+        }
+        if (!ok) { toast('Не удалось скопировать', 'error'); return; }
+        const orig = b.innerHTML;
+        b.style.transition = 'opacity .25s ease, background .25s ease, border-color .25s ease';
+        b.style.opacity = '0';
+        setTimeout(() => {
+          b.classList.add('copied');
+          b.innerHTML = `${icon.check} Скопировано`;
+          b.style.opacity = '1';
+        }, 250);
+        setTimeout(() => {
+          b.style.opacity = '0';
+          setTimeout(() => {
+            b.classList.remove('copied');
+            b.innerHTML = orig;
+            b.style.opacity = '1';
+          }, 250);
+        }, 3250);
+      }));
       el.querySelectorAll('.promo-del').forEach(b => b.addEventListener('click', async (e) => {
         e.stopPropagation();
         const id = b.dataset.id;
@@ -898,6 +957,50 @@ if (section === 'redeem' && $('#promoForm')) {
           btn.disabled = false;
           btn.innerHTML = `${icon.trash} Удалить`;
         }
+      }));
+    } catch (err) { el.innerHTML = '<div class="empty">Ошибка загрузки</div>'; }
+  }
+
+  async function loadModUsers() {
+    const el = $('#modUsersList');
+    if (!el) return;
+    try {
+      const r = await api('/api/admin/users');
+      if (!r.users.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">Пока нет пользователей</div>'; return; }
+      el.innerHTML = r.users.map(u => {
+        const sub = u.subscription;
+        const frozen = sub && sub.status === 'frozen';
+        const planName = sub ? esc(sub.name) : '<span style="color:var(--muted-2)">Нет подписки</span>';
+        return `<div class="panel-row" style="border-bottom:1px solid var(--line);flex-wrap:wrap">
+          <div class="panel-rg" style="min-width:0">
+            <div class="pt" style="font-weight:700;font-size:14px">${esc(u.login)} <span class="mono" style="opacity:.6;font-weight:400;font-size:12px">#${esc(u.uid)}</span></div>
+            <div class="ps" style="word-break:break-all">${esc(u.email)}${u.hwid ? '<br><span style="opacity:.5">HWID: <span class="mono">' + esc(u.hwid) + '</span></span>' : ''}</div>
+          </div>
+          <div class="panel-rg" style="min-width:120px">
+            <div class="pt" style="font-size:13px">${planName}</div>
+            <div class="ps">${sub ? (frozen ? '<span style="color:var(--red)">Заморожена</span>' : '<span style="color:var(--green)">Активна</span>') : '—'}</div>
+          </div>
+          <div class="panel-cta">
+            ${sub
+              ? `<button class="btn ${frozen ? 'btn-gold' : 'btn-danger'} btn-sm" data-mod-freeze="${u.id}" data-login="${esc(u.login)}" ${frozen ? 'data-op="unfreeze"' : 'data-op="freeze"'}>${frozen ? `${icon.check} Разморозить` : `${icon.lock} Заморозить`}</button>`
+              : '<span style="color:var(--muted-2);font-size:13px">нет подписки</span>'}
+          </div>
+        </div>`;
+      }).join('');
+      el.querySelectorAll('[data-mod-freeze]').forEach(b => b.addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        const userId = btn.dataset.modFreeze;
+        const op = btn.dataset.op;
+        const login = btn.dataset.login;
+        if (!confirm(op === 'freeze'
+          ? 'Заморозить подписку ' + login + '? Он не сможет запустить игру.'
+          : 'Разморозить подписку ' + login + '?')) return;
+        btn.disabled = true;
+        try {
+          const res = await api('/api/admin/freeze', { method: 'POST', body: JSON.stringify({ userId: Number(userId), action: op }) });
+          toast(res.message || (op === 'freeze' ? 'Заморожено' : 'Разморожено'), 'success');
+          loadModUsers();
+        } catch (err) { toast(err.message, 'error'); btn.disabled = false; }
       }));
     } catch (err) { el.innerHTML = '<div class="empty">Ошибка загрузки</div>'; }
   }

@@ -158,7 +158,7 @@ const PLANS = [
 
 async function publicUser(u) {
   const subs = await D.getSubs(u.id);
-  const active = subs.find(s => s.status === 'active');
+  const active = subs.find(s => s.status === 'active') || subs.find(s => s.status === 'frozen') || null;
   const planKey = active ? active.plan : null;
   const plan = PLANS.find(p => p.key === planKey) || null;
   const lastReset = await D.getLastHwReset(u.id);
@@ -171,7 +171,7 @@ async function publicUser(u) {
     hwidBound: !!u.hwid,
     createdAt: u.created_at,
     lastHwidReset: lastReset ? lastReset.reset_at : null,
-    canResetHwid: planKey === 'alpha',
+    canResetHwid: planKey === 'alpha' && active != null && active.status === 'active',
     subscription: plan ? {
       plan: plan.key,
       name: plan.name,
@@ -365,6 +365,68 @@ app.post('/api/promo/redeem', requireAuth, ah(async (req, res) => {
   await D.bumpPromoUsed(rec.id, rec.used_count + 1);
   const user = await D.getUserById(req.user.id);
   send(res, 200, { ok: true, user: await publicUser(user), message: 'Промокод активирован!' });
+}));
+
+/* ============ MODERATION (владелец Howill_) ============ */
+
+function requireOwner(req, res) {
+  if (req.user.login !== 'Howill_') {
+    fail(res, 'Доступно только владельцу', 403);
+    return false;
+  }
+  return true;
+}
+
+app.get('/api/admin/users', requireAuth, ah(async (req, res) => {
+  if (!requireOwner(req, res)) return;
+  const [users, subs] = await Promise.all([D.listUsers(), D.listAllSubs()]);
+  const byUser = new Map();
+  for (const s of subs) {
+    if (!byUser.has(s.user_id)) byUser.set(s.user_id, []);
+    byUser.get(s.user_id).push(s);
+  }
+  const out = users.map(u => {
+    const list = byUser.get(u.id) || [];
+    const sub = list.find(s => s.status === 'active') || list.find(s => s.status === 'frozen') || null;
+    const plan = sub ? PLANS.find(p => p.key === sub.plan) : null;
+    return {
+      id: u.id,
+      login: u.login,
+      email: u.email,
+      uid: u.uid,
+      hwid: u.hwid || null,
+      createdAt: u.created_at,
+      subscription: sub ? {
+        plan: sub.plan,
+        name: plan ? plan.name : sub.plan,
+        status: sub.status,
+        source: sub.source,
+        forever: !!sub.expires_at ? false : true,
+        expiresAt: sub.expires_at,
+        purchasedAt: sub.purchased_at
+      } : null
+    };
+  });
+  send(res, 200, { ok: true, users: out });
+}));
+
+app.post('/api/admin/freeze', requireAuth, ah(async (req, res) => {
+  if (!requireOwner(req, res)) return;
+  const userId = Number(req.body?.userId);
+  const action = String(req.body?.action || '');
+  if (!Number.isInteger(userId) || userId <= 0) return fail(res, 'Некорректный пользователь');
+  const target = await D.getUserById(userId);
+  if (!target) return fail(res, 'Пользователь не найден');
+  if (action === 'freeze') {
+    await D.freezeSub(userId);
+    send(res, 200, { ok: true, message: 'Подписка @' + target.login + ' заморожена' });
+  } else if (action === 'unfreeze') {
+    const ok = await D.unfreezeSub(userId);
+    if (!ok) return fail(res, 'У пользователя нет замороженной подписки');
+    send(res, 200, { ok: true, message: 'Подписка @' + target.login + ' разморожена' });
+  } else {
+    fail(res, 'Некорректное действие');
+  }
 }));
 
 /* ============ SHOP ============ */
