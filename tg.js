@@ -42,6 +42,21 @@ async function sendTgCode(tgUsername, text) {
   return await sendChat(chatId, text);
 }
 
+// Отправить личное сообщение по привязке пользователя сайта (по userId).
+// Возвращает true, если бот включён и сообщение доставлено.
+async function sendTgToUser(userId, text) {
+  if (!TOKEN) return false;
+  try {
+    const bind = await D.getTgByUserId(userId);
+    if (!bind) return false;
+    const chatId = bind.c || bind.u; // chatId или @username
+    return await sendChat(chatId, text);
+  } catch (e) {
+    console.error('[tg] sendTgToUser failed:', e.message);
+    return false;
+  }
+}
+
 function extractCode(text) {
   return (text || '').trim().replace(/^\/?bind\s*/i, '').match(/([A-Z0-9]{6})\b/i)?.[1] || null;
 }
@@ -153,4 +168,4 @@ function start() {
   schedule();
 }
 
-module.exports = { start, sendTgCode, registerBindCode, registerResetCode, isEnabled: () => !!TOKEN, botUsername: BOT_USERNAME };
+module.exports = { start, sendTgCode, sendTgToUser, registerBindCode, registerResetCode, isEnabled: () => !!TOKEN, botUsername: BOT_USERNAME };

@@ -543,10 +543,16 @@ app.post('/api/admin/freeze', requireAuth, ah(async (req, res) => {
   if (!target) return fail(res, 'Пользователь не найден');
   if (action === 'freeze') {
     await D.freezeSub(userId);
+    if (TGBot.isEnabled()) {
+      await TGBot.sendTgToUser(userId, '⛔️ Ваша подписка была <b>заморожена</b> администратором. Доступ временно приостановлен.');
+    }
     send(res, 200, { ok: true, message: 'Подписка @' + target.login + ' заморожена' });
   } else if (action === 'unfreeze') {
     const ok = await D.unfreezeSub(userId);
     if (!ok) return fail(res, 'У пользователя нет замороженной подписки');
+    if (TGBot.isEnabled()) {
+      await TGBot.sendTgToUser(userId, '✅ Ваша подписка <b>разморожена</b>. Доступ восстановлен!');
+    }
     send(res, 200, { ok: true, message: 'Подписка @' + target.login + ' разморожена' });
   } else {
     fail(res, 'Некорректное действие');
