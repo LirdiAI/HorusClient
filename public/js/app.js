@@ -17,7 +17,7 @@
       }
     ],
     purchaseNote: 'Покупка через FunPay. Выберите тариф и переходите к оплате.',
-    community: { discord: { members: 1421, url: 'https://discord.gg/sGjbnrdBfw' }, telegram: { members: 987, url: 'https://t.me/HorusClVS' } }
+    community: { discord: { members: 1421, url: 'https://discord.gg/sGjbnrdBfw' } }
   };
 
 /* ---------- helpers ---------- */
@@ -162,7 +162,7 @@ renderNav();
           <a href="#/pricing" class="btn btn-ghost btn-lg">Купить доступ</a>
         </div>
         <div class="hero-stats">
-          <div class="hstat"><div class="num">${fmtNum(c.discord.members + c.telegram.members)}</div><div class="lbl">В сообществах</div></div>
+          <div class="hstat"><div class="num">${fmtNum(c.discord.members)}</div><div class="lbl">В сообществах</div></div>
           <div class="hstat"><div class="num">24/7</div><div class="lbl">Поддержка</div></div>
           <div class="hstat"><div class="num" id="statUsers">—</div><div class="lbl">Пользователей</div></div>
         </div>
@@ -247,11 +247,6 @@ renderNav();
         <a class="com-card" href="${esc(c.discord.url)}" target="_blank" rel="noopener">
           <div class="com-ico ds">${icon.discord}</div>
           <div><h3>Discord</h3><div class="com-count">участников: <b>${fmtNum(c.discord.members)}</b></div></div>
-          <div class="com-arrow">${icon.arrow}</div>
-        </a>
-        <a class="com-card" href="${esc(c.telegram.url)}" target="_blank" rel="noopener">
-          <div class="com-ico tg">${icon.telegram}</div>
-          <div><h3>Telegram</h3><div class="com-count">подписчиков: <b>${fmtNum(c.telegram.members)}</b></div></div>
           <div class="com-arrow">${icon.arrow}</div>
         </a>
       </div>
@@ -446,10 +441,6 @@ ${sbGroup('Мой кабинет', [
             <span style="color:#8b95ff">${icon.discord}</span>Discord
             <span style="margin-left:auto;color:var(--muted-2);font-size:12px">${fmtNum(state.community.discord.members)}</span>
           </a>
-          <a class="sb-item" href="${esc(state.community.telegram.url)}" target="_blank" rel="noopener">
-            <span style="color:#4ec6ff">${icon.telegram}</span>Telegram
-            <span style="margin-left:auto;color:var(--muted-2);font-size:12px">${fmtNum(state.community.telegram.members)}</span>
-          </a>
         </div>
         <div class="sb-sep"></div>
         <button class="sb-item" id="logoutBtn"><span style="color:var(--red)">${icon.lock}</span>Выйти</button>
@@ -618,7 +609,7 @@ function viewRedeem() {
         <div class="field">
           <label>Промокод</label>
           <input name="code" placeholder="HORUS-GIVEAWAY" maxlength="30" required>
-          <div class="hint">Промокоды выдают в Discord и Telegram во время раздач</div>
+          <div class="hint">Промокоды выдают в Discord во время раздач</div>
         </div>
         <button type="submit" class="btn btn-gold">Активировать</button>
       </form>
@@ -707,7 +698,7 @@ function viewRedeem() {
     <div class="page-card" style="max-width:640px">
       <div class="page-head"><div>
         <div class="page-title">${t.title}</div>
-        <div class="page-sub">Мы отвечаем в течение 24 часов в Discord и Telegram</div>
+        <div class="page-sub">Мы отвечаем в течение 24 часов в Discord</div>
       </div></div>
       <form id="supportForm">
         <div class="field"><label>Тема</label><input name="subject" maxlength="100" placeholder="Коротко о вопросе" required></div>
@@ -844,7 +835,7 @@ if (section === 'redeem' && $('#promoForm')) {
           });
           const box = $('#supportResult');
           box.className = 'okbox';
-          box.textContent = 'Заявка #' + r.ticketId + ' («' + r.typeName + '») отправлена. Мы ответим в Discord/Telegram.';
+          box.textContent = 'Заявка #' + r.ticketId + ' («' + r.typeName + '») отправлена. Мы ответим в Discord.';
           e.target.reset();
         } catch (err) { toast(err.message, 'error'); }
         btn.disabled = false;
