@@ -152,9 +152,13 @@ async function requireAuth(req, res, next) {
 }
 
 const PLANS = [
-  { key: 'kamiki', name: 'Kamiki', tag: 'Базовый', price: 199, currency: '₽', forever: true,
+  { key: 'kamiki', name: 'Kamiki 1.21.4', tag: 'Базовый · Навсегда', price: 300, currency: '₽', forever: true,
     desc: ['Базовый доступ к клиенту', 'Все будущие обновления', 'Поддержка 24/7'] },
-  { key: 'alpha', name: 'Alpha', tag: 'Расширенный', price: 349, currency: '₽', forever: true,
+  { key: 'kamiki30', name: 'Kamiki 1.21.4', tag: 'Базовый · 30 дней', price: 67, currency: '₽', forever: false, days: 30,
+    desc: ['Базовый доступ на 30 дней', 'Поддержка 24/7', 'Продление из кабинета'] },
+  { key: 'kamiki365', name: 'Kamiki 1.21.4', tag: 'Базовый · 365 дней', price: 199, currency: '₽', forever: false, days: 365,
+    desc: ['Базовый доступ на 365 дней', 'Выгода: ~0.55 ₽ в день', 'Продление из кабинета'] },
+  { key: 'alpha', name: 'Alpha 1.21.4', tag: 'Расширенный · Навсегда', price: 349, currency: '₽', forever: true,
     featured: true,
     desc: ['Всё из Kamiki', 'Ранние обновления', 'Сброс HWID раз в месяц', 'Приоритетная поддержка'] },
   { key: 'hwid_reset', name: 'Сброс HWID', tag: 'Услуга', price: 100, currency: '₽', forever: false,

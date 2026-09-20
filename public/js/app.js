@@ -11,11 +11,19 @@
     me: null,
     plans: [
       {
-        key: 'kamiki', name: 'Kamiki', tag: 'Базовый', price: 199, currency: '₽', forever: true,
+        key: 'kamiki', name: 'Kamiki 1.21.4', tag: 'Базовый · Навсегда', price: 300, currency: '₽', forever: true,
         desc: ['Базовый доступ к клиенту', 'Все будущие обновления', 'Поддержка 24/7']
       },
       {
-        key: 'alpha', name: 'Alpha', tag: 'Расширенный', price: 349, currency: '₽', forever: true,
+        key: 'kamiki30', name: 'Kamiki 1.21.4', tag: 'Базовый · 30 дней', price: 67, currency: '₽', forever: false, days: 30,
+        desc: ['Базовый доступ на 30 дней', 'Поддержка 24/7', 'Продление из кабинета']
+      },
+      {
+        key: 'kamiki365', name: 'Kamiki 1.21.4', tag: 'Базовый · 365 дней', price: 199, currency: '₽', forever: false, days: 365,
+        desc: ['Базовый доступ на 365 дней', 'Выгода: ~0.55 ₽ в день', 'Продление из кабинета']
+      },
+      {
+        key: 'alpha', name: 'Alpha 1.21.4', tag: 'Расширенный · Навсегда', price: 349, currency: '₽', forever: true,
         featured: true,
         desc: ['Всё из Kamiki', 'Ранние обновления', 'Сброс HWID раз в месяц', 'Приоритетная поддержка']
       },
@@ -217,7 +225,7 @@ renderNav();
 
     <section class="section" id="pricing">
       <span class="eyebrow">${icon.crown} Тарифы</span>
-      <h2 class="section-title">Одна покупка — <span class="grad grad-anim">доступ навсегда</span></h2>
+      <h2 class="section-title">Выбери <span class="grad grad-anim">свой тариф</span></h2>
       <p class="section-sub">Активируй подписку на своём аккаунте и привяжи к устройству через лаунчер.</p>
       <div class="pricing-grid">${plansHTML()}</div>
     </section>
@@ -277,7 +285,7 @@ renderNav();
         <div class="plan-sub">${esc(p.tag)}</div>
         <div class="plan-price">
           <span class="amount">${p.price}</span><span class="cur">${esc(p.currency)}</span>
-          <span class="forever">${p.forever ? 'Действует: Навсегда' : ''}</span>
+          <span class="forever">${p.forever ? 'Действует: Навсегда' : p.days ? 'Действует: ' + p.days + ' дней' : ''}</span>
         </div>
         <ul class="plan-feats">${p.desc.map(d => `<li>${icon.check}<span>${esc(d)}</span></li>`).join('')}</ul>
         <button class="btn btn-block ${p.featured ? 'btn-gold' : 'btn-dark'}" data-buy="${p.key}">${esc(p.cta || 'Купить доступ')}</button>
@@ -781,7 +789,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
           </button>
         </div>
       </div>
-      ${alpha ? '' : '<div class="warn">У вас подписка Kamiki. Сброс HWID доступен только с подпиской <b>Alpha</b>.</div>'}
+      ${alpha ? '' : '<div class="warn">Сброс HWID доступен только с подпиской <b>Alpha 1.21.4</b>.</div>'}
     </div>`;
   }
 
@@ -790,7 +798,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
     <div class="page-card" style="max-width:820px">
       <div class="page-head"><div>
         <div class="page-title">Купить доступ</div>
-        <div class="page-sub">Одна покупка — доступ навсегда. Активация мгновенная.</div>
+        <div class="page-sub">Выбери срок доступа: навсегда или по подписке. Активация мгновенная.</div>
       </div></div>
       <div class="pricing-grid">${plansHTML()}</div>
       ${state.purchaseNote ? `<div class="okbox mt-24">${esc(state.purchaseNote)}</div>` : ''}
@@ -828,12 +836,14 @@ function viewRedeem() {
           <div class="dd" id="planDD">
             <input type="hidden" name="plan" value="kamiki">
             <button type="button" class="dd-head" id="planDDHead">
-              <span class="dd-txt">Kamiki</span>
+              <span class="dd-txt">Kamiki 1.21.4</span>
               <span class="dd-caret"></span>
             </button>
             <div class="dd-menu">
-              <div class="dd-item selected" data-plan-value="kamiki">Kamiki</div>
-              <div class="dd-item" data-plan-value="alpha">Alpha</div>
+              <div class="dd-item selected" data-plan-value="kamiki">Kamiki 1.21.4</div>
+              <div class="dd-item" data-plan-value="kamiki30">Kamiki 1.21.4 · 30 дней</div>
+              <div class="dd-item" data-plan-value="kamiki365">Kamiki 1.21.4 · 365 дней</div>
+              <div class="dd-item" data-plan-value="alpha">Alpha 1.21.4</div>
               <div class="dd-item" data-plan-value="hwid_reset">Сброс HWID</div>
             </div>
           </div></div>
@@ -992,13 +1002,16 @@ if (section === 'redeem' && $('#promoForm')) {
         });
         $$('.dd-item', dd).forEach(item => item.addEventListener('click', (e) => {
           e.stopPropagation();
-          dd.querySelector('input[name="plan"]').value = item.dataset.planValue;
+          const plan = item.dataset.planValue;
+          dd.querySelector('input[name="plan"]').value = plan;
           dd.querySelector('.dd-txt').textContent = item.textContent.trim();
           $$('.dd-item', dd).forEach(i => i.classList.toggle('selected', i === item));
-          if (item.dataset.planValue === 'hwid_reset') {
+          if (plan === 'hwid_reset') {
             $$('#daysField', main).forEach(f => f.style.display = 'none');
           } else {
             $$('#daysField', main).forEach(f => f.style.display = '');
+            if (plan === 'kamiki30') $$('#daysField input', main).forEach(i => i.value = '30');
+            if (plan === 'kamiki365') $$('#daysField input', main).forEach(i => i.value = '365');
           }
           dd.classList.remove('open');
         }));
@@ -1021,7 +1034,7 @@ if (section === 'redeem' && $('#promoForm')) {
           e.target.days.value = '0';
           if (dd) {
             dd.querySelector('input[name="plan"]').value = 'kamiki';
-            dd.querySelector('.dd-txt').textContent = 'Kamiki';
+            dd.querySelector('.dd-txt').textContent = 'Kamiki 1.21.4';
             $$('#daysField', main).forEach(f => f.style.display = '');
             $$('.dd-item', dd).forEach(i => i.classList.toggle('selected', i.dataset.planValue === 'kamiki'));
           }
@@ -1176,7 +1189,7 @@ if (section === 'redeem' && $('#promoForm')) {
       const r = await api('/api/promo/list');
       if (!r.codes.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">Пока нет промокодов</div>'; return; }
       el.innerHTML = r.codes.map(c => {
-        const planLabel = c.plan === 'alpha' ? 'Alpha' : c.plan === 'hwid_reset' ? 'Сброс HWID' : 'Kamiki';
+        const planLabel = c.plan === 'alpha' ? 'Alpha 1.21.4' : c.plan === 'hwid_reset' ? 'Сброс HWID' : c.plan === 'kamiki30' ? 'Kamiki 1.21.4 · 30 дней' : c.plan === 'kamiki365' ? 'Kamiki 1.21.4 · 365 дней' : 'Kamiki 1.21.4';
         const fullyUsed = c.used_count >= c.max_uses;
         const dur = c.days > 0 ? ` · ${c.days} дн.` : '';
         return `<div class="panel-row" style="border-bottom:1px solid var(--line);flex-wrap:wrap">
