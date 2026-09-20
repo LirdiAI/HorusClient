@@ -154,11 +154,11 @@ renderNav();
     <section class="hero" id="top">
       <div>
         <div class="hero-badge"><span class="dot"></span> Minecraft 1.21.4 · FPS Boost · Защита от банов</div>
-        <h1>Мир под контролем<br>с <span class="grad">HorusClient</span></h1>
+        <h1>Мир под контролем<br>с <span class="grad grad-anim">HorusClient</span></h1>
         <p class="lead">Современный клиент с расширенным функционалом: защита, комбат-модули, рендер,
           дискорд-статус и свой лаунчер. Одна подписка — все обновления.</p>
         <div class="hero-cta">
-          <a href="${state.me ? '#/cabinet' : '#/register'}" class="btn btn-gold btn-lg">${state.me ? 'Открыть кабинет' : 'Скачать лаунчер'}</a>
+          <a href="${state.me ? (state.me.subscription ? '#launcher' : '#/cabinet/buy') : '#/register'}" class="btn btn-gold btn-lg">${state.me ? (state.me.subscription ? 'Скачать клиент' : 'Купить доступ') : 'Скачать лаунчер'}</a>
           <a href="#/pricing" class="btn btn-ghost btn-lg">Купить доступ</a>
         </div>
         <div class="hero-stats">
@@ -190,7 +190,7 @@ renderNav();
 
     <section class="section" id="features">
       <span class="eyebrow">${icon.spark} Возможности</span>
-      <h2 class="section-title">Всё для побед и <span class="grad">комфортной игры</span></h2>
+      <h2 class="section-title">Всё для побед и <span class="grad grad-anim">комфортной игры</span></h2>
       <p class="section-sub">Десятки модулей во всех категориях. Включаются в пару кликов через удобный ClickGUI.</p>
       <div class="features-grid">
         <div class="feature"><div class="fic">${icon.shieldFx}</div><h3>Защита</h3><p>Streamer Mode, скрытие ника, защита от отслеживания и банов.</p></div>
@@ -204,14 +204,14 @@ renderNav();
 
     <section class="section" id="pricing">
       <span class="eyebrow">${icon.crown} Тарифы</span>
-      <h2 class="section-title">Одна покупка — <span class="grad">доступ навсегда</span></h2>
+      <h2 class="section-title">Одна покупка — <span class="grad grad-anim">доступ навсегда</span></h2>
       <p class="section-sub">Активируй подписку на своём аккаунте и привяжи к устройству через лаунчер.</p>
       <div class="pricing-grid">${plansHTML()}</div>
     </section>
 
     <section class="section" id="launcher">
       <span class="eyebrow">${icon.layers} Лаунчер</span>
-      <h2 class="section-title">Скачай <span class="grad">HorusLauncher</span></h2>
+      <h2 class="section-title">Скачай <span class="grad grad-anim">HorusLauncher</span></h2>
       <p class="section-sub">Вход по логину и паролю от сайта, автоматическая установка и обновление клиента,
         привязка HWID и управление подпиской прямо в лаунчере.</p>
       <div class="launch-wrap mt-24">
@@ -241,7 +241,7 @@ renderNav();
 
     <section class="section" id="community">
       <span class="eyebrow">${icon.heart} Сообщество</span>
-      <h2 class="section-title">Присоединяйся к <span class="grad">HorusClient</span></h2>
+      <h2 class="section-title">Присоединяйся к <span class="grad grad-anim">HorusClient</span></h2>
       <p class="section-sub">Новости, голосования за обновления, розыгрыши подписок и оперативная поддержка.</p>
       <div class="com-grid">
         <a class="com-card" href="${esc(c.discord.url)}" target="_blank" rel="noopener">
@@ -273,8 +273,17 @@ renderNav();
       </div>`).join('');
   }
 
-  function bindLanding(app) {
+function bindLanding(app) {
     $$('[data-buy]', app).forEach(b => b.addEventListener('click', () => startPurchase(b.dataset.buy)));
+    $$('[data-scroll-dl]', app).forEach(dl => dl.addEventListener('click', (e) => {
+      if (!hasSub()) {
+        e.preventDefault();
+        requireSub();
+        return;
+      }
+      const target = document.getElementById('download');
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }));
     const btn = $('.nav-burger');
     btn.addEventListener('click', () => {
       $('#navLinks').classList.toggle('open');
@@ -287,6 +296,23 @@ renderNav();
 
 async function startPurchase(plan) {
     window.open('https://funpay.com/lots/offer?id=77228605', '_blank', 'noopener');
+  }
+
+  function hasSub() {
+    return !!(state.me && state.me.subscription);
+  }
+
+  /* Проверка доступа к скачиванию: только с активной подпиской */
+  function requireSub() {
+    if (hasSub()) return true;
+    if (!state.me) {
+      toast('Войдите в аккаунт, чтобы скачать клиент');
+      location.hash = '#/login';
+    } else {
+      toast('Скачивание доступно только с подпиской', 'error');
+      location.hash = '#/cabinet/buy';
+    }
+    return false;
   }
 
   /* ================= AUTH ================= */
@@ -478,7 +504,9 @@ if (section === 'profile') main.innerHTML = viewProfile();
           <div class="pv mono">${u.hwid ? esc(u.hwid) : '<span class="badge badge-gray">Не привязано</span>'}</div></div>
       </div>
       <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
-        <a href="#/launcher" class="btn btn-gold btn-lg">${icon.layers} Скачать клиент</a>
+        ${u.subscription
+          ? `<a href="#/launcher" class="btn btn-gold btn-lg">${icon.layers} Скачать клиент</a>`
+          : `<a href="#/cabinet/buy" data-cab="buy" class="btn btn-gold btn-lg">${icon.crown} Купить доступ</a>`}
       </div>
     </div>
     <div class="page-card">

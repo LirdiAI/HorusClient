@@ -429,7 +429,9 @@ app.get('/api/community', ah(async (req, res) => {
 
 /* ============ LAUNCHER ============ */
 
-app.get('/api/launcher/latest', (req, res) => {
+app.get('/api/launcher/latest', requireAuth, async (req, res) => {
+  const active = (await D.getSubs(req.user.id)).find(s => s.status === 'active');
+  if (!active) return fail(res, 'Скачивание доступно только с активной подпиской', 403);
   send(res, 200, {
     ok: true,
     version: '1.0.0',

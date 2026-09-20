@@ -419,6 +419,111 @@ button { font-family: inherit; cursor: pointer; }
 .mt-24 { margin-top: 24px; }
 .muted { color: var(--muted); }
 .small { font-size: 13px; }
+
+/* ================= FX: красота, плавность, эффективность ================= */
+html { scroll-padding-top: 76px; }
+
+#fxCanvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+.scroll-progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 120;
+  background: linear-gradient(90deg, var(--gold-2), var(--gold), var(--cyan));
+  transform-origin: 0 50%; transform: scaleX(0);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
+  pointer-events: none;
+}
+
+.to-top {
+  position: fixed; right: 24px; bottom: 26px; z-index: 110; width: 46px; height: 46px; border-radius: 14px;
+  border: 1px solid var(--line-strong); background: var(--panel-solid); color: var(--gold);
+  display: grid; place-items: center; cursor: pointer; opacity: 0; transform: translateY(16px);
+  pointer-events: none; transition: opacity .3s, transform .3s, border-color .3s, box-shadow .3s, background .3s;
+}
+.to-top.show { opacity: 1; transform: none; pointer-events: auto; }
+.to-top:hover { border-color: rgba(168, 85, 247, 0.6); box-shadow: 0 8px 30px -8px rgba(168, 85, 247, 0.6); }
+
+/* reveal on scroll */
+.js-fx .reveal { opacity: 0; transform: translateY(26px); transition: opacity .65s cubic-bezier(.16,1,.3,1), transform .65s cubic-bezier(.16,1,.3,1); transition-delay: var(--d, 0s); will-change: opacity, transform; }
+.js-fx .reveal.in { opacity: 1; transform: none; }
+
+/* nav: тень и фон при скролле */
+.nav.scrolled { background: rgba(7,11,20,0.9); box-shadow: 0 14px 40px -20px rgba(0,0,0,0.9); }
+.nav-links a { position: relative; transition: color .25s; }
+.nav-links a.active { color: var(--text); }
+.nav-links a::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--gold-2), var(--gold));
+  transform: scaleX(0); transform-origin: left; transition: transform .3s cubic-bezier(.16,1,.3,1);
+}
+.nav-links a:hover::after, .nav-links a.active::after { transform: scaleX(1); }
+
+/* hero: плавное появление */
+
+/* дрейф блобов */
+.b1 { animation: drift1 16s ease-in-out infinite alternate; }
+.b2 { animation: drift2 20s ease-in-out infinite alternate; }
+.b3 { animation: drift3 24s ease-in-out infinite alternate; }
+@keyframes drift1 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(60px, 40px) scale(1.08); } }
+@keyframes drift2 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(-50px, -30px) scale(1.1); } }
+@keyframes drift3 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(40px, -50px) scale(1.05); } }
+
+/* градиентный текстовый шиммер */
+.grad-anim { background-size: 200% auto; animation: gradShift 5s linear infinite; }
+@keyframes gradShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+/* hover-эффекты карточек */
+.feature, .plan, .com-card { transition: transform .3s cubic-bezier(.16,1,.3,1), border-color .3s, box-shadow .3s; }
+.feature:hover, .com-card:hover { transform: translateY(-6px); box-shadow: 0 20px 46px -18px rgba(168, 85, 247, 0.45); }
+.plan:hover { transform: translateY(-7px); box-shadow: 0 26px 54px -20px rgba(168, 85, 247, 0.5); }
+.plan.featured { box-shadow: 0 0 0 1px rgba(168,85,247,.45), 0 18px 50px -18px rgba(168,85,247,.35); }
+
+/* подсветка, следующая за курсором */
+.feature, .plan, .com-card { position: relative; }
+.feature::before, .plan::before, .com-card::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(340px circle at var(--mx, 50%) var(--my, 50%), rgba(168, 85, 247, 0.14), transparent 60%);
+  opacity: 0; transition: opacity .3s;
+}
+.feature:hover::before, .plan:hover::before, .com-card:hover::before { opacity: 1; }
+.preview-card, .launch-window { position: relative; }
+.preview-card::before, .launch-window::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(168, 85, 247, 0.12), transparent 55%);
+}
+
+/* пульс у бейджа hero */
+.hero-badge .dot { animation: pulse 2s ease-out infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(55,211,154,.55); } 80%, 100% { box-shadow: 0 0 0 12px rgba(55,211,154,0); } }
+
+/* блеск кнопок */
+.btn-gold { position: relative; overflow: hidden; }
+.btn-gold::after {
+  content: ''; position: absolute; top: 0; left: -80%; height: 100%; width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.35), transparent);
+  transform: skewX(-20deg); animation: shine 3.4s ease-in-out infinite;
+}
+@keyframes shine { 0%, 55% { left: -80%; } 100% { left: 160%; } }
+.btn:active { transform: translateY(0) scale(.97); }
+
+/* float-карточки: мягче */
+.fc-1, .fc-2 { will-change: transform; }
+
+/* счётчики */
+.hstat .num, .com-count b { font-variant-numeric: tabular-nums; }
+
+/* тосты: плавнее */
+.toast { transition: opacity .35s ease; }
+
+/* якорные секции не липнут под навбаров */
+.section, .hero { scroll-margin-top: 70px; }
+
+/* reduced motion: отключаем лишнее */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .reveal { opacity: 1 !important; transform: none !important; }
+  .grad-anim, .b1, .b2, .b3, .btn-gold::after, .hero-badge .dot { animation: none !important; }
+}
 </style>
 </head>
 <body>
@@ -428,7 +533,12 @@ button { font-family: inherit; cursor: pointer; }
   <div class="blob b2"></div>
   <div class="blob b3"></div>
   <div class="grid-lines"></div>
+  <canvas id="fxCanvas"></canvas>
 </div>
+<div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+<button class="to-top" id="toTop" aria-label="Наверх">
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+</button>
 
 <div class="toast-wrap" id="toastWrap"></div>
 
@@ -486,6 +596,7 @@ button { font-family: inherit; cursor: pointer; }
   <div class="footer-bottom">© 2026 HorusClient. Не является отрытым продуктом Mojang / Microsoft.</div>
 </footer>
 
+<script src="js/fx.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
