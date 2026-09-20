@@ -24,8 +24,13 @@
       },
       {
         key: 'alpha', name: 'Alpha 1.21.4', tag: 'Расширенный · Навсегда', price: 349, currency: '₽', forever: true,
-        featured: true,
-        desc: ['Всё из Kamiki', 'Ранние обновления', 'Сброс HWID раз в месяц', 'Приоритетная поддержка']
+        featured: true, requires: 'kamiki', requiresForever: true,
+        desc: ['Докупка к Kamiki 1.21.4', 'Ранние обновления', 'Сброс HWID раз в месяц', 'Приоритетная поддержка']
+      },
+      {
+        key: 'tester', name: 'Набор Тестера', tag: 'Набор · 30 дней', price: 129, currency: '₽', forever: false, days: 30,
+        pack: true, badge: '10% выгоды',
+        desc: ['Kamiki 1.21.4 на 30 дней', 'Бесплатный сброс HWID ×1', 'Роль в Discord «Пакет Тестер»']
       },
       {
         key: 'hwid_reset', name: 'Сброс HWID', tag: 'Услуга', price: 100, currency: '₽', forever: false,
@@ -224,9 +229,41 @@ renderNav();
     </section>
 
     <section class="section" id="pricing">
-      <span class="eyebrow">${icon.crown} Тарифы</span>
-      <h2 class="section-title">Выбери <span class="grad grad-anim">свой тариф</span></h2>
-      <p class="section-sub">Активируй подписку на своём аккаунте и привяжи к устройству через лаунчер.</p>
+      <span class="eyebrow">${icon.crown} Подписки и Наборы</span>
+      <h2 class="section-title">Стань частью <span class="grad grad-anim">HorusClient</span></h2>
+      <p class="section-sub">Активируй подписку на своём аккаунте и привяжи к устройству через лаунчер.
+        Выбирай тариф под свой стиль игры или собирай выгодный набор.</p>
+
+      <div class="subs-wrap">
+        <div class="subs-grid">
+          <div class="subcard">
+            <div class="sub-ic">${icon.zap}</div>
+            <div>
+              <h3>Подписки</h3>
+              <p>Лучший выбор для постоянных игроков. Полный доступ к клиенту с ежедневными обновлениями.</p>
+              <ul>
+                <li>${icon.check}<span>Все модули и функции клиента</span></li>
+                <li>${icon.check}<span>Автообновление через лаунчер</span></li>
+                <li>${icon.check}<span>Поддержка 24/7</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="subcard">
+            <div class="sub-ic">${icon.layers}</div>
+            <div>
+              <h3>Наборы</h3>
+              <p>Готовые комплекты из тарифа и полезных бонусов — выгоднее, чем покупать по отдельности.</p>
+              <ul>
+                <li>${icon.check}<span>Экономия до 10% от цены набора</span></li>
+                <li>${icon.check}<span>Дополнительный сброс HWID</span></li>
+                <li>${icon.check}<span>Особые роли в Discord</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="subs-divider"><span>Все доступные тарифы</span></div>
+      </div>
+
       <div class="pricing-grid">${plansHTML()}</div>
     </section>
 
