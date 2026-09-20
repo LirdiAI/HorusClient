@@ -1012,8 +1012,10 @@ if (section === 'redeem' && $('#promoForm')) {
       overlay.className = 'modal-overlay';
       overlay.innerHTML = `
         <div class="modal-card ${danger ? 'modal-danger' : ''}" role="dialog">
-          <div class="modal-ic">${danger ? icon.lock : icon.check}</div>
-          <div class="modal-title">${esc(title)}</div>
+          <div class="modal-head ${danger ? 'mod-danger' : ''}">
+            <div class="modal-ic">${danger ? icon.lock : icon.check}</div>
+            <div class="modal-title">${esc(title)}</div>
+          </div>
           <div class="modal-text">${text}</div>
           <div class="modal-btns">
             <button class="btn btn-dark" data-modal-cancel>Отмена</button>
