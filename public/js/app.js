@@ -11,16 +11,16 @@
     me: null,
     plans: [
       {
-        key: 'kamiki', name: 'Kamiki 1.21.4', tag: 'Базовый · Навсегда', price: 300, currency: '₽', forever: true,
-        desc: ['Базовый доступ к клиенту', 'Все будущие обновления', 'Поддержка 24/7']
-      },
-      {
         key: 'kamiki30', name: 'Kamiki 1.21.4', tag: 'Базовый · 30 дней', price: 67, currency: '₽', forever: false, days: 30,
         desc: ['Базовый доступ на 30 дней', 'Поддержка 24/7', 'Продление из кабинета']
       },
       {
         key: 'kamiki365', name: 'Kamiki 1.21.4', tag: 'Базовый · 365 дней', price: 199, currency: '₽', forever: false, days: 365,
         desc: ['Базовый доступ на 365 дней', 'Выгода: ~0.55 ₽ в день', 'Продление из кабинета']
+      },
+      {
+        key: 'kamiki', name: 'Kamiki 1.21.4', tag: 'Базовый · Навсегда', price: 300, currency: '₽', forever: true,
+        desc: ['Базовый доступ к клиенту', 'Все будущие обновления', 'Поддержка 24/7']
       },
       {
         key: 'alpha', name: 'Alpha 1.21.4', tag: 'Расширенный · Навсегда', price: 349, currency: '₽', forever: true,
@@ -30,7 +30,8 @@
       {
         key: 'tester', name: 'Набор Тестера', tag: 'Набор · 30 дней', price: 129, currency: '₽', forever: false, days: 30,
         pack: true, badge: '10% выгоды',
-        desc: ['Kamiki 1.21.4 на 30 дней', 'Бесплатный сброс HWID ×1', 'Роль в Discord «Пакет Тестер»']
+        includes: ['kamiki30', 'hwid_reset'], discordRole: 'Пакет Тестер',
+        desc: ['Kamiki 1.21.4 на 30 дней', 'Бесплатный сброс HWID x1', 'Роль в Discord «Пакет Тестер»']
       },
       {
         key: 'hwid_reset', name: 'Сброс HWID', tag: 'Услуга', price: 100, currency: '₽', forever: false,
@@ -234,37 +235,12 @@ renderNav();
       <p class="section-sub">Активируй подписку на своём аккаунте и привяжи к устройству через лаунчер.
         Выбирай тариф под свой стиль игры или собирай выгодный набор.</p>
 
-      <div class="subs-wrap">
-        <div class="subs-grid">
-          <div class="subcard">
-            <div class="sub-ic">${icon.zap}</div>
-            <div>
-              <h3>Подписки</h3>
-              <p>Лучший выбор для постоянных игроков. Полный доступ к клиенту с ежедневными обновлениями.</p>
-              <ul>
-                <li>${icon.check}<span>Все модули и функции клиента</span></li>
-                <li>${icon.check}<span>Автообновление через лаунчер</span></li>
-                <li>${icon.check}<span>Поддержка 24/7</span></li>
-              </ul>
-            </div>
-          </div>
-          <div class="subcard">
-            <div class="sub-ic">${icon.layers}</div>
-            <div>
-              <h3>Наборы</h3>
-              <p>Готовые комплекты из тарифа и полезных бонусов — выгоднее, чем покупать по отдельности.</p>
-              <ul>
-                <li>${icon.check}<span>Экономия до 10% от цены набора</span></li>
-                <li>${icon.check}<span>Дополнительный сброс HWID</span></li>
-                <li>${icon.check}<span>Особые роли в Discord</span></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div class="subs-divider"><span>Все доступные тарифы</span></div>
+      <div class="subs-tabs" id="pricingTabs">
+        <button type="button" class="subs-tab active" data-cat="subs">${icon.crown} Подписки</button>
+        <button type="button" class="subs-tab" data-cat="packs">${icon.layers} Наборы</button>
       </div>
 
-      <div class="pricing-grid">${plansHTML()}</div>
+      <div class="pricing-grid" id="pricingGrid" data-grid="subs"></div>
     </section>
 
     <section class="section" id="launcher">
@@ -314,8 +290,10 @@ renderNav();
     </section>`;
   }
 
-  function plansHTML() {
-    return state.plans.map((p, i) => `
+  function plansHTML(cat = 'all') {
+    return state.plans
+      .filter(p => cat === 'all' ? true : (cat === 'packs' ? !!p.pack : !p.pack))
+      .map((p) => `
       <div class="plan ${p.featured ? 'featured' : ''} ${p.forever ? 'forever-badge' : ''}">
         ${p.featured ? '<div class="plan-tag">Выбор игроков</div>' : ''}
         <div class="plan-name">${esc(p.name)}</div>
@@ -331,6 +309,15 @@ renderNav();
 
 function bindLanding(app) {
     $$('[data-buy]', app).forEach(b => b.addEventListener('click', () => startPurchase(b.dataset.buy)));
+    const pricingGrid = $('#pricingGrid', app);
+    if (pricingGrid) {
+      pricingGrid.innerHTML = plansHTML('subs');
+      $$('.subs-tab', app).forEach(t => t.addEventListener('click', () => {
+        $$('.subs-tab', app).forEach(x => x.classList.toggle('active', x === t));
+        pricingGrid.innerHTML = plansHTML(t.dataset.cat);
+        $$('[data-buy]', pricingGrid).forEach(b => b.addEventListener('click', () => startPurchase(b.dataset.buy)));
+      }));
+    }
     $$('[data-scroll-dl]', app).forEach(dl => dl.addEventListener('click', (e) => {
       if (!hasSub()) {
         e.preventDefault();

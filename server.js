@@ -152,18 +152,15 @@ async function requireAuth(req, res, next) {
 }
 
 const PLANS = [
-  { key: 'kamiki', name: 'Kamiki 1.21.4', tag: 'Базовый · Навсегда', price: 300, currency: '₽', forever: true,
-    desc: ['Базовый доступ к клиенту', 'Все будущие обновления', 'Поддержка 24/7'] },
   { key: 'kamiki30', name: 'Kamiki 1.21.4', tag: 'Базовый · 30 дней', price: 67, currency: '₽', forever: false, days: 30,
     desc: ['Базовый доступ на 30 дней', 'Поддержка 24/7', 'Продление из кабинета'] },
   { key: 'kamiki365', name: 'Kamiki 1.21.4', tag: 'Базовый · 365 дней', price: 199, currency: '₽', forever: false, days: 365,
     desc: ['Базовый доступ на 365 дней', 'Выгода: ~0.55 ₽ в день', 'Продление из кабинета'] },
+  { key: 'kamiki', name: 'Kamiki 1.21.4', tag: 'Базовый · Навсегда', price: 300, currency: '₽', forever: true,
+    desc: ['Базовый доступ к клиенту', 'Все будущие обновления', 'Поддержка 24/7'] },
   { key: 'alpha', name: 'Alpha 1.21.4', tag: 'Расширенный · Навсегда', price: 349, currency: '₽', forever: true,
     featured: true, requires: 'kamiki', requiresForever: true,
     desc: ['Докупка к Kamiki 1.21.4', 'Ранние обновления', 'Сброс HWID раз в месяц', 'Приоритетная поддержка'] },
-  { key: 'tester', name: 'Набор Тестера', tag: 'Набор · 30 дней', price: 129, currency: '₽', forever: false, days: 30,
-    pack: true, badge: '10% выгоды',
-    desc: ['Kamiki 1.21.4 на 30 дней', 'Бесплатный сброс HWID ×1', 'Роль в Discord «Пакет Тестер»'] },
   { key: 'tester', name: 'Набор Тестера', tag: 'Набор · 30 дней', price: 129, currency: '₽', forever: false, days: 30, pack: true,
     badge: '10% выгоды',
     includes: ['kamiki30', 'hwid_reset'], discordRole: 'Пакет Тестер',
