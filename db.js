@@ -268,6 +268,133 @@ async function getCfg(key) {
   return data ? data.value : null;
 }
 
+async function setCfg(key, value) {
+  const { error } = await sb.from('site_cfg').upsert({ key, value }, { onConflict: 'key' });
+  if (error) throw error;
+}
+
+async function deleteCfg(key) {
+  await sb.from('site_cfg').delete().eq('key', key);
+}
+
+/* ---------------- telegram ---------------- */
+
+// Привязка Telegram хранится в site_cfg:
+//   tg_userid:<userId> -> JSON {u: username, c: chatId}
+//   tg_user:<username> -> userId
+//   tg_pend:<userId>   -> JSON {o: username, code, exp}
+//   tg_reset:<userId>  -> JSON {code, exp}
+
+async function getTgByUserId(userId) {
+  const raw = await getCfg(`tg_userid:${userId}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return { u: raw, c: null }; }
+}
+
+async function getUserIdByTg(username) {
+  const cfgKey = `tg_user:${String(username).toLowerCase()}`;
+  const v = await getCfg(cfgKey);
+  return v ? Number(v) : null;
+}
+
+async function checkTgTaken(username, excludeUserId) {
+  const cfgKey = `tg_user:${String(username).toLowerCase()}`;
+  const v = await getCfg(cfgKey);
+  if (!v) return false;
+  return Number(v) !== excludeUserId;
+}
+
+async function bindTg(userId, username, chatId) {
+  // Убираем прежнюю привязку этого пользователя, чтобы не осталось висячих tg_user-ключей
+  const prev = await getCfg(`tg_userid:${userId}`);
+  if (prev) {
+    try {
+      const parsed = JSON.parse(prev);
+      if (parsed.u) await sb.from('site_cfg').delete().eq('key', `tg_user:${String(parsed.u).toLowerCase()}`);
+    } catch { /* игнорируем */ }
+  }
+  await sb.from('site_cfg').upsert({ key: `tg_userid:${userId}`, value: JSON.stringify({ u: username, c: chatId || null }) }, { onConflict: 'key' });
+  await sb.from('site_cfg').upsert({ key: `tg_user:${String(username).toLowerCase()}`, value: String(userId) }, { onConflict: 'key' });
+}
+
+async function unbindTg(userId, username) {
+  if (username) await sb.from('site_cfg').delete().eq('key', `tg_user:${String(username).toLowerCase()}`);
+  await sb.from('site_cfg').delete().eq('key', `tg_userid:${userId}`);
+}
+
+async function setTgPending(userId, payload) {
+  await setCfg(`tg_pend:${userId}`, JSON.stringify(payload));
+}
+
+async function getTgPending(userId) {
+  const raw = await getCfg(`tg_pend:${userId}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+// Поиск ожидающей привязки по коду (устойчиво к перезагрузке сервера)
+async function findTgPendingByCode(code) {
+  const all = await getAllCfg();
+  for (const row of all) {
+    if (!String(row.key || '').startsWith('tg_pend:')) continue;
+    try {
+      const parsed = JSON.parse(row.value);
+      if (parsed.code && String(parsed.code).toUpperCase() === String(code).toUpperCase()) {
+        const userId = Number(String(row.key).split(':')[1]);
+        if (Number.isInteger(userId)) return { userId, ...parsed };
+      }
+    } catch { /* пропускаем битые записи */ }
+  }
+  return null;
+}
+
+async function clearTgPending(userId) {
+  await deleteCfg(`tg_pend:${userId}`);
+}
+
+async function setTgReset(userId, payload) {
+  await setCfg(`tg_reset:${userId}`, JSON.stringify(payload));
+}
+
+async function getTgReset(userId) {
+  const raw = await getCfg(`tg_reset:${userId}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+// Поиск записи сброса по uid аккаунта (для ссылки-подтверждения из Telegram-бота)
+async function getTgResetByUid(uid) {
+  const all = await getAllCfg();
+  for (const row of all) {
+    if (!String(row.key || '').startsWith('tg_reset:')) continue;
+    try {
+      const parsed = JSON.parse(row.value);
+      if (String(parsed.uid) === String(uid)) return parsed;
+    } catch { /* пропускаем битые записи */ }
+  }
+  return null;
+}
+
+// Поиск записи сброса по коду (для команды /reset в боте, устойчиво к перезагрузке)
+async function findTgResetByCode(code) {
+  const all = await getAllCfg();
+  for (const row of all) {
+    if (!String(row.key || '').startsWith('tg_reset:')) continue;
+    try {
+      const parsed = JSON.parse(row.value);
+      if (parsed.code && String(parsed.code).toUpperCase() === String(code).toUpperCase()) {
+        const userId = Number(String(row.key).split(':')[1]);
+        if (Number.isInteger(userId)) return { userId, ...parsed };
+      }
+    } catch { /* пропускаем битые записи */ }
+  }
+  return null;
+}
+
+async function clearTgReset(userId) {
+  await deleteCfg(`tg_reset:${userId}`);
+}
+
 /* ---------------- stats ---------------- */
 
 async function countUsers() {
@@ -293,6 +420,9 @@ module.exports = {
   getLastHwReset, insertHwReset,
   getPromoByCode, promoCodeExists, insertPromo, listPromos, bumpPromoUsed, deletePromo,
   insertOrder, insertTicket,
-  getAllCfg, getCfg,
+  getAllCfg, getCfg, setCfg, deleteCfg,
+  getTgByUserId, getUserIdByTg, checkTgTaken, bindTg, unbindTg,
+  setTgPending, getTgPending, findTgPendingByCode, clearTgPending,
+  setTgReset, getTgReset, getTgResetByUid, findTgResetByCode, clearTgReset,
   countUsers, countSales
 };

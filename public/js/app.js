@@ -4,6 +4,8 @@
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
   let modUsersCache = null;
+  let TG_BOT_LINK = '';
+  let TG_BOT_ENABLED = false;
 
   const state = {
     me: null,
@@ -96,6 +98,7 @@ shieldFx: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="c
   async function boot() {
     try { state.community = (await api('/api/community')).community || state.community; } catch {}
     try { const p = await api('/api/plans'); state.plans = p.plans; state.purchaseNote = p.purchaseNote; } catch {}
+    try { const b = await api('/api/tg/bot'); TG_BOT_LINK = b.bot || ''; TG_BOT_ENABLED = !!b.enabled; } catch {}
     try {
       const m = await api('/api/me');
       if (m.authed) state.me = m.user;
@@ -136,6 +139,8 @@ renderNav();
 
     if (path.startsWith('/cabinet')) { routeCabinet(path); return; }
     if (path === '/login' || path === '/register') { routeAuth(path); return; }
+    if (path === '/forgot') { routeForgot(); return; }
+    if (path.startsWith('/reset')) { routeReset(); return; }
 
     routeLanding(path);
   }
@@ -356,6 +361,7 @@ async function startPurchase(plan) {
         <div class="form-switch">${isLogin
           ? 'Нет аккаунта? <a href="#/register">Зарегистрируйтесь</a>'
           : 'Уже есть аккаунт? <a href="#/login">Войти</a>'}</div>
+        ${isLogin ? `<div class="form-switch" style="margin-top:6px"><a href="#/forgot" style="font-size:13px">Забыли пароль?</a></div>` : ''}
       </div>
     </div>`;
 
@@ -385,6 +391,149 @@ async function startPurchase(plan) {
         btn.disabled = false; btn.textContent = isLogin ? 'Войти' : 'Зарегистрироваться';
       }
     });
+  }
+
+  function routeForgot() {
+    const app = $('#app');
+    document.title = 'Восстановление пароля — HorusClient';
+    app.innerHTML = `
+    <div class="auth-wrap">
+      <div class="form-card">
+        <div class="form-title">Восстановление пароля</div>
+        <div class="form-sub">Введите логин — код придёт в привязанный Telegram.</div>
+        <form id="forgotForm">
+          <div class="field"><label>Логин</label>
+            <input name="login" autocomplete="username" placeholder="0_0_Krolik" maxlength="20" required></div>
+          <button type="submit" class="btn btn-gold btn-block btn-lg">Получить код</button>
+        </form>
+        <div id="forgotResult"></div>
+        <div class="form-switch"><a href="#/login">← Вернуться ко входу</a></div>
+      </div>
+    </div>`;
+
+    $('#forgotForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button');
+      const box = $('#forgotResult');
+      btn.disabled = true; btn.textContent = 'Подождите...';
+      try {
+        const r = await api('/api/forgot/request', {
+          method: 'POST', body: JSON.stringify({ login: e.target.login.value.trim() })
+        });
+        if (r.sent) {
+          if (box) { box.className = 'okbox'; box.textContent = r.message || 'Код отправлен.'; }
+          e.target.reset();
+          showForgotConfirm();
+        } else if (box) {
+          box.className = 'okbox';
+          box.textContent = r.message || 'Если к аккаунту привязан Telegram — код будет отправлен туда.';
+        }
+      } catch (err) {
+        if (box) { box.className = 'okbox err'; box.textContent = err.message; }
+      } finally {
+        btn.disabled = false; btn.textContent = 'Получить код';
+      }
+    });
+
+    function showForgotConfirm() {
+      const app = $('#app');
+      document.title = 'Восстановление пароля — HorusClient';
+      app.innerHTML = `
+    <div class="auth-wrap">
+      <div class="form-card">
+        <div class="form-title">Введите код</div>
+        <div class="form-sub">Код из Telegram + новый пароль.</div>
+        <form id="forgotConfirmForm">
+          <div class="field"><label>Логин</label>
+            <input name="login" autocomplete="username" placeholder="0_0_Krolik" maxlength="20" required></div>
+          <div class="field"><label>Код из Telegram</label>
+            <input name="code" placeholder="XXXXXX" maxlength="6" autocapitalize="characters" autocomplete="one-time-code" required></div>
+          <div class="field"><label>Новый пароль</label>
+            <input name="password" type="password" autocomplete="new-password" placeholder="••••••••" minlength="8" required>
+            <div class="hint">Минимум 8 символов</div></div>
+          <button type="submit" class="btn btn-gold btn-block btn-lg">Сменить пароль</button>
+        </form>
+        <div id="forgotConfirmResult"></div>
+        <div class="form-switch"><a href="#/login">← Вернуться ко входу</a></div>
+      </div>
+    </div>`;
+      $('#forgotConfirmForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button');
+        const box = $('#forgotConfirmResult');
+        btn.disabled = true; btn.textContent = 'Подождите...';
+        try {
+          const r = await api('/api/forgot/confirm', {
+            method: 'POST', body: JSON.stringify({
+              login: e.target.login.value.trim(),
+              code: e.target.code.value.trim(),
+              password: e.target.password.value
+            })
+          });
+          if (box) { box.className = 'okbox'; box.textContent = 'Пароль изменён!'; }
+          toast(r.message || 'Пароль изменён', 'success');
+          setTimeout(() => { location.hash = '#/login'; }, 1200);
+        } catch (err) {
+          if (box) { box.className = 'okbox err'; box.textContent = err.message; }
+          btn.disabled = false; btn.textContent = 'Сменить пароль';
+        }
+      });
+    }
+  }
+
+  function routeReset() {
+    const app = $('#app');
+    document.title = 'Установка пароля — HorusClient';
+    const params = new URLSearchParams(location.hash.split('?')[1] || '');
+    const u = params.get('u') || '';
+    const c = params.get('c') || '';
+    app.innerHTML = `
+    <div class="auth-wrap">
+      <div class="form-card">
+        <div class="form-title">Установка пароля</div>
+        <div class="form-sub" id="resetSub">Проверяем ссылку...</div>
+        <div id="resetBody"><div class="empty" style="padding:18px 0">Загрузка...</div></div>
+        <div class="form-switch"><a href="#/login">← Вернуться ко входу</a></div>
+      </div>
+    </div>`;
+    (async () => {
+      const sub = $('#resetSub');
+      const body = $('#resetBody');
+      try {
+        const r = await api('/api/forgot/status?u=' + encodeURIComponent(u) + '&c=' + encodeURIComponent(c));
+        if (!r.valid) throw new Error('Код не подтверждён в Telegram. Откройте ссылку из сообщения бота.');
+        if (sub) sub.textContent = 'Введите новый пароль для аккаунта <b>' + esc(r.login) + '</b>.';
+        body.innerHTML = `
+          <form id="resetForm">
+            <div class="field"><label>Новый пароль</label>
+              <input name="password" type="password" autocomplete="new-password" placeholder="••••••••" minlength="8" required>
+              <div class="hint">Минимум 8 символов</div></div>
+            <button type="submit" class="btn btn-gold btn-block btn-lg">Сменить пароль</button>
+          </form>
+          <div id="resetResult"></div>`;
+        $('#resetForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const btn = e.target.querySelector('button');
+          const box = $('#resetResult');
+          btn.disabled = true; btn.textContent = 'Подождите...';
+          try {
+            await api('/api/forgot/confirm', {
+              method: 'POST', body: JSON.stringify({
+                login: r.login, code: c, password: e.target.password.value
+              })
+            });
+            toast('Пароль изменён. Войдите с новым паролем.', 'success');
+            setTimeout(() => { location.hash = '#/login'; }, 1200);
+          } catch (err) {
+            if (box) { box.className = 'okbox err'; box.textContent = err.message; }
+            btn.disabled = false; btn.textContent = 'Сменить пароль';
+          }
+        });
+      } catch (err) {
+        if (sub) sub.textContent = 'Ошибка';
+        body.innerHTML = `<div class="empty" style="padding:18px 0">${esc(err.message)}</div>`;
+      }
+    })();
   }
 
 /* ================= CABINET ================= */
@@ -694,6 +843,9 @@ function viewRedeem() {
   }
 
   function viewSecurity() {
+    const u = state.me;
+    const tg = u.tg;
+    const tgBound = u.tgBound;
     return `
     <div class="page-card" style="max-width:620px">
       <div class="page-head"><div>
@@ -708,6 +860,34 @@ function viewRedeem() {
         <div class="field"><label>Новый пароль</label><input name="next" type="password" minlength="8" required></div>
         <button type="submit" class="btn btn-dark">Сменить пароль</button>
       </form>
+    </div>
+
+    <div class="page-card" style="max-width:620px">
+      <div class="page-head"><div><div class="page-title" style="font-size:17px">Telegram</div>
+      <div class="page-sub">Восстановление пароля через Telegram</div></div></div>
+      <div class="panel-row">
+        <div class="panel-ic ${tg ? 'g' : ''}">${icon.telegram}</div>
+        <div class="panel-rg">
+          <div class="pt">${tg ? esc('@' + tg) : 'Telegram не привязан'}</div>
+          <div class="ps">${tg
+            ? (tgBound ? 'Привязан. Если забудете пароль — сможете восстановить через Telegram.' : 'Ожидает подтверждения в Telegram. Отправьте код боту.')
+            : 'Начните чат с ботом, затем введите @username и получите код.'}</div>
+        </div>
+        <div class="panel-cta">
+          ${tg
+            ? `<button class="btn btn-danger btn-sm" id="tgUnbindBtn">Отвязать</button>`
+            : ''}
+        </div>
+      </div>
+      ${tg ? '' : `
+      <div class="field" style="margin-top:10px;max-width:340px">
+        <label>Ваш Telegram username</label>
+        <input name="tg" id="tgInput" placeholder="@username" maxlength="32" autocomplete="off">
+        <div class="hint">2. Напишите боту @${esc(TG_BOT_LINK || '...')} любое сообщение (команду /start), затем нажмите «Получить код».</div>
+      </div>
+      <button class="btn btn-gold" id="tgBindBtn" ${TG_BOT_ENABLED ? '' : 'disabled'}>Получить код</button>
+      ${TG_BOT_ENABLED ? '' : '<div class="warn" style="margin-top:12px">Telegram-бот временно недоступен. Попробуйте позже.</div>'}
+      <div id="tgResult"></div>`}
     </div>
 
     <div class="page-card" style="max-width:620px">
@@ -845,6 +1025,36 @@ if (section === 'redeem' && $('#promoForm')) {
         state.me = null; renderNav(); location.hash = '#/';
         toast('Все сессии завершены');
       });
+      const bindBtn = $('#tgBindBtn');
+      if (bindBtn) bindBtn.addEventListener('click', async () => {
+        const input = $('#tgInput');
+        const box = $('#tgResult');
+        if (!input || !input.value.trim()) { toast('Введите @username', 'error'); return; }
+        bindBtn.disabled = true;
+        try {
+          const r = await api('/api/tg/bind', { method: 'POST', body: JSON.stringify({ tg: input.value.trim() }) });
+          const bot = r.bot || TG_BOT_LINK || '';
+          if (box) {
+            box.className = 'okbox';
+            box.innerHTML = 'Код: <b>' + esc(r.code) + '</b>' + (bot ? '. Отправьте его боту @' + esc(bot) : '') + ', затем вернитесь сюда — страница обновится автоматически.';
+          }
+          toast('Отправьте код боту в Telegram', 'success');
+          pollTgBind();
+        } catch (err) { toast(err.message, 'error'); }
+        bindBtn.disabled = false;
+      });
+      const unbindBtn = $('#tgUnbindBtn');
+      if (unbindBtn) unbindBtn.addEventListener('click', async () => {
+        const ok = await askFreeze({ title: 'Отвязать Telegram', text: 'Убрать привязку Telegram от вашего аккаунта? Вы не сможете восстанавливать пароль через Telegram.', confirm: 'Отвязать', danger: true });
+        if (!ok) return;
+        unbindBtn.disabled = true;
+        try {
+          const r = await api('/api/tg/unbind', { method: 'POST' });
+          state.me = r.user;
+          toast('Telegram отвязан', 'success');
+          renderCabContent('security', ap);
+        } catch (err) { toast(err.message, 'error'); unbindBtn.disabled = false; }
+      });
     }
     if (['support', 'idea', 'bug'].includes(section) && $('#supportForm')) {
       $('#supportForm').addEventListener('submit', async (e) => {
@@ -867,6 +1077,31 @@ if (section === 'redeem' && $('#promoForm')) {
         btn.disabled = false;
       });
     }
+  }
+
+  let tgPollTimer = null;
+  function pollTgBind() {
+    if (tgPollTimer) return;
+    let attempts = 0;
+    tgPollTimer = setInterval(async () => {
+      attempts += 1;
+      try {
+        const m = await api('/api/me');
+        if (m.authed && m.user.tgBound) {
+          state.me = m.user;
+          clearInterval(tgPollTimer);
+          tgPollTimer = null;
+          const el = $('#app');
+          if (el) renderCabContent('security', el);
+          toast('Telegram привязан!', 'success');
+          return;
+        }
+      } catch {}
+      if (attempts >= 20) {
+        clearInterval(tgPollTimer);
+        tgPollTimer = null;
+      }
+    }, 3000);
   }
 
   async function loadPromoList() {

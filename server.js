@@ -3,6 +3,7 @@ const crypto = require('node:crypto');
 const path = require('node:path');
 const D = require('./db');
 const { now } = D;
+const TGBot = require('./tg');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -39,6 +40,11 @@ async function verifyPassword(pw, stored) {
 
 const randomToken = (n = 32) => crypto.randomBytes(n).toString('hex');
 const randomUid = () => String(crypto.randomInt(100, 100000));
+
+function genTgCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({ length: 6 }, () => chars[crypto.randomInt(chars.length)]).join('');
+}
 
 async function makeUidUnique() {
   for (let i = 0; i < 200; i++) {
@@ -162,6 +168,7 @@ async function publicUser(u) {
   const planKey = active ? active.plan : null;
   const plan = PLANS.find(p => p.key === planKey) || null;
   const lastReset = await D.getLastHwReset(u.id);
+  const tgInfo = await D.getTgByUserId(u.id);
   return {
     id: u.id,
     login: u.login,
@@ -169,6 +176,8 @@ async function publicUser(u) {
     email: u.email,
     hwid: u.hwid || null,
     hwidBound: !!u.hwid,
+    tg: tgInfo ? tgInfo.u : null,
+    tgBound: tgInfo ? !!tgInfo.c : false,
     createdAt: u.created_at,
     lastHwidReset: lastReset ? lastReset.reset_at : null,
     canResetHwid: planKey === 'alpha' && active != null && active.status === 'active',
@@ -252,6 +261,130 @@ app.post('/api/change-password', requireAuth, ah(async (req, res) => {
   await D.deleteSessionsForUser(req.user.id);
   res.clearCookie('hs_session', { path: '/' });
   send(res, 200, { ok: true, message: 'Пароль изменён. Войдите заново.' });
+}));
+
+/* ============ TELEGRAM bind ============ */
+
+const TG_USERNAME_RE = /^@?[A-Za-z_][A-Za-z0-9_]{2,30}$/;
+const TG_CODE_TTL = 10 * 60 * 1000;
+
+// Ссылка/имя бота для подсказок в интерфейсе
+app.get('/api/tg/bot', (req, res) => {
+  send(res, 200, { ok: true, bot: TGBot.botUsername || null, enabled: TGBot.isEnabled() });
+});
+
+// Шаг 1: пользователь запрашивает привязку TG — генерируем код и ждём подтверждения через бота
+app.post('/api/tg/bind', requireAuth, ah(async (req, res) => {
+  if (!TGBot.isEnabled()) return fail(res, 'Telegram-бот не настроен на сервере', 503);
+  const raw = String(req.body?.tg || '').trim().replace(/^@/, '');
+  if (!TG_USERNAME_RE.test(raw)) return fail(res, 'Некорректный Telegram username (без @, 3-32 символа)');
+
+  const existing = await D.getTgByUserId(req.user.id);
+  if (existing) {
+    if (existing.u.toLowerCase() === raw.toLowerCase()) return fail(res, 'Этот Telegram уже привязан к вашему аккаунту');
+  }
+  if (await D.checkTgTaken(raw, req.user.id)) return fail(res, 'Этот Telegram уже привязан к другому аккаунту');
+
+  const code = genTgCode();
+  await D.setTgPending(req.user.id, {
+    username: raw, login: req.user.login, code, exp: Date.now() + TG_CODE_TTL
+  });
+  TGBot.registerBindCode(code, req.user.id, TG_CODE_TTL);
+
+  send(res, 200, {
+    ok: true,
+    code,
+    bot: TGBot.botUsername || '',
+    message: TGBot.botUsername
+      ? 'Отправьте боту @' + TGBot.botUsername + ' код <b>' + code + '</b>. Код действителен 10 минут.'
+      : 'Отправьте боту код <b>' + code + '</b>. Код действителен 10 минут.'
+  });
+}));
+
+// Шаг 2: проверка — бот подтвердил привязку? Обновляем state.me
+app.post('/api/tg/unbind', requireAuth, ah(async (req, res) => {
+  const info = await D.getTgByUserId(req.user.id);
+  const username = info ? info.u : null;
+  await D.unbindTg(req.user.id, username);
+  await D.clearTgPending(req.user.id);
+  const user = await D.getUserById(req.user.id);
+  send(res, 200, { ok: true, user: await publicUser(user) });
+}));
+
+/* ============ FORGOT PASSWORD via TG ============ */
+
+// Шаг 1: пользователь вводит логин — генерируем код и отправляем в привязанный Telegram (если есть)
+app.post('/api/forgot/request', ah(async (req, res) => {
+  const login = String(req.body?.login || '').trim();
+  if (!rateLimit('forgot:' + req.ip, 5, 10 * 60 * 1000)) return fail(res, 'Слишком много попыток. Подождите.', 429);
+  if (!login) return fail(res, 'Введите логин');
+
+  const user = await D.getUserByLogin(login);
+  const tgInfo = user ? await D.getTgByUserId(user.id) : null;
+  // Всегда отвечаем одинаково — не раскрываем существование аккаунта
+  if (!user || !tgInfo || !tgInfo.c || !TGBot.isEnabled()) {
+    return send(res, 200, {
+      ok: true,
+      sent: false,
+      message: 'Если аккаунт с таким логином существует и к нему привязан Telegram — код отправлен туда.'
+    });
+  }
+
+  const code = genTgCode();
+  await D.setTgReset(user.id, {
+    code, uid: user.uid, login: user.login, exp: Date.now() + TG_CODE_TTL, confirmed: false
+  });
+  TGBot.registerResetCode(code, user.id, TG_CODE_TTL);
+
+  const sent = await TGBot.sendTgCode(tgInfo.c,
+    'Восстановление пароля HorusClient.\n\nВаш код: <b>' + code + '</b>\nВведите его на сайте вместе с новым паролем. Код действителен 10 минут.');
+  if (!sent) {
+    await D.clearTgReset(user.id);
+  }
+
+  send(res, 200, {
+    ok: true,
+    sent,
+    message: sent
+      ? 'Код отправлен в ваш Telegram.'
+      : 'Если аккаунт с таким логином существует и к нему привязан Telegram — код отправлен туда.'
+  });
+}));
+
+// Шаг 2: код из TG + новый пароль
+app.post('/api/forgot/confirm', ah(async (req, res) => {
+  const { login, code, password } = req.body || {};
+  if (!rateLimit('forgotc:' + req.ip)) return fail(res, 'Слишком много попыток. Подождите.', 429);
+  const cl = String(login || '').trim().toLowerCase();
+  const cc = String(code || '').trim().toUpperCase();
+  if (!cl || !cc) return fail(res, 'Введите логин и код из Telegram');
+  if (!password || password.length < 8) return fail(res, 'Новый пароль должен быть длиннее 8 символов');
+
+  const user = await D.getUserByLogin(cl);
+  if (!user) return fail(res, 'Неверный код или аккаунт не найден', 400);
+  const rec = await D.getTgReset(user.id);
+  if (!rec || rec.code.toUpperCase() !== cc) return fail(res, 'Неверный код');
+  if (rec.exp < Date.now()) {
+    await D.clearTgReset(user.id);
+    return fail(res, 'Код истёк. Запросите новый.');
+  }
+
+  await D.updateUserPass(user.id, await hashPassword(password));
+  await D.clearTgReset(user.id);
+  await D.deleteSessionsForUser(user.id);
+  res.clearCookie('hs_session', { path: '/' });
+  send(res, 200, { ok: true, message: 'Пароль изменён. Войдите с новым паролем.' });
+}));
+
+// Проверка: пользователь подтвердил сброс через бота (/reset) — открываем форму установки пароля
+app.get('/api/forgot/status', ah(async (req, res) => {
+  const uid = String(req.query?.u || '');
+  const code = String(req.query?.c || '').trim().toUpperCase();
+  if (!uid || !code) return fail(res, 'Некорректная ссылка', 400);
+  const rec = await D.getTgResetByUid(uid);
+  if (!rec || rec.code.toUpperCase() !== code || !rec.confirmed) return send(res, 200, { ok: true, valid: false });
+  if (rec.exp < Date.now()) return send(res, 200, { ok: true, valid: false });
+  send(res, 200, { ok: true, valid: true, login: rec.login, code });
 }));
 
 /* ============ HWID ============ */
@@ -531,6 +664,7 @@ app.get(/^\/(?!api\/).*/, (req, res) => {
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`[HorusWebsite] запущен: http://${HOST}:${PORT}`);
+    TGBot.start();
   });
 }
 
