@@ -992,9 +992,10 @@ if (section === 'redeem' && $('#promoForm')) {
         const userId = btn.dataset.modFreeze;
         const op = btn.dataset.op;
         const login = btn.dataset.login;
-        if (!confirm(op === 'freeze'
-          ? 'Заморозить подписку ' + login + '? Он не сможет запустить игру.'
-          : 'Разморозить подписку ' + login + '?')) return;
+        const ok = await askFreeze(op === 'freeze'
+          ? { title: 'Заморозить подписку', text: 'Пользователь <b>' + login + '</b> не сможет запустить клиент, пока вы не разморозите его подписку.', confirm: 'Заморозить', danger: true }
+          : { title: 'Разморозить подписку', text: 'Вернуть доступ к клиенту пользователю <b>' + login + '</b>?', confirm: 'Разморозить', danger: false });
+        if (!ok) return;
         btn.disabled = true;
         try {
           const res = await api('/api/admin/freeze', { method: 'POST', body: JSON.stringify({ userId: Number(userId), action: op }) });
@@ -1003,6 +1004,30 @@ if (section === 'redeem' && $('#promoForm')) {
         } catch (err) { toast(err.message, 'error'); btn.disabled = false; }
       }));
     } catch (err) { el.innerHTML = '<div class="empty">Ошибка загрузки</div>'; }
+  }
+
+  function askFreeze({ title, text, confirm, danger }) {
+    return new Promise(resolve => {
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.innerHTML = `
+        <div class="modal-card ${danger ? 'modal-danger' : ''}" role="dialog">
+          <div class="modal-ic">${danger ? icon.lock : icon.check}</div>
+          <div class="modal-title">${esc(title)}</div>
+          <div class="modal-text">${text}</div>
+          <div class="modal-btns">
+            <button class="btn btn-dark" data-modal-cancel>Отмена</button>
+            <button class="btn ${danger ? 'btn-danger' : 'btn-gold'}" data-modal-ok>${esc(confirm)}</button>
+          </div>
+        </div>`;
+      const close = (val) => { overlay.classList.add('hide'); setTimeout(() => overlay.remove(), 200); resolve(val); };
+      overlay.querySelector('[data-modal-cancel]').addEventListener('click', () => close(false));
+      overlay.querySelector('[data-modal-ok]').addEventListener('click', () => close(true));
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) close(false); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(false); }, { once: true });
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => overlay.classList.add('show'));
+    });
   }
 
   boot();
