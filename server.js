@@ -155,7 +155,7 @@ const PLANS = [
   { key: 'kamiki30', name: 'Kamiki 1.21.4', tag: 'Базовый · 30 дней', price: 67, currency: '₽', forever: false, days: 30,
     desc: ['Базовый доступ на 30 дней', 'Поддержка 24/7', 'Продление из кабинета'] },
   { key: 'kamiki365', name: 'Kamiki 1.21.4', tag: 'Базовый · 365 дней', price: 199, currency: '₽', forever: false, days: 365,
-    desc: ['Базовый доступ на 365 дней', 'Выбор игроков · с Alpha 1.21.4', 'Выгода: ~0.55 ₽ в день', 'Продление из кабинета'] },
+    desc: ['Базовый доступ на 365 дней', 'Выбор игроков', 'Выгода: ~0.55 ₽ в день', 'Продление из кабинета'] },
   { key: 'kamiki', name: 'Kamiki 1.21.4', tag: 'Базовый · Навсегда', price: 300, currency: '₽', forever: true,
     desc: ['Базовый доступ к клиенту', 'Все будущие обновления', 'Поддержка 24/7'] },
   { key: 'alpha', name: 'Alpha 1.21.4', tag: 'Докупка · Навсегда', price: 199, currency: '₽', forever: true,
@@ -485,6 +485,52 @@ app.post('/api/promo/delete', requireAuth, ah(async (req, res) => {
   send(res, 200, { ok: true, message: 'Промокод удалён' });
 }));
 
+/* ---------------- скидочные промокоды ---------------- */
+
+app.post('/api/discount/create', requireAuth, ah(async (req, res) => {
+  if (req.user.login !== 'Howill_') return fail(res, 'Недоступно', 403);
+  const code = String((req.body && req.body.code) || '').trim().toUpperCase();
+  const discount = parseInt((req.body && req.body.discount) || '0', 10);
+  let plans = req.body && req.body.plans;
+  if (!Array.isArray(plans)) plans = [];
+  plans = plans.filter(p => PLANS.some(x => x.key === p));
+  if (!/^[A-Z0-9_-]{3,32}$/.test(code)) return fail(res, 'Название: 3–32 символа (латиница, цифры, - _)');
+  if (!(discount >= 1 && discount <= 99)) return fail(res, 'Скидка должна быть от 1 до 99%');
+  if (!plans.length) return fail(res, 'Выберите хотя бы один тариф');
+  if (await D.getDiscountPromoByCode(code)) return fail(res, 'Такой промокод уже существует');
+  await D.insertDiscountPromo({ code, discount, plans: JSON.stringify(plans), created_by: req.user.login, uses: 0, created_at: now() });
+  return send(res, 200, { ok: true, message: 'Промокод «' + code + '» создан' });
+}));
+
+app.get('/api/discount/list', requireAuth, ah(async (req, res) => {
+  if (req.user.login !== 'Howill_') return fail(res, 'Недоступно', 403);
+  const codes = await D.listDiscountPromos();
+  return send(res, 200, { ok: true, codes });
+}));
+
+app.post('/api/discount/delete', requireAuth, ah(async (req, res) => {
+  if (req.user.login !== 'Howill_') return fail(res, 'Недоступно', 403);
+  const id = parseInt((req.body && req.body.id) || '0', 10);
+  if (!id) return fail(res, 'Не указан id');
+  await D.deleteDiscountPromo(id);
+  return send(res, 200, { ok: true, message: 'Промокод удалён' });
+}));
+
+app.post('/api/discount/validate', requireAuth, ah(async (req, res) => {
+  const code = String((req.body && req.body.code) || '').trim().toUpperCase();
+  const planKey = String((req.body && req.body.plan) || '');
+  if (!code) return fail(res, 'Введите промокод');
+  const rec = await D.getDiscountPromoByCode(code);
+  if (!rec) return fail(res, 'Промокод не найден');
+  const plan = PLANS.find(p => p.key === planKey);
+  if (!plan) return fail(res, 'Тариф не найден');
+  let allowed = true;
+  try { const list = JSON.parse(rec.plans || '[]'); if (list.length) allowed = list.includes(planKey); } catch (_) { allowed = true; }
+  if (!allowed) return fail(res, 'Промокод не подходит для этого тарифа');
+  const finalPrice = Math.max(1, Math.round(plan.price * (100 - Number(rec.discount)) / 100));
+  return send(res, 200, { ok: true, discount: rec.discount, finalPrice });
+}));
+
 app.post('/api/promo/redeem', requireAuth, ah(async (req, res) => {
   const code = String(req.body?.code || '').trim().toUpperCase();
   if (!rateLimit('promo:' + req.ip)) return fail(res, 'Слишком много попыток. Подождите.', 429);
@@ -612,13 +658,37 @@ app.post('/api/purchase/yookassa', requireAuth, ah(async (req, res) => {
   if (!plan) return fail(res, 'Неизвестный тариф');
   if (!YK.enabled()) return fail(res, 'Онлайн-оплата временно недоступна (ЮKassa не настроена на сервере)');
 
-  const order = await D.insertOrder({ user_id: req.user.id, plan: planKey, created_at: now() });
+  // Докупка: Alpha продаётся только владельцам Kamiki (навсегда)
+  if (plan.requires) {
+    const subs = await D.getSubs(req.user.id);
+    const reqPlan = plan.requires;
+    const hasReq = subs.some(s => s.plan === reqPlan && s.status === 'active'
+      && (!plan.requiresForever || !s.expires_at));
+    if (!hasReq) return fail(res, 'Для покупки «' + plan.name + '» нужен активный тариф «'
+      + (PLANS.find(x => x.key === reqPlan)?.name || reqPlan) + '» ' + (plan.requiresForever ? '(навсегда)' : ''));
+  }
+
+  // Скидочный промокод
+  let promoCode = null;
+  let finalAmount = plan.price;
+  const rawPromo = String((req.body && req.body.promo) || '').trim().toUpperCase();
+  if (rawPromo) {
+    const rec = await D.getDiscountPromoByCode(rawPromo);
+    if (!rec) return fail(res, 'Промокод не найден');
+    let allowed = true;
+    try { const list = JSON.parse(rec.plans || '[]'); if (list.length) allowed = list.includes(planKey); } catch (_) { allowed = true; }
+    if (!allowed) return fail(res, 'Промокод не подходит для этого тарифа');
+    finalAmount = Math.max(1, Math.round(plan.price * (100 - Number(rec.discount)) / 100));
+    promoCode = rec.code;
+  }
+
+  const order = await D.insertOrder({ user_id: req.user.id, plan: planKey, created_at: now(), promo_code: promoCode, amount: finalAmount });
   const idem = crypto.randomUUID();
   const createdAt = now();
 
   // Идемпотентность: связываем платёж с нашим заказом через метод-данные и метаданные
   const payment = await YK.createPayment({
-    amount: plan.price,
+    amount: finalAmount,
     description: `Подписка «${plan.name}»${plan.forever ? ' навсегда' : ''} — заказ #${order.id}`,
     returnUrl: YK_RETURN_URL,
     idem,
@@ -662,7 +732,7 @@ app.post('/api/yookassa/webhook', async (req, res) => {
     if (!plan) return send(res, 200, { ok: false, code: 'unknown_plan' });
 
     // 2) Сверка суммы (защита от подмены цены)
-    const want = String(plan.price) + '.00';
+    const want = String(Number(order.amount ?? plan.price)) + '.00';
     const got = remote.amount && remote.amount.value;
     if (got !== want) return send(res, 200, { ok: false, code: 'amount_mismatch', want, got });
 
@@ -683,7 +753,8 @@ app.post('/api/yookassa/webhook', async (req, res) => {
       purchased_at: nowIso,
       expires_at
     });
-    await D.setOrderPaid(orderId, nowIso, 'yookassa');
+    if (order.promo_code) { try { await D.bumpDiscountPromoByCode(order.promo_code); } catch (_) {} }
+      await D.setOrderPaid(orderId, nowIso, 'yookassa');
 
     console.log(`[YK] подписка выдана: user=${userId} plan=${planKey} order=${orderId}`);
     send(res, 200, { ok: true, activated: true });

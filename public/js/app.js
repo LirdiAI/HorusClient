@@ -348,65 +348,76 @@ function bindLanding(app) {
 
   /* ---------- окно покупки ---------- */
   const PAY_METHODS = [
-    { id: 'card',     img: 'img/mir.png', name: 'Банковская карта', sub: 'МИР · Visa · Mastercard', kind: 'yookassa', cta: 'Перейти к оплате' },
-    { id: 'sbp',      img: 'img/sbp.jpg', name: 'СБП',      sub: 'QR-код в приложении банка',   kind: 'yookassa', cta: 'Перейти к оплате' },
-    { id: 'tpay',     img: 'img/tpay.png', name: 'T-Pay',    sub: 'Через приложение Т-Банка',    kind: 'yookassa', cta: 'Перейти к оплате' },
-    { id: 'funpay',   img: 'img/funpay.jpg', name: 'FunPay', sub: 'Покупка на площадке FunPay',  kind: 'external', url: 'https://funpay.com/lots/offer?id=77228605', cta: 'Открыть FunPay' },
-    { id: 'telegram', img: 'img/telegram.png', name: 'Telegram-бот', sub: 'Оплата через @Horusclientbot', kind: 'external', url: 'https://t.me/Horusclientbot', cta: 'Написать боту' },
+    { id: 'sbp',    img: 'img/sbp.jpg',    name: 'СБП',    kind: 'yookassa' },
+    { id: 'funpay', img: 'img/funpay.jpg', name: 'FunPay', kind: 'external', url: 'https://funpay.com/lots/offer?id=77228605' },
   ];
 
   async function startPurchase(planKey) {
     const plan = (state.plans || []).find(p => p.key === planKey)
       || { key: planKey, name: planKey, tag: 'Доступ HorusClient', price: null, currency: '₽' };
-    const duration = plan.forever ? 'Навсегда' : (plan.days ? plan.days + ' дней' : '30 дней');
+    const duration = plan.forever ? 'Навсегда' : (plan.days ? plan.days + ' дней' : 'Разовая услуга');
+    const shortDur = plan.key === 'alpha' ? 'Докупка'
+      : plan.forever ? 'Навсегда'
+      : (plan.days ? plan.days + ' дн' : 'Разовая услуга');
     const priceTxt = plan.price != null ? (plan.price + ' ' + (plan.currency || '₽')) : '';
     const reqPlan = plan.requires ? (state.plans || []).find(r => r.key === plan.requires) : null;
     const reqTxt = reqPlan ? (reqPlan.name + (reqPlan.forever ? ' Навсегда' : '')) : 'Kamiki 1.21.4 Навсегда';
 
-    let selected = 'card';
+    let selected = 'sbp';
+    let promo = null;
     const overlay = document.createElement('div');
     overlay.className = 'buy-overlay';
     overlay.innerHTML = `
       <div class="buy-modal" role="dialog" aria-modal="true">
         <button class="buy-close" data-close aria-label="Закрыть">✕</button>
-        <div class="buy-head">
-          <div class="buy-tag">${esc(plan.tag || 'Доступ HorusClient')}</div>
-          <div class="buy-name">${esc(plan.name)}</div>
-          <div class="buy-price-row">
-            ${priceTxt ? `<span class="buy-price">${esc(priceTxt)}</span>` : ''}
-            <span class="buy-duration">${esc(duration)}</span>
-          </div>
-        </div>
+        <div class="buy-co-head">Оформление</div>
         ${plan.requires ? `<div class="buy-warn">⚠️ Этот товар докупается к подписке ${esc(reqTxt)} (Без нее не покупайте)</div>` : ''}
-        <div class="buy-label">Способ оплаты</div>
-        <div class="buy-methods">
+        <div class="buy-order-row">
+          ${plan.pack ? '' : '<span class="buy-order-ic"><img src="img/order_icon.png" alt=""></span>'}
+          <span class="buy-order-info">
+            <span class="buy-order-name">${plan.pack ? esc(plan.name) : esc(plan.name + ' ' + shortDur)}</span>
+          </span>
+          <span class="buy-order-price" data-price>${esc(priceTxt)}</span>
+        </div>
+        <div class="buy-divider"></div>
+        <div class="buy-sec-label"><img class="buy-sec-img" src="img/pay_icon.png" alt=""> Способ оплаты</div>
+        <div class="buy-chips">
           ${PAY_METHODS.map(m => `
-            <button type="button" class="buy-method" data-method="${m.id}">
-              <span class="buy-method-icon">${m.img ? '<img src="' + m.img + '" alt="' + m.name + '">' : m.icon}</span>
-              <span class="buy-method-info">
-                <span class="buy-method-name">${m.name}</span>
-                <span class="buy-method-sub">${m.sub}</span>
-              </span>
-              <span class="buy-method-check"></span>
+            <button type="button" class="buy-chip" data-method="${m.id}">
+              ${m.img ? `<img src="${m.img}" alt="${m.name}">` : `<span class="buy-chip-ic">${m.icon}</span>`}
+              <span>${m.name}</span>
             </button>`).join('')}
         </div>
-        <div class="buy-perks">
-          <span class="buy-perk">⚡ Доступ сразу после оплаты</span>
-          <span class="buy-perk">🔑 Лицензия привяжется к аккаунту</span>
-          <span class="buy-perk">🛠 Поддержка 24/7</span>
+        <div class="buy-ext-note" data-ext-note style="display:none"></div>
+        <div data-promo-box>
+        <div class="buy-sec-label"><img class="buy-sec-img" src="img/promo_icon.png" alt=""> Промокод</div>
+        <div class="buy-promo-row">
+          <input type="text" data-promo-input placeholder="Введите промокод" autocomplete="off">
+          <button type="button" class="buy-promo-apply" data-promo-apply>✓ Применить</button>
         </div>
-        <div class="buy-actions">
-          <button type="button" class="btn btn-ghost" data-close>Отмена</button>
-          <button type="button" class="btn btn-gold buy-go" data-go>Перейти к оплате</button>
         </div>
+        <button type="button" class="buy-pay" data-go>Оплатить</button>
       </div>`;
 
     const goBtn = overlay.querySelector('[data-go]');
+    const extNote = overlay.querySelector('[data-ext-note]');
+    const promoBox = overlay.querySelector('[data-promo-box]');
     const syncGo = () => {
       const m = PAY_METHODS.find(x => x.id === selected);
-      goBtn.textContent = (priceTxt && m.kind === 'yookassa') ? m.cta + ' · ' + priceTxt : m.cta;
-      overlay.querySelectorAll('.buy-method').forEach(b =>
+      const eff = promo ? (promo.finalPrice + ' ' + (plan.currency || '₽')) : priceTxt;
+      if (m.kind === 'external') {
+        goBtn.innerHTML = 'Перейти на ' + esc(m.name) + ' ↗';
+        if (extNote) {
+          extNote.style.display = 'block';
+          extNote.textContent = 'Вы будете перенаправлены на ' + m.name + ' для безопасной оплаты.';
+        }
+      } else {
+        goBtn.innerHTML = '&#128179; ' + esc(!eff ? 'Оплатить' : (m.id === 'sbp' ? 'Оплатить через СБП · ' + eff : 'Оплатить · ' + eff));
+        if (extNote) extNote.style.display = 'none';
+      }
+      overlay.querySelectorAll('.buy-chip').forEach(b =>
         b.classList.toggle('selected', b.dataset.method === selected));
+      if (promoBox) promoBox.style.display = (m.kind === 'external') ? 'none' : 'block';
     };
 
     const prevOverflow = document.body.style.overflow;
@@ -421,10 +432,36 @@ function bindLanding(app) {
       setTimeout(() => overlay.remove(), 220);
     };
 
+    const applyPromo = async () => {
+      const input = overlay.querySelector('[data-promo-input]');
+      const btn = overlay.querySelector('[data-promo-apply]');
+      const code = ((input && input.value) || '').trim().toUpperCase();
+      if (!code) return toast('Введите промокод');
+      btn.disabled = true; btn.textContent = 'Проверка…';
+      try {
+        const r = await api('/api/discount/validate', { method: 'POST', body: JSON.stringify({ code, plan: plan.key }) });
+        if (r && r.ok) {
+          promo = { code, discount: r.discount, finalPrice: r.finalPrice };
+          const priceEl = overlay.querySelector('[data-price]');
+          if (priceEl) priceEl.innerHTML = priceTxt
+            ? '<s>' + esc(priceTxt) + '</s>' + esc(r.finalPrice + ' ' + (plan.currency || '₽'))
+            : esc(r.finalPrice + ' ' + (plan.currency || '₽'));
+          toast('Промокод применён: скидка ' + r.discount + '%', 'success');
+          syncGo();
+        } else {
+          toast((r && (r.message || r.error)) || 'Промокод не подходит');
+        }
+      } catch (err) {
+        toast((err && err.message) || 'Не удалось применить промокод');
+      }
+      btn.disabled = false; btn.textContent = '✓ Применить';
+    };
+
     overlay.addEventListener('click', async (e) => {
       if (e.target.closest('[data-close]') || e.target === overlay) return close();
       const mBtn = e.target.closest('[data-method]');
       if (mBtn) { selected = mBtn.dataset.method; return syncGo(); }
+      if (e.target.closest('[data-promo-apply]')) return applyPromo();
       if (!e.target.closest('[data-go]')) return;
 
       const m = PAY_METHODS.find(x => x.id === selected);
@@ -437,15 +474,15 @@ function bindLanding(app) {
       try {
         const r = await api('/api/purchase/yookassa', {
           method: 'POST',
-          body: { plan: plan.key, methodType: 'redirect' },
+          body: JSON.stringify({ plan: plan.key, methodType: 'redirect', promo: promo ? promo.code : undefined }),
         });
         if (r && r.ok && r.confirmationUrl) {
           window.location.href = r.confirmationUrl;
           return;
         }
-        toast((r && r.message) || 'Ссылка на оплату не получена');
+        toast((r && (r.message || r.error)) || 'Ссылка на оплату не получена');
       } catch (err) {
-        toast('Ошибка подключения к оплате');
+        toast((err && err.message) || 'Ошибка подключения к оплате');
       }
       goBtn.disabled = false;
       syncGo();
@@ -706,11 +743,11 @@ function bindLanding(app) {
     subs: { icon: 'crown', title: 'Подписки' },
     device: { icon: 'monitor', title: 'Привязка устройства' },
     buy: { icon: 'cart', title: 'Купить доступ' },
-    redeem: { icon: 'key', title: 'Ввести промокод' },
     invoice: { icon: 'receipt', title: 'Счёт на оплату (ИП)' },
     invoice: { icon: 'receipt', title: 'Счёт на оплату (ИП)' },
     security: { icon: 'shield', title: 'Безопасность' },
     promo: { icon: 'spark', title: 'Раздача' },
+    discounts: { icon: 'zap', title: 'Создание скидок' },
     mod: { icon: 'shield', title: 'Модификация' },
     support: { icon: 'support', title: 'Поддержка' },
     idea: { icon: 'idea', title: 'Предложить идею' },
@@ -758,7 +795,7 @@ ${sbGroup('Мой кабинет', [
           ['redeem', 'key', 'Ввести промокод'],
           ['invoice', 'receipt', 'Счёт на оплату (ИП)'],
           ['security', 'shield', 'Безопасность'],
-          ...(isOwner() ? [['mod', 'shield', 'Модификация'], ['promo', 'spark', 'Раздача']] : [])
+          ...(isOwner() ? [['mod', 'shield', 'Модификация'], ['promo', 'spark', 'Раздача'], ['discounts', 'zap', 'Создание скидок']] : [])
         ])}
         ${sbGroup('Помощь', [
           ['support', 'support', 'Поддержка'],
@@ -801,9 +838,10 @@ if (section === 'profile') main.innerHTML = viewProfile();
     else if (section === 'subs') main.innerHTML = viewSubs();
     else if (section === 'device') main.innerHTML = viewDevice();
     else if (section === 'buy') main.innerHTML = viewBuy();
-    else if (section === 'redeem') main.innerHTML = viewRedeem();
-    else if (section === 'invoice') { main.innerHTML = ''; startPurchase('invoice'); }
+    else if (section === 'redeem') main.innerHTML = viewProfile();
+    else if (section === 'invoice') main.innerHTML = viewInvoice();
     else if (section === 'promo' && isOwner()) main.innerHTML = viewPromo();
+    else if (section === 'discounts' && isOwner()) main.innerHTML = viewDiscounts();
     else if (section === 'mod' && isOwner()) main.innerHTML = viewMod();
     else if (section === 'security') main.innerHTML = viewSecurity();
     else main.innerHTML = viewSupport(section, ap);
@@ -999,6 +1037,39 @@ function viewRedeem() {
     </div>`;
   }
 
+  function viewDiscounts() {
+    const plans = (state.plans || []).filter(p => !p.pack && p.key !== 'hwid_reset');
+    return `
+    <div class="page-card" style="max-width:640px">
+      <div class="page-head"><div>
+        <div class="page-title">Создание скидок</div>
+        <div class="page-sub">Скидочные промокоды на тарифы</div>
+      </div></div>
+      <form id="discountCreateForm">
+        <div class="field"><label>Название промокода</label>
+          <input name="code" required minlength="3" maxlength="32" placeholder="Например: SALE20" style="text-transform:uppercase">
+        </div>
+        <div class="field"><label>Скидка, %</label>
+          <input name="discount" type="number" min="1" max="99" required placeholder="20">
+        </div>
+        <div class="field"><label>Режим</label>
+          <div class="promo-modes">
+            <button type="button" class="buy-chip selected" data-mode="media">🎬 Медиа — на все тарифы</button>
+            <button type="button" class="buy-chip" data-mode="custom">🎯 Кастом — выбрать самому</button>
+          </div>
+        </div>
+        <div class="field"><label>Тарифы</label>
+          <div class="promo-plans" id="discountPlans">
+            ${plans.map(p => `<label class="promo-plan"><input type="checkbox" name="plan" value="${p.key}" checked disabled> <span>${esc(p.name)}${p.forever ? ' · Навсегда' : p.days ? ' · ' + p.days + ' дн.' : ''}</span></label>`).join('')}
+          </div>
+        </div>
+        <button class="btn btn-gold" type="submit">Создать промокод</button>
+      </form>
+      <div class="page-title" style="margin-top:26px;font-size:17px">Активные промокоды</div>
+      <div id="promoList" class="promo-list"></div>
+    </div>`;
+  }
+
   function viewMod() {
     return `
     <div class="page-card" style="max-width:820px">
@@ -1181,6 +1252,37 @@ if (section === 'redeem' && $('#promoForm')) {
         btn.disabled = false;
       });
       loadPromoList();
+    }
+    if (section === 'discounts' && isOwner() && $('#discountCreateForm')) {
+      let mode = 'media';
+      const plansBox = $('#discountPlans');
+      const syncMode = () => {
+        $$('.promo-modes .buy-chip', main).forEach(c => c.classList.toggle('selected', c.dataset.mode === mode));
+        $$('input[name="plan"]', plansBox).forEach(inp => {
+          inp.disabled = (mode === 'media');
+          if (mode === 'media') inp.checked = true;
+        });
+      };
+      $$('.promo-modes .buy-chip', main).forEach(c => c.addEventListener('click', () => { mode = c.dataset.mode; syncMode(); }));
+      syncMode();
+      $('#discountCreateForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const code = e.target.code.value.trim().toUpperCase();
+        const discount = parseInt(e.target.discount.value, 10);
+        const plans = $$('input[name="plan"]:checked', plansBox).map(inp => inp.value);
+        if (!code || !(discount >= 1 && discount <= 99)) return toast('Проверьте название и скидку', 'error');
+        if (!plans.length) return toast('Выберите хотя бы один тариф', 'error');
+        btn.disabled = true;
+        try {
+          const r = await api('/api/discount/create', { method: 'POST', body: JSON.stringify({ code, discount, plans }) });
+          toast((r && r.message) || 'Промокод создан', 'success');
+          e.target.reset(); mode = 'media'; syncMode();
+          loadDiscountList();
+        } catch (err) { toast(err.message, 'error'); }
+        btn.disabled = false;
+      });
+      loadDiscountList();
     }
     if (section === 'mod' && isOwner()) {
       loadModUsers();
@@ -1396,6 +1498,34 @@ if (section === 'redeem' && $('#promoForm')) {
         }
       }));
     } catch (err) { el.innerHTML = '<div class="empty">Ошибка загрузки</div>'; }
+  }
+
+  async function loadDiscountList() {
+    const el = $('#discountList');
+    if (!el) return;
+    try {
+      const r = await api('/api/discount/list');
+      if (!r.codes || !r.codes.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">Пока нет промокодов</div>'; return; }
+      el.innerHTML = r.codes.map(c => {
+        let names = 'Все тарифы';
+        try {
+          const l = JSON.parse(c.plans || '[]');
+          if (l.length) names = l.map(k => { const p = (state.plans || []).find(x => x.key === k); return p ? p.name : k; }).join(', ');
+        } catch (_) {}
+        return `<div class="promo-item">
+          <div><b>${esc(c.code)}</b> · −${c.discount}%<div class="promo-item-sub">${esc(names)} · использований: ${c.uses || 0}</div></div>
+          <button class="btn btn-ghost" data-del-promo="${c.id}">Удалить</button>
+        </div>`;
+      }).join('');
+      $$('[data-del-promo]', el).forEach(b => b.addEventListener('click', async () => {
+        if (!confirm('Удалить промокод?')) return;
+        try {
+          await api('/api/discount/delete', { method: 'POST', body: JSON.stringify({ id: Number(b.dataset.delPromo) }) });
+          toast('Промокод удалён', 'success');
+          loadDiscountList();
+        } catch (err) { toast(err.message, 'error'); }
+      }));
+    } catch (err) { el.innerHTML = '<div class="empty" style="padding:18px 0">Ошибка загрузки</div>'; }
   }
 
   async function loadLauncherMeta() {

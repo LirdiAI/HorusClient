@@ -244,10 +244,44 @@ async function deletePromo(id) {
   if (error) throw error;
 }
 
+/* ---------------- discount_promos ---------------- */
+
+async function getDiscountPromoByCode(code) {
+  const { data, error } = await sb.from('discount_promos').select('*').eq('code', code).maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
+async function insertDiscountPromo(p) {
+  const { error } = await sb.from('discount_promos').insert(p);
+  if (error) throw error;
+}
+
+async function listDiscountPromos() {
+  const { data, error } = await sb.from('discount_promos').select('*').order('id', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function deleteDiscountPromo(id) {
+  const { error } = await sb.from('discount_promos').delete().eq('id', id);
+  if (error) throw error;
+}
+
+async function bumpDiscountPromoByCode(code) {
+  const rec = await getDiscountPromoByCode(code);
+  if (!rec) return;
+  const { error } = await sb.from('discount_promos').update({ uses: (rec.uses || 0) + 1 }).eq('id', rec.id);
+  if (error) throw error;
+}
+
 /* ---------------- orders ---------------- */
 
 async function insertOrder(o) {
-  const { data, error } = await sb.from('orders').insert({ user_id: o.user_id, plan: o.plan, status: 'pending', created_at: o.created_at }).select().single();
+  const row = { user_id: o.user_id, plan: o.plan, status: 'pending', created_at: o.created_at };
+  if (o.amount != null) row.amount = o.amount;
+  if (o.promo_code) row.promo_code = o.promo_code;
+  const { data, error } = await sb.from('orders').insert(row).select().single();
   if (error) throw error;
   return data;
 }
@@ -474,6 +508,7 @@ module.exports = {
   getSubs, revokePromoSubs, insertSub, freezeSub, unfreezeSub, listUsers, listAllSubs, getActiveSubsWithExpiry,
   getLastHwReset, insertHwReset,
   getPromoByCode, promoCodeExists, insertPromo, listPromos, bumpPromoUsed, deletePromo,
+  getDiscountPromoByCode, insertDiscountPromo, listDiscountPromos, deleteDiscountPromo, bumpDiscountPromoByCode,
   insertOrder, insertTicket,
   getAllCfg, getCfg, setCfg, deleteCfg,
   getTgByUserId, getUserIdByTg, checkTgTaken, bindTg, unbindTg,
