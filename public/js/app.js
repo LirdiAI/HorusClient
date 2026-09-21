@@ -794,6 +794,7 @@ function bindLanding(app) {
     promo: { icon: 'spark', title: 'Раздача' },
     discounts: { icon: 'zap', title: 'Создание скидок' },
     testing: { icon: 'bug', title: 'Тестирование' },
+    ops: { icon: 'cart', title: 'Операции' },
     mod: { icon: 'shield', title: 'Модификация' },
     support: { icon: 'support', title: 'Поддержка' },
     idea: { icon: 'idea', title: 'Предложить идею' },
@@ -839,7 +840,7 @@ ${sbGroup('Мой кабинет', [
           ['device', 'monitor', 'Привязка устройства'],
           ['buy', 'cart', 'Купить доступ'],
           ['security', 'shield', 'Безопасность'],
-          ...(isOwner() ? [['mod', 'shield', 'Модификация'], ['promo', 'spark', 'Раздача'], ['discounts', 'zap', 'Создание скидок'], ['testing', 'bug', 'Тестирование']] : [])
+          ...(isOwner() ? [['mod', 'shield', 'Модификация'], ['promo', 'spark', 'Раздача'], ['discounts', 'zap', 'Создание скидок'], ['testing', 'bug', 'Тестирование'], ['ops', 'cart', 'Операции']] : [])
         ])}
         ${sbGroup('Помощь', [
           ['support', 'support', 'Поддержка'],
@@ -887,6 +888,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
     else if (section === 'promo' && isOwner()) main.innerHTML = viewPromo();
     else if (section === 'discounts' && isOwner()) main.innerHTML = viewDiscounts();
     else if (section === 'testing' && isOwner()) main.innerHTML = viewTesting();
+    else if (section === 'ops' && isOwner()) main.innerHTML = viewOps();
     else if (section === 'mod' && isOwner()) main.innerHTML = viewMod();
     else if (section === 'security') main.innerHTML = viewSecurity();
     else main.innerHTML = viewSupport(section, ap);
@@ -1079,6 +1081,17 @@ function viewRedeem() {
         <div class="page-sub">Список промокодов и их использование</div>
       </div></div>
       <div id="promoList"></div>
+    </div>`;
+  }
+
+  function viewOps() {
+    return `
+    <div class="page-card" style="max-width:720px">
+      <div class="page-head"><div>
+        <div class="page-title">Операции</div>
+        <div class="page-sub">Покупки игроков: последние 200 заказов</div>
+      </div></div>
+      <div id="opsList" class="promo-list"><div class="empty" style="padding:18px 0">Загрузка…</div></div>
     </div>`;
   }
 
@@ -1325,6 +1338,10 @@ if (section === 'redeem' && $('#promoForm')) {
       });
       loadPromoList();
     }
+    if (section === 'ops' && isOwner() && $('#opsList')) {
+      loadOpsList();
+    }
+
     if (section === 'testing' && isOwner() && $('#customForm')) {
       $('#customForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -1592,6 +1609,32 @@ if (section === 'redeem' && $('#promoForm')) {
     } catch (err) { el.innerHTML = '<div class="empty">Ошибка загрузки</div>'; }
   }
 
+  async function loadOpsList() {
+    const el = $('#opsList');
+    if (!el) return;
+    try {
+      const r = await api('/api/orders/list');
+      if (!r.orders || !r.orders.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">Заказов пока нет</div>'; return; }
+      el.innerHTML = r.orders.map(o => {
+        const badge = o.status === 'paid'
+          ? '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#7ee2a8;background:rgba(46,204,113,.14);border:1px solid rgba(46,204,113,.4)">оплачено</span>'
+          : (o.status === 'refunded' || o.status === 'canceled')
+            ? '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffe08a;background:rgba(240,180,41,.15);border:1px solid rgba(240,180,41,.5)">возврат</span>'
+            : '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffb3b9;background:rgba(255,95,109,.12);border:1px solid rgba(255,95,109,.4)">не оплачено</span>';
+        const date = o.created_at ? new Date(o.created_at).toLocaleString('ru-RU') : '';
+        const sum = o.amount != null ? esc(String(o.amount)) + ' ' + esc(o.currency || '\u20bd') : '\u2014';
+        return `<div class="promo-item">
+          <div style="min-width:0">
+            <b>${esc(o.login)}</b> \u00b7 <span style="color:var(--muted)">${esc(o.email)}</span>
+            <div class="promo-item-sub">\u0427\u0442\u043e: ${esc(o.what)} \u00b7 \u0421\u0443\u043c\u043c\u0430: <b>${sum}</b></div>
+            <div class="promo-item-sub">\u0417\u0430\u043a\u0430\u0437 #${o.id}${date ? ' \u00b7 ' + esc(date) : ''}</div>
+          </div>
+          <div style="flex-shrink:0">${badge}</div>
+        </div>`;
+      }).join('');
+    } catch (err) { el.innerHTML = '<div class="empty" style="padding:18px 0">Ошибка загрузки: ' + esc(err.message || '') + '</div>'; }
+  }
+
   async function loadCustomList() {
     const el = $('#customList');
     if (!el) return;
@@ -1600,10 +1643,13 @@ if (section === 'redeem' && $('#promoForm')) {
       if (!r.offers || !r.offers.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">Пока нет позиций</div>'; return; }
       el.innerHTML = r.offers.map(o => {
         const link = location.origin + '/#/pay-offer/' + o.id;
-        const paid = Number(o.paid_count || 0);
-        const status = paid > 0
-          ? `<span style="margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#7ee2a8;background:rgba(46,204,113,.14);border:1px solid rgba(46,204,113,.4)">оплачено${paid > 1 ? ' · ' + paid : ''}</span>`
-          : `<span style="margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffb3b9;background:rgba(255,95,109,.12);border:1px solid rgba(255,95,109,.4)">не оплачено</span>`;
+        const st = o.stats || { paid: 0, refunded: 0, canceled: 0 };
+        const badges = [];
+        if (st.paid > 0) badges.push(`<span style="margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#7ee2a8;background:rgba(46,204,113,.14);border:1px solid rgba(46,204,113,.4)">оплачено${st.paid > 1 ? ' · ' + st.paid : ''}</span>`);
+        const ret = (st.refunded || 0) + (st.canceled || 0);
+        if (ret > 0) badges.push(`<span style="margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffe08a;background:rgba(240,180,41,.15);border:1px solid rgba(240,180,41,.5)">возврат${ret > 1 ? ' · ' + ret : ''}</span>`);
+        if (!st.paid && !ret) badges.push(`<span style="margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffb3b9;background:rgba(255,95,109,.12);border:1px solid rgba(255,95,109,.4)">не оплачено</span>`);
+        const status = badges.join('');
         let gives = '';
         try {
           const arr = JSON.parse(o.description || '[]');

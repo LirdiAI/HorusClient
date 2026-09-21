@@ -268,8 +268,33 @@ async function deleteCustomOffer(id) {
   if (error) throw error;
 }
 
-async function listPaidCustomOrders() {
-  const { data, error } = await sb.from('orders').select('plan').eq('status', 'paid').like('plan', 'custom:%');
+async function listCustomOrderStatuses() {
+  const { data, error } = await sb.from('orders').select('plan,status').like('plan', 'custom:%');
+  if (error) throw error;
+  return data || [];
+}
+
+async function updateOrderStatus(id, status) {
+  const { error } = await sb.from('orders').update({ status }).eq('id', id);
+  if (error) throw error;
+}
+
+async function getOrderByPaymentId(paymentId) {
+  const { data, error } = await sb.from('orders').select('*').eq('payment_id', String(paymentId)).maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
+async function listRecentOrders(limit) {
+  const { data, error } = await sb.from('orders').select('*').order('id', { ascending: false }).limit(limit || 200);
+  if (error) throw error;
+  return data || [];
+}
+
+async function getUsersByIds(ids) {
+  const uniq = [...new Set((ids || []).filter(Boolean))];
+  if (!uniq.length) return [];
+  const { data, error } = await sb.from('users').select('id, login, email').in('id', uniq);
   if (error) throw error;
   return data || [];
 }
@@ -539,7 +564,8 @@ module.exports = {
   getLastHwReset, insertHwReset,
   getPromoByCode, promoCodeExists, insertPromo, listPromos, bumpPromoUsed, deletePromo,
   getDiscountPromoByCode, insertDiscountPromo, listDiscountPromos, deleteDiscountPromo, bumpDiscountPromoByCode,
-  getCustomOfferById, insertCustomOffer, listCustomOffers, deleteCustomOffer, listPaidCustomOrders,
+  getCustomOfferById, insertCustomOffer, listCustomOffers, deleteCustomOffer, listCustomOrderStatuses, updateOrderStatus, getOrderByPaymentId,
+  listRecentOrders, getUsersByIds,
   insertOrder, getOrderById, setOrderPaid, saveOrderPayment, insertTicket,
   getAllCfg, getCfg, setCfg, deleteCfg,
   getTgByUserId, getUserIdByTg, checkTgTaken, bindTg, unbindTg,

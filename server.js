@@ -553,10 +553,15 @@ app.post('/api/custom/create', requireAuth, ah(async (req, res) => {
 app.get('/api/custom/list', requireAuth, ah(async (req, res) => {
   if (req.user.login !== 'Howill_') return fail(res, 'Недоступно', 403);
   const offers = await D.listCustomOffers();
-  const paidRows = await D.listPaidCustomOrders();
-  const paidMap = {};
-  paidRows.forEach(r => { paidMap[r.plan] = (paidMap[r.plan] || 0) + 1; });
-  return send(res, 200, { ok: true, offers: offers.map(o => ({ ...o, paid_count: paidMap['custom:' + o.id] || 0 })) });
+  const rows = await D.listCustomOrderStatuses();
+  const statMap = {};
+  rows.forEach(r => {
+    if (!statMap[r.plan]) statMap[r.plan] = { paid: 0, refunded: 0, canceled: 0 };
+    if (r.status === 'paid') statMap[r.plan].paid++;
+    else if (r.status === 'refunded') statMap[r.plan].refunded++;
+    else if (r.status === 'canceled') statMap[r.plan].canceled++;
+  });
+  return send(res, 200, { ok: true, offers: offers.map(o => ({ ...o, stats: statMap['custom:' + o.id] || { paid: 0, refunded: 0, canceled: 0 } })) });
 }));
 
 app.post('/api/custom/delete', requireAuth, ah(async (req, res) => {
@@ -590,6 +595,35 @@ app.post('/api/custom/pay', requireAuth, ah(async (req, res) => {
   });
   await D.saveOrderPayment(order.id, payment.id);
   return send(res, 200, { ok: true, confirmationUrl: payment.confirmationUrl });
+}));
+
+/* ---------------- операции (заказы) ---------------- */
+
+app.get('/api/orders/list', requireAuth, ah(async (req, res) => {
+  if (req.user.login !== 'Howill_') return fail(res, 'Недоступно', 403);
+  const orders = await D.listRecentOrders(200);
+  const users = await D.getUsersByIds(orders.map(o => o.user_id));
+  const umap = {};
+  users.forEach(u => { umap[u.id] = u; });
+  const offers = await D.listCustomOffers();
+  const omap = {};
+  offers.forEach(o => { omap[o.id] = o.title; });
+  const items = orders.map(o => {
+    const isCustom = String(o.plan).startsWith('custom:');
+    const plan = isCustom ? null : PLANS.find(p => p.key === o.plan);
+    const what = isCustom
+      ? (omap[Number(String(o.plan).split(':')[1])] || 'Кастомная позиция')
+      : (plan ? plan.name + (plan.forever ? ' Навсегда' : plan.days ? ' ' + plan.days + ' дн' : '') : o.plan);
+    const amount = o.amount != null ? o.amount : (plan ? plan.price : null);
+    return {
+      id: o.id, status: o.status, what, amount,
+      currency: (plan && plan.currency) || '₽',
+      created_at: o.created_at,
+      login: (umap[o.user_id] && umap[o.user_id].login) || '—',
+      email: (umap[o.user_id] && umap[o.user_id].email) || '—',
+    };
+  });
+  return send(res, 200, { ok: true, orders: items });
 }));
 
 app.post('/api/promo/redeem', requireAuth, ah(async (req, res) => {
@@ -774,6 +808,32 @@ app.post('/api/yookassa/webhook', async (req, res) => {
   const event = body.event;
   const obj = body.object;
   if (!event || !obj || !obj.id) return send(res, 200, { ok: false, code: 'bad_payload' });
+  // Отмена платежа покупателем
+  if (event === 'payment.canceled') {
+    try {
+      const remoteC = await YK.getPayment(obj.id);
+      const metaC = (remoteC && remoteC.metadata) || {};
+      const orderIdC = Number(metaC.orderId || 0);
+      if (orderIdC) {
+        const o = await D.getOrderById(orderIdC);
+        if (o && o.status === 'pending') await D.updateOrderStatus(orderIdC, 'canceled');
+      }
+    } catch (e) { console.error('[HorusWebsite] cancel webhook error:', e); }
+    return send(res, 200, { ok: true, canceled: true });
+  }
+
+  // Возврат средств
+  if (event === 'refund.succeeded') {
+    try {
+      const paymentId = obj.payment_id;
+      if (paymentId) {
+        const o = await D.getOrderByPaymentId(paymentId);
+        if (o && o.status === 'paid') await D.updateOrderStatus(o.id, 'refunded');
+      }
+    } catch (e) { console.error('[HorusWebsite] refund webhook error:', e); }
+    return send(res, 200, { ok: true, refunded: true });
+  }
+
   if (event !== 'payment.succeeded') return send(res, 200, { ok: true, ignored: event });
 
   try {
@@ -801,14 +861,14 @@ app.post('/api/yookassa/webhook', async (req, res) => {
       return send(res, 200, { ok: false, code: 'unknown_plan' });
     }
 
-    // 2) Сверка суммы (защита от подмены цены)
+    // 2) Заказ + сверка суммы (защита от подмены цены)
+    const order = await D.getOrderById(orderId);
+    if (!order) return send(res, 200, { ok: false, code: 'no_order' });
     const want = String(Number(order.amount ?? plan.price)) + '.00';
     const got = remote.amount && remote.amount.value;
     if (got !== want) return send(res, 200, { ok: false, code: 'amount_mismatch', want, got });
 
     // 3) Идемпотентность: выдаём подписку ровно один раз на заказ
-    const order = await D.getOrderById(orderId);
-    if (!order) return send(res, 200, { ok: false, code: 'no_order' });
     if (order.status !== 'pending') {
       return send(res, 200, { ok: true, already: true }); // уже выдана или отменена
     }
