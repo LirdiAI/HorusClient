@@ -1032,7 +1032,7 @@ app.get('/api/launcher/latest', ah(async (req, res) => {
   send(res, 200, {
     ok: true,
     version: cfg.launcher_version || '1.0.0',
-    url: '#download',
+    url: cfg.launcher_url || '#download',
     gameVersion: cfg.game_version || '1.21.4',
     build: 'stable'
   });

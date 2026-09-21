@@ -328,8 +328,8 @@ renderNav();
           : `<div class="dl-card" style="max-width:640px">
               <span style="display:flex;align-items:center"><span>${icon.zap}</span></span>
               <div><div style="font-weight:700">HorusLauncher для Windows</div>
-              <div class="muted" style="font-size:12.5px">exe · ~45 МБ со встроенной Java · версия <span id="dlVersion">1.0.0</span></div></div>
-              <a href="/files/HorusLauncher.zip" class="btn btn-gold" style="margin-left:auto" download>Скачать</a>
+              <div class="muted" style="font-size:12.5px">портативный zip · ~45 МБ · версия <span id="dlVersion">1.0.0</span></div></div>
+              <a id="dlExeLink" href="/files/HorusLauncher.zip" class="btn btn-gold" style="margin-left:auto" download>Скачать</a>
             </div>`}
       </div>
     </section>
@@ -398,6 +398,8 @@ function bindLanding(app) {
     api('/api/launcher/latest').then(l => {
       const el = $('#lwVersion');
       if (el && l && l.version) el.textContent = esc(l.version);
+      const dla = $('#dlExeLink');
+      if (dla && l && l.url && l.url !== '#download') dla.href = l.url;
     }).catch(() => {});
     api('/api/stats').then(d => {
       const el = $('#statUsers');
