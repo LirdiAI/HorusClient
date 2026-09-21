@@ -386,7 +386,7 @@ input, textarea, [contenteditable="true"] { user-select: text; -webkit-user-sele
 .modal-overlay.hide { opacity: 0; }
 .modal-card {
   position: fixed; top: 50%; left: 50%; z-index: 101;
-  width: 460px; max-width: calc(100vw - 28px); max-height: calc(100dvh - 24px); overflow-y: auto;
+  width: min(380px, calc(100vw - 32px)); max-width: calc(100vw - 28px); max-height: calc(100dvh - 24px); overflow-y: auto;
   background: var(--panel-solid); border: 1px solid var(--line-strong);
   border-radius: 16px;
   box-shadow: 0 30px 90px -18px rgba(0,0,0,0.85);
