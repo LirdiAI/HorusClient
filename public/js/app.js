@@ -347,7 +347,47 @@ function bindLanding(app) {
   }
 
 async function startPurchase(plan) {
-    window.open('https://funpay.com/lots/offer?id=77228605', '_blank', 'noopener');
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-card" role="dialog">
+        <div class="modal-head">
+          <div class="modal-ic">💳</div>
+          <div class="modal-title">Способ оплаты</div>
+        </div>
+        <div class="modal-text">Как вы оплатите доступ «${esc(plan)}»?</div>
+        <div class="modal-btns" style="flex-direction:column;gap:10px">
+          <button class="btn btn-gold" data-yk="1">Карты / СБП / T-Pay</button>
+          <button class="btn btn-dark" data-yk="0">FunPay</button>
+          <button class="btn btn-dark" data-cancel="1">Отмена</button>
+        </div>
+      </div>`;
+    const close = () => { overlay.classList.add('hide'); setTimeout(() => overlay.remove(), 180); };
+    overlay.addEventListener('click', (e) => {
+      const yk = e.target.closest('[data-yk]');
+      const cn = e.target.closest('[data-cancel]');
+      if (cn) return close();
+      if (yk) {
+        close();
+        if (yk.dataset.yk === '1') return checkoutYooKassa(plan);
+        window.open('https://funpay.com/lots/offer?id=77228605', '_blank', 'noopener');
+      } else if (e.target === overlay) close();
+    });
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('show'));
+  }
+
+  async function checkoutYooKassa(plan) {
+    try {
+      const r = await api('/api/purchase/yookassa', {
+        method: 'POST', body: { plan, methodType: 'redirect' }
+      });
+      if (!r || !r.ok) return toast(r && r.message || 'Не удалось начать оплату');
+      if (r.confirmationUrl) window.location.href = r.confirmationUrl;
+      else toast('Ссылка на оплату не получена');
+    } catch (err) {
+      toast('Ошибка подключения к оплате');
+    }
   }
 
   function hasSub() {

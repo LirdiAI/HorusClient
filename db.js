@@ -252,6 +252,22 @@ async function insertOrder(o) {
   return data;
 }
 
+async function getOrderById(id) {
+  const { data, error } = await sb.from('orders').select('*').eq('id', id).maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
+async function setOrderPaid(id, paidAt, provider) {
+  const { error } = await sb.from('orders').update({ status: 'paid', paid_at: paidAt, provider }).eq('id', id);
+  if (error) throw error;
+}
+
+async function saveOrderPayment(id, pid) {
+  const { error } = await sb.from('orders').update({ payment_id: pid }).eq('id', id);
+  if (error) throw error;
+}
+
 /* ---------------- tickets ---------------- */
 
 async function insertTicket(t) {

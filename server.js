@@ -600,7 +600,107 @@ app.post('/api/purchase', requireAuth, ah(async (req, res) => {
   send(res, 200, { ok: true, orderId: order.id, message: cfgNote || '' });
 }));
 
-/* ============ SUPPORT ============ */
+/* ---------------- Покупка через ЮKassa (карты / СБП / СБП T-Pay) ---------------- */
+
+const YK = require('./yookassa');
+const YK_RETURN_URL = (process.env.SITE_ORIGIN || '') + '/cabinet?paid=1';
+
+// Создать платёж в ЮKassa и вернуть confirmation_url для редиректа
+app.post('/api/purchase/yookassa', requireAuth, ah(async (req, res) => {
+  const { plan: planKey, methodType } = req.body || {};
+  const plan = PLANS.find(p => p.key === planKey);
+  if (!plan) return fail(res, 'Неизвестный тариф');
+  if (!YK.enabled()) return fail(res, 'Онлайн-оплата временно недоступна (ЮKassa не настроена на сервере)');
+
+  const order = await D.insertOrder({ user_id: req.user.id, plan: planKey, created_at: now() });
+  const idem = crypto.randomUUID();
+  const createdAt = now();
+
+  // Идемпотентность: связываем платёж с нашим заказом через метод-данные и метаданные
+  const payment = await YK.createPayment({
+    amount: plan.price,
+    description: `Подписка «${plan.name}»${plan.forever ? ' навсегда' : ''} — заказ #${order.id}`,
+    returnUrl: YK_RETURN_URL,
+    idem,
+    methodType,
+    metadata: {
+      orderId: String(order.id),
+      userId: String(req.user.id),
+      plan: planKey,
+      provider: 'yookassa'
+    }
+  });
+
+  await D.saveOrderPayment(order.id, payment.id);
+  send(res, 200, { ok: true, orderId: order.id, paymentId: payment.id, confirmationUrl: payment.confirmationUrl });
+}));
+
+// Вебхук ЮKassa: автовыдача подписки после успешной оплаты.
+// Подлинность уведомления не полагается на HTTP-подпись: статус ПЕРЕПРОВЕРЯЕТСЯ
+// через API ЮKassa (GET /payments/{id}) — подделать уведомление нельзя.
+app.post('/api/yookassa/webhook', async (req, res) => {
+  const body = req.body || {};
+  const event = body.event;
+  const obj = body.object;
+  if (!event || !obj || !obj.id) return send(res, 200, { ok: false, code: 'bad_payload' });
+  if (event !== 'payment.succeeded') return send(res, 200, { ok: true, ignored: event });
+
+  try {
+    // 1) Перепроверка статуса у ЮKassa
+    const remote = await YK.getPayment(obj.id);
+    if (remote.status !== 'succeeded' || !remote.paid) {
+      return send(res, 200, { ok: false, code: 'not_succeeded' });
+    }
+
+    const meta = remote.metadata || {};
+    const orderId = Number(meta.orderId || 0);
+    const planKey = meta.plan;
+    const userId = Number(meta.userId || 0);
+    if (!orderId || !planKey || !userId) return send(res, 200, { ok: false, code: 'no_metadata' });
+
+    const plan = PLANS.find(p => p.key === planKey);
+    if (!plan) return send(res, 200, { ok: false, code: 'unknown_plan' });
+
+    // 2) Сверка суммы (защита от подмены цены)
+    const want = String(plan.price) + '.00';
+    const got = remote.amount && remote.amount.value;
+    if (got !== want) return send(res, 200, { ok: false, code: 'amount_mismatch', want, got });
+
+    // 3) Идемпотентность: выдаём подписку ровно один раз на заказ
+    const order = await D.getOrderById(orderId);
+    if (!order) return send(res, 200, { ok: false, code: 'no_order' });
+    if (order.status !== 'pending') {
+      return send(res, 200, { ok: true, already: true }); // уже выдана или отменена
+    }
+
+    const nowIso = now();
+    const expires_at = plan.forever ? null : new Date(Date.now() + plan.days * 86400000).toISOString();
+    await D.insertSub({
+      user_id: userId,
+      plan: planKey,
+      status: 'active',
+      source: 'yookassa',
+      purchased_at: nowIso,
+      expires_at
+    });
+    await D.setOrderPaid(orderId, nowIso, 'yookassa');
+
+    console.log(`[YK] подписка выдана: user=${userId} plan=${planKey} order=${orderId}`);
+    send(res, 200, { ok: true, activated: true });
+  } catch (e) {
+    console.error('[YK] webhook error', e);
+    return send(res, 200, { ok: false, code: 'server_error' });
+  }
+});
+
+// Статус заказа (для return_url и кнопки «Уже оплатил»)
+app.get('/api/purchase/status', requireAuth, ah(async (req, res) => {
+  const orderId = Number(req.query.orderId || 0);
+  if (!orderId) return fail(res, 'Не передан orderId');
+  const order = await D.getOrderById(orderId);
+  if (!order || order.user_id !== req.user.id) return fail(res, 'Заказ не найден');
+  send(res, 200, { ok: true, status: order.status, paidAt: order.paid_at || null, plan: order.plan });
+}));
 
 const TICKET_TYPES = { support: 'Поддержка', idea: 'Предложить идею', bug: 'Сообщить о баге' };
 
