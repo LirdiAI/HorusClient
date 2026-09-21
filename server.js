@@ -578,12 +578,12 @@ app.post('/api/custom/pay', requireAuth, ah(async (req, res) => {
     amount: offer.amount,
     description: `Оплата: ${offer.title} — заказ #${order.id}`,
     returnUrl: YK_RETURN_URL,
-    idem: 'custom-' + order.id,
+    idemKey: 'custom-' + order.id,
     methodType: 'redirect',
     metadata: { orderId: String(order.id), userId: String(req.user.id), plan: 'custom:' + offer.id, provider: 'yookassa' }
   });
   await D.saveOrderPayment(order.id, payment.id);
-  return send(res, 200, { ok: true, confirmationUrl: payment.confirmation_url });
+  return send(res, 200, { ok: true, confirmationUrl: payment.confirmationUrl });
 }));
 
 app.post('/api/promo/redeem', requireAuth, ah(async (req, res) => {
