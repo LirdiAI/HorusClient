@@ -346,61 +346,111 @@ function bindLanding(app) {
     }).catch(() => {});
   }
 
-async function startPurchase(plan) {
+  /* ---------- окно покупки ---------- */
+  const PAY_METHODS = [
+    { id: 'card',     icon: '💳', name: 'Банковская карта', sub: 'МИР · Visa · Mastercard',     kind: 'yookassa', cta: 'Перейти к оплате' },
+    { id: 'sbp',      icon: '📲', name: 'СБП',              sub: 'QR-код в приложении банка',   kind: 'yookassa', cta: 'Перейти к оплате' },
+    { id: 'tpay',     icon: '🅣', name: 'T-Pay',            sub: 'Через приложение Т-Банка',    kind: 'yookassa', cta: 'Перейти к оплате' },
+    { id: 'funpay',   icon: '🟢', name: 'FunPay',           sub: 'Покупка на площадке FunPay',  kind: 'external', url: 'https://funpay.com/lots/offer?id=77228605', cta: 'Открыть FunPay' },
+    { id: 'telegram', icon: '✈️', name: 'Telegram-бот',     sub: 'Оплата через @Agent_Horus_Bot', kind: 'external', url: 'https://t.me/Agent_Horus_Bot', cta: 'Написать боту' },
+  ];
+
+  async function startPurchase(planKey) {
+    const plan = (state.plans || []).find(p => p.key === planKey)
+      || { key: planKey, name: planKey, tag: 'Доступ HorusClient', price: null, currency: '₽' };
+    const duration = plan.forever ? 'Навсегда' : (plan.days ? plan.days + ' дней' : '30 дней');
+    const priceTxt = plan.price != null ? (plan.price + ' ' + (plan.currency || '₽')) : '';
+
+    let selected = 'card';
     const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
+    overlay.className = 'buy-overlay';
     overlay.innerHTML = `
-      <div class="modal-card" role="dialog">
-        <div class="modal-pay-grid">
-          <div class="modal-pay-left">
-            <button class="btn btn-gold" data-pm="card" style="width:100%;justify-content:flex-start"><span class="pay-icon">💳</span> Карты (МИР / Visa / MC)</button>
-            <button class="btn btn-gold" data-pm="sbp" style="width:100%;justify-content:flex-start"><span class="pay-icon">📲</span> СБП</button>
-            <button class="btn btn-gold" data-pm="tpay" style="width:100%;justify-content:flex-start"><span class="pay-icon">🅣</span> T-Pay</button>
-            <button class="btn btn-dark" data-pm="funpay" style="width:100%;justify-content:flex-start"><span class="pay-icon">🟢</span> FunPay</button>
-            <button class="btn btn-dark" data-pm="telegram" style="width:100%;justify-content:flex-start"><span class="pay-icon">✈️</span> Через Telegram</button>
+      <div class="buy-modal" role="dialog" aria-modal="true">
+        <button class="buy-close" data-close aria-label="Закрыть">✕</button>
+        <div class="buy-head">
+          <div class="buy-tag">${esc(plan.tag || 'Доступ HorusClient')}</div>
+          <div class="buy-name">${esc(plan.name)}</div>
+          <div class="buy-price-row">
+            ${priceTxt ? `<span class="buy-price">${esc(priceTxt)}</span>` : ''}
+            <span class="buy-duration">${esc(duration)}</span>
           </div>
-        <div class="modal-pay-right">
-          <div class="modal-recip-title">Что получу:</div>
-          <div class="modal-recip-item">Подписка: <b>${esc(plan)}</b> · 30 дней</div>
-          <div class="modal-recip-item">Доступ откроется сразу<br>в личном кабинете</div>
-          <div class="modal-recip-note">Мгновенно после оплаты<br>по указанному способу</div>
         </div>
+        <div class="buy-label">Способ оплаты</div>
+        <div class="buy-methods">
+          ${PAY_METHODS.map(m => `
+            <button type="button" class="buy-method" data-method="${m.id}">
+              <span class="buy-method-icon">${m.icon}</span>
+              <span class="buy-method-info">
+                <span class="buy-method-name">${m.name}</span>
+                <span class="buy-method-sub">${m.sub}</span>
+              </span>
+              <span class="buy-method-check"></span>
+            </button>`).join('')}
         </div>
-        <div class="modal-btns" style="flex-direction:row;justify-content:center">
-          <button class="btn btn-dark" data-cancel="1">Отмена</button>
+        <div class="buy-perks">
+          <span class="buy-perk">⚡ Доступ сразу после оплаты</span>
+          <span class="buy-perk">🔑 Лицензия привяжется к аккаунту</span>
+          <span class="buy-perk">🛠 Поддержка 24/7</span>
+        </div>
+        <div class="buy-actions">
+          <button type="button" class="btn btn-ghost" data-close>Отмена</button>
+          <button type="button" class="btn btn-gold buy-go" data-go>Перейти к оплате</button>
         </div>
       </div>`;
-    const close = () => { overlay.classList.add('hide'); setTimeout(() => overlay.remove(), 180); };
-    overlay.addEventListener('click', (e) => {
-      const pm = e.target.closest('[data-pm]');
-      const cn = e.target.closest('[data-cancel]');
-      if (cn) return close();
-      if (pm) {
-        const type = pm.dataset.pm;
-        close();
-        if (type === 'funpay') return window.open('https://funpay.com/lots/offer?id=77228605', '_blank', 'noopener');
-        if (type === 'telegram') return window.open('https://t.me/Agent_Horus_Bot', '_blank', 'noopener');
-        // Карты, СБП: направляем на общую страницу Юkassa (T-Pay она покажет сама
-        // как подключённый способ — отдельный method_data 'tinkoff_bank' не шлём,
-        // иначе Юkassa отвечает «требуется Real Id / Merchant ID (СБП T-Pay)»).
-        return checkoutYooKassa(plan, 'redirect');
-      } else if (e.target === overlay) close();
-    });
-    document.body.appendChild(overlay);
-    requestAnimationFrame(() => overlay.classList.add('show'));
-  }
 
-  async function checkoutYooKassa(plan) {
-    try {
-      const r = await api('/api/purchase/yookassa', {
-        method: 'POST', body: { plan, methodType: 'redirect' }
-      });
-      if (!r || !r.ok) return toast(r && r.message || 'Не удалось начать оплату');
-      if (r.confirmationUrl) window.location.href = r.confirmationUrl;
-      else toast('Ссылка на оплату не получена');
-    } catch (err) {
-      toast('Ошибка подключения к оплате');
-    }
+    const goBtn = overlay.querySelector('[data-go]');
+    const syncGo = () => {
+      const m = PAY_METHODS.find(x => x.id === selected);
+      goBtn.textContent = (priceTxt && m.kind === 'yookassa') ? m.cta + ' · ' + priceTxt : m.cta;
+      overlay.querySelectorAll('.buy-method').forEach(b =>
+        b.classList.toggle('selected', b.dataset.method === selected));
+    };
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', onKey);
+
+    const close = () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+      overlay.classList.add('hide');
+      setTimeout(() => overlay.remove(), 220);
+    };
+
+    overlay.addEventListener('click', async (e) => {
+      if (e.target.closest('[data-close]') || e.target === overlay) return close();
+      const mBtn = e.target.closest('[data-method]');
+      if (mBtn) { selected = mBtn.dataset.method; return syncGo(); }
+      if (!e.target.closest('[data-go]')) return;
+
+      const m = PAY_METHODS.find(x => x.id === selected);
+      if (m.kind === 'external') {
+        window.open(m.url, '_blank', 'noopener');
+        return close();
+      }
+      goBtn.disabled = true;
+      goBtn.textContent = 'Создаём платёж…';
+      try {
+        const r = await api('/api/purchase/yookassa', {
+          method: 'POST',
+          body: { plan: plan.key, methodType: 'redirect' },
+        });
+        if (r && r.ok && r.confirmationUrl) {
+          window.location.href = r.confirmationUrl;
+          return;
+        }
+        toast((r && r.message) || 'Ссылка на оплату не получена');
+      } catch (err) {
+        toast('Ошибка подключения к оплате');
+      }
+      goBtn.disabled = false;
+      syncGo();
+    });
+
+    document.body.appendChild(overlay);
+    syncGo();
+    requestAnimationFrame(() => overlay.classList.add('show'));
   }
 
   function hasSub() {
