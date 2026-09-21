@@ -413,6 +413,13 @@ input, textarea, [contenteditable="true"] { user-select: text; -webkit-user-sele
 .modal-text { color: var(--muted); font-size: 13.5px; line-height: 1.55; padding: 18px 20px 6px; }
 .modal-btns { display: flex; gap: 10px; justify-content: flex-end; padding: 14px 20px 18px; }
 [data-pm], .modal-ship .pm-btn { width: 100% !important; justify-content: flex-start; }
+.modal-pay-grid { display: flex; gap: 14px; align-items: stretch; padding: 16px 20px 4px; }
+.modal-pay-left { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.modal-pay-left .btn { width: 100% !important; justify-content: flex-start; }
+.modal-pay-right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,196,0,.04); }
+.modal-recip-title { font-family: var(--font-h); font-weight: 700; font-size: 13.5px; }
+.modal-recip-item { color: var(--muted); font-size: 13px; line-height: 1.45; }
+.modal-recip-note { color: var(--gold); font-size: 12.5px; line-height: 1.5; margin-top: 4px; }
 .modal-methods { display: flex; flex-direction: column; gap: 10px; padding: 4px 20px 2px; }
 .modal-methods .btn { width: 100%; justify-content: flex-start; }
 .modal-methods .pay-icon { width: 34px; height: 34px; min-width: 34px; display: flex; align-items: center; justify-content: center; border-radius: 9px; font-size: 16px; }

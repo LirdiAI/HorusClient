@@ -351,17 +351,22 @@ async function startPurchase(plan) {
     overlay.className = 'modal-overlay';
     overlay.innerHTML = `
       <div class="modal-card" role="dialog">
-        <div class="modal-head">
-          <div class="modal-ic">💳</div>
-          <div class="modal-title">Способ оплаты</div>
+        <div class="modal-pay-grid">
+          <div class="modal-pay-left">
+            <button class="btn btn-gold" data-pm="card" style="width:100%;justify-content:flex-start"><span class="pay-icon">💳</span> Карты (МИР / Visa / MC)</button>
+            <button class="btn btn-gold" data-pm="sbp" style="width:100%;justify-content:flex-start"><span class="pay-icon">📲</span> СБП</button>
+            <button class="btn btn-gold" data-pm="tpay" style="width:100%;justify-content:flex-start"><span class="pay-icon">🅣</span> T-Pay</button>
+            <button class="btn btn-dark" data-pm="funpay" style="width:100%;justify-content:flex-start"><span class="pay-icon">🟢</span> FunPay</button>
+            <button class="btn btn-dark" data-pm="telegram" style="width:100%;justify-content:flex-start"><span class="pay-icon">✈️</span> Через Telegram</button>
+          </div>
+          <div class="modal-pay-right">
+            <div class="modal-recip-title">📦 Что получу:</div>
+            <div class="modal-recip-item">Пример: <b>${esc(plan)}</b> · 30 дней</div>
+            <div class="modal-recip-item">Доступ сразу<br>к конфигу в кабинете</div>
+            <div class="modal-recip-note">Мгновенно после оплаты<br>в личном кабинете</div>
+          </div>
         </div>
-        <div class="modal-text">Как вы оплатите доступ «${esc(plan)}»?</div>
-        <div class="modal-btns" style="flex-direction:column;gap:10px">
-          <button class="btn btn-gold" data-pm="card" style="width:100%;justify-content:flex-start"><span class="pay-icon">💳</span> Карты (МИР / Visa / MC)</button>
-          <button class="btn btn-gold" data-pm="sbp" style="width:100%;justify-content:flex-start"><span class="pay-icon">📲</span> СБП</button>
-          <button class="btn btn-gold" data-pm="tpay" style="width:100%;justify-content:flex-start"><span class="pay-icon">🅣</span> T-Pay</button>
-          <button class="btn btn-dark" data-pm="funpay" style="width:100%;justify-content:flex-start"><span class="pay-icon">🟢</span> FunPay</button>
-          <button class="btn btn-dark" data-pm="telegram" style="width:100%;justify-content:flex-start"><span class="pay-icon">✈️</span> Через Telegram</button>
+        <div class="modal-btns" style="flex-direction:row;justify-content:center">
           <button class="btn btn-dark" data-cancel="1">Отмена</button>
         </div>
       </div>`;
