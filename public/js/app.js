@@ -16,7 +16,7 @@
       },
       {
         key: 'kamiki365', name: 'Kamiki 1.21.4', tag: 'Базовый · 365 дней', price: 199, currency: '₽', forever: false, days: 365,
-        desc: ['Базовый доступ на 365 дней', 'Выбор игроков · с Alpha 1.21.4', 'Выгода: ~0.55 ₽ в день', 'Продление из кабинета']
+        desc: ['Базовый доступ на 365 дней', 'Выбор игроков', 'Выгода: ~0.55 ₽ в день', 'Продление из кабинета']
       },
       {
         key: 'kamiki', name: 'Kamiki 1.21.4', tag: 'Базовый · Навсегда', price: 300, currency: '₽', forever: true,
@@ -295,7 +295,7 @@ renderNav();
       .filter(p => cat === 'all' ? true : (cat === 'packs' ? !!p.pack : !p.pack))
       .map((p) => `
       <div class="plan ${p.featured ? 'featured' : ''} ${p.forever ? 'forever-badge' : ''}">
-        ${p.featured ? '<div class="plan-tag">Выбор игроков</div>' : ''}
+        ${p.key === 'kamiki365' ? '<div class="plan-tag">Выбор игроков</div>' : ''}
         <div class="plan-name">${esc(p.name)}</div>
         <div class="plan-sub">${esc(p.tag)}</div>
         <div class="plan-price">
@@ -360,6 +360,8 @@ function bindLanding(app) {
       || { key: planKey, name: planKey, tag: 'Доступ HorusClient', price: null, currency: '₽' };
     const duration = plan.forever ? 'Навсегда' : (plan.days ? plan.days + ' дней' : '30 дней');
     const priceTxt = plan.price != null ? (plan.price + ' ' + (plan.currency || '₽')) : '';
+    const reqPlan = plan.requires ? (state.plans || []).find(r => r.key === plan.requires) : null;
+    const reqTxt = reqPlan ? (reqPlan.name + (reqPlan.forever ? ' Навсегда' : '')) : 'Kamiki 1.21.4 Навсегда';
 
     let selected = 'card';
     const overlay = document.createElement('div');
@@ -375,6 +377,7 @@ function bindLanding(app) {
             <span class="buy-duration">${esc(duration)}</span>
           </div>
         </div>
+        ${plan.requires ? `<div class="buy-warn">⚠️ Этот товар докупается к подписке ${esc(reqTxt)} (Без нее не покупайте)</div>` : ''}
         <div class="buy-label">Способ оплаты</div>
         <div class="buy-methods">
           ${PAY_METHODS.map(m => `
@@ -799,7 +802,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
     else if (section === 'device') main.innerHTML = viewDevice();
     else if (section === 'buy') main.innerHTML = viewBuy();
     else if (section === 'redeem') main.innerHTML = viewRedeem();
-    else if (section === 'invoice') main.innerHTML = viewInvoice();
+    else if (section === 'invoice') { main.innerHTML = ''; startPurchase('invoice'); }
     else if (section === 'promo' && isOwner()) main.innerHTML = viewPromo();
     else if (section === 'mod' && isOwner()) main.innerHTML = viewMod();
     else if (section === 'security') main.innerHTML = viewSecurity();
