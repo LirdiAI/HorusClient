@@ -357,11 +357,11 @@ async function startPurchase(plan) {
         </div>
         <div class="modal-text">Как вы оплатите доступ «${esc(plan)}»?</div>
         <div class="modal-btns" style="flex-direction:column;gap:10px">
-          <button class="btn btn-gold" data-pm="card"><span class="pay-icon">💳</span> Карты (МИР / Visa / MC)</button>
-          <button class="btn btn-gold" data-pm="sbp"><span class="pay-icon">📲</span> СБП</button>
-          <button class="btn btn-gold" data-pm="tpay"><span class="pay-icon">🅣</span> T-Pay</button>
-          <button class="btn btn-dark" data-pm="funpay"><span class="pay-icon">🟢</span> FunPay</button>
-          <button class="btn btn-dark" data-pm="telegram"><span class="pay-icon">✈️</span> Через Telegram</button>
+          <button class="btn btn-gold" data-pm="card" style="width:100%;justify-content:flex-start"><span class="pay-icon">💳</span> Карты (МИР / Visa / MC)</button>
+          <button class="btn btn-gold" data-pm="sbp" style="width:100%;justify-content:flex-start"><span class="pay-icon">📲</span> СБП</button>
+          <button class="btn btn-gold" data-pm="tpay" style="width:100%;justify-content:flex-start"><span class="pay-icon">🅣</span> T-Pay</button>
+          <button class="btn btn-dark" data-pm="funpay" style="width:100%;justify-content:flex-start"><span class="pay-icon">🟢</span> FunPay</button>
+          <button class="btn btn-dark" data-pm="telegram" style="width:100%;justify-content:flex-start"><span class="pay-icon">✈️</span> Через Telegram</button>
           <button class="btn btn-dark" data-cancel="1">Отмена</button>
         </div>
       </div>`;

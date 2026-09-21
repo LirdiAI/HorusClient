@@ -412,6 +412,11 @@ input, textarea, [contenteditable="true"] { user-select: text; -webkit-user-sele
 .modal-title { font-family: var(--font-h); font-weight: 700; font-size: 15px; letter-spacing: .3px; }
 .modal-text { color: var(--muted); font-size: 13.5px; line-height: 1.55; padding: 18px 20px 6px; }
 .modal-btns { display: flex; gap: 10px; justify-content: flex-end; padding: 14px 20px 18px; }
+[data-pm], .modal-ship .pm-btn { width: 100% !important; justify-content: flex-start; }
+.modal-methods { display: flex; flex-direction: column; gap: 10px; padding: 4px 20px 2px; }
+.modal-methods .btn { width: 100%; justify-content: flex-start; }
+.modal-methods .pay-icon { width: 34px; height: 34px; min-width: 34px; display: flex; align-items: center; justify-content: center; border-radius: 9px; font-size: 16px; }
+.modal-methods[data-pm="card"] .pay-icon { background: rgba(255,196,0,.15); }
 
 /* ---------- футер ---------- */
 .footer { border-top: 1px solid var(--line); margin-top: 70px; background: rgba(5,8,15,0.7); }
