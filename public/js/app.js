@@ -1091,6 +1091,9 @@ function viewRedeem() {
         <div class="page-title">Операции</div>
         <div class="page-sub">Покупки игроков: последние 200 заказов</div>
       </div></div>
+      <div class="field" style="margin-bottom:14px">
+        <input id="opsSearch" type="text" placeholder="Поиск по логину…" autocomplete="off">
+      </div>
       <div id="opsList" class="promo-list"><div class="empty" style="padding:18px 0">Загрузка…</div></div>
     </div>`;
   }
@@ -1340,6 +1343,8 @@ if (section === 'redeem' && $('#promoForm')) {
     }
     if (section === 'ops' && isOwner() && $('#opsList')) {
       loadOpsList();
+      const s = $('#opsSearch');
+      if (s) s.addEventListener('input', () => renderOps(s.value.trim().toLowerCase()));
     }
 
     if (section === 'testing' && isOwner() && $('#customForm')) {
@@ -1609,30 +1614,43 @@ if (section === 'redeem' && $('#promoForm')) {
     } catch (err) { el.innerHTML = '<div class="empty">Ошибка загрузки</div>'; }
   }
 
+  let opsCache = [];
+
   async function loadOpsList() {
     const el = $('#opsList');
     if (!el) return;
     try {
       const r = await api('/api/orders/list');
-      if (!r.orders || !r.orders.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">Заказов пока нет</div>'; return; }
-      el.innerHTML = r.orders.map(o => {
-        const badge = o.status === 'paid'
-          ? '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#7ee2a8;background:rgba(46,204,113,.14);border:1px solid rgba(46,204,113,.4)">оплачено</span>'
-          : (o.status === 'refunded' || o.status === 'canceled')
-            ? '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffe08a;background:rgba(240,180,41,.15);border:1px solid rgba(240,180,41,.5)">возврат</span>'
-            : '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffb3b9;background:rgba(255,95,109,.12);border:1px solid rgba(255,95,109,.4)">не оплачено</span>';
-        const date = o.created_at ? new Date(o.created_at).toLocaleString('ru-RU') : '';
-        const sum = o.amount != null ? esc(String(o.amount)) + ' ' + esc(o.currency || '\u20bd') : '\u2014';
-        return `<div class="promo-item">
-          <div style="min-width:0">
-            <b>${esc(o.login)}</b> \u00b7 <span style="color:var(--muted)">${esc(o.email)}</span>
-            <div class="promo-item-sub">\u0427\u0442\u043e: ${esc(o.what)} \u00b7 \u0421\u0443\u043c\u043c\u0430: <b>${sum}</b></div>
-            <div class="promo-item-sub">\u0417\u0430\u043a\u0430\u0437 #${o.id}${date ? ' \u00b7 ' + esc(date) : ''}</div>
-          </div>
-          <div style="flex-shrink:0">${badge}</div>
-        </div>`;
-      }).join('');
+      opsCache = r.orders || [];
+      renderOps('');
     } catch (err) { el.innerHTML = '<div class="empty" style="padding:18px 0">Ошибка загрузки: ' + esc(err.message || '') + '</div>'; }
+  }
+
+  function renderOps(filter) {
+    const el = $('#opsList');
+    if (!el) return;
+    const list = filter ? opsCache.filter(o => (o.login || '').toLowerCase().includes(filter)) : opsCache;
+    if (!list.length) {
+      el.innerHTML = '<div class="empty" style="padding:18px 0">' + (filter ? 'По запросу ничего не найдено' : 'Заказов пока нет') + '</div>';
+      return;
+    }
+    el.innerHTML = list.map(o => {
+      const badge = o.status === 'paid'
+        ? '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#7ee2a8;background:rgba(46,204,113,.14);border:1px solid rgba(46,204,113,.4)">оплачено</span>'
+        : (o.status === 'refunded' || o.status === 'canceled')
+          ? '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffe08a;background:rgba(240,180,41,.15);border:1px solid rgba(240,180,41,.5)">возврат</span>'
+          : '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffb3b9;background:rgba(255,95,109,.12);border:1px solid rgba(255,95,109,.4)">не оплачено</span>';
+      const date = o.created_at ? new Date(o.created_at).toLocaleString('ru-RU') : '';
+      const sum = o.amount != null ? esc(String(o.amount)) + ' ' + esc(o.currency || '\u20bd') : '\u2014';
+      return `<div class="promo-item">
+        <div style="min-width:0">
+          <b>${esc(o.login)}</b> \u00b7 <span style="color:var(--muted)">${esc(o.email)}</span>
+          <div class="promo-item-sub">\u0427\u0442\u043e: ${esc(o.what)} \u00b7 \u0421\u0443\u043c\u043c\u0430: <b>${sum}</b></div>
+          <div class="promo-item-sub">\u0417\u0430\u043a\u0430\u0437 #${o.id}${date ? ' \u00b7 ' + esc(date) : ''}</div>
+        </div>
+        <div style="flex-shrink:0">${badge}</div>
+      </div>`;
+    }).join('');
   }
 
   async function loadCustomList() {
