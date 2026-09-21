@@ -835,9 +835,10 @@ async function getDiscordMembers() {
 app.get('/api/community', ah(async (req, res) => {
   const cfg = Object.fromEntries((await D.getAllCfg()).map(r => [r.key, r.value]));
   const liveDiscord = await getDiscordMembers();
+  const manualDiscord = Number(cfg.discord_members || 0);
   send(res, 200, {
     ok: true,
-    discord: { url: cfg.discord_url, members: liveDiscord ?? Number(cfg.discord_members || 0) },
+    discord: { url: cfg.discord_url, members: manualDiscord > 0 ? manualDiscord : (liveDiscord ?? 0) },
     telegram: { url: cfg.telegram_url, members: Number(cfg.telegram_members || 0) }
   });
 }));
