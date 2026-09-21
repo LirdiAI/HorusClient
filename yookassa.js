@@ -27,7 +27,7 @@ async function call(method, path, body, idemKey) {
     'Idempotence-Key': idemKey || crypto.randomUUID()
   };
   const opts = { method, headers };
-  if (body !== undefined) opts.body = JSON.stringify(bodyapsed);
+  if (body !== undefined) opts.body = JSON.stringify(body);
   const res = await fetch(API + path, opts);
 
   const text = await res.text();

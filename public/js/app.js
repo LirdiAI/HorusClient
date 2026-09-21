@@ -1034,7 +1034,7 @@ function viewRedeem() {
   }
 
   function viewDiscounts() {
-    const plans = (state.plans || []).filter(p => !p.pack && p.key !== 'hwid_reset');
+    const plans = (state.plans || []);
     return `
     <div class="page-card" style="max-width:640px">
       <div class="page-head"><div>
@@ -1062,7 +1062,7 @@ function viewRedeem() {
         <button class="btn btn-gold" type="submit">Создать промокод</button>
       </form>
       <div class="page-title" style="margin-top:26px;font-size:17px">Активные промокоды</div>
-      <div id="promoList" class="promo-list"></div>
+      <div id="discountList" class="promo-list"></div>
     </div>`;
   }
 
