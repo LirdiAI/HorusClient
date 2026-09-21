@@ -359,12 +359,12 @@ async function startPurchase(plan) {
             <button class="btn btn-dark" data-pm="funpay" style="width:100%;justify-content:flex-start"><span class="pay-icon">🟢</span> FunPay</button>
             <button class="btn btn-dark" data-pm="telegram" style="width:100%;justify-content:flex-start"><span class="pay-icon">✈️</span> Через Telegram</button>
           </div>
-          <div class="modal-pay-right">
-            <div class="modal-recip-title">📦 Что получу:</div>
-            <div class="modal-recip-item">Пример: <b>${esc(plan)}</b> · 30 дней</div>
-            <div class="modal-recip-item">Доступ сразу<br>к конфигу в кабинете</div>
-            <div class="modal-recip-note">Мгновенно после оплаты<br>в личном кабинете</div>
-          </div>
+        <div class="modal-pay-right">
+          <div class="modal-recip-title">Что получу:</div>
+          <div class="modal-recip-item">Подписка: <b>${esc(plan)}</b> · 30 дней</div>
+          <div class="modal-recip-item">Доступ откроется сразу<br>в личном кабинете</div>
+          <div class="modal-recip-note">Мгновенно после оплаты<br>по указанному способу</div>
+        </div>
         </div>
         <div class="modal-btns" style="flex-direction:row;justify-content:center">
           <button class="btn btn-dark" data-cancel="1">Отмена</button>
@@ -654,6 +654,8 @@ async function startPurchase(plan) {
     device: { icon: 'monitor', title: 'Привязка устройства' },
     buy: { icon: 'cart', title: 'Купить доступ' },
     redeem: { icon: 'key', title: 'Ввести промокод' },
+    invoice: { icon: 'receipt', title: 'Счёт на оплату (ИП)' },
+    invoice: { icon: 'receipt', title: 'Счёт на оплату (ИП)' },
     security: { icon: 'shield', title: 'Безопасность' },
     promo: { icon: 'spark', title: 'Раздача' },
     mod: { icon: 'shield', title: 'Модификация' },
@@ -701,6 +703,7 @@ ${sbGroup('Мой кабинет', [
           ['device', 'monitor', 'Привязка устройства'],
           ['buy', 'cart', 'Купить доступ'],
           ['redeem', 'key', 'Ввести промокод'],
+          ['invoice', 'receipt', 'Счёт на оплату (ИП)'],
           ['security', 'shield', 'Безопасность'],
           ...(isOwner() ? [['mod', 'shield', 'Модификация'], ['promo', 'spark', 'Раздача']] : [])
         ])}
@@ -746,6 +749,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
     else if (section === 'device') main.innerHTML = viewDevice();
     else if (section === 'buy') main.innerHTML = viewBuy();
     else if (section === 'redeem') main.innerHTML = viewRedeem();
+    else if (section === 'invoice') main.innerHTML = viewInvoice();
     else if (section === 'promo' && isOwner()) main.innerHTML = viewPromo();
     else if (section === 'mod' && isOwner()) main.innerHTML = viewMod();
     else if (section === 'security') main.innerHTML = viewSecurity();
@@ -886,8 +890,8 @@ function viewRedeem() {
     return `
     <div class="page-card" style="max-width:620px">
       <div class="page-head"><div>
-        <div class="page-title">Ввести промокод</div>
-        <div class="page-sub">Активируйте промокод из раздачи</div>
+        <div class="page-title">Введите промокод</div>
+        <div class="page-sub">Есть промокод из раздачи? Введите его — и скидка применится сразу.</div>
       </div></div>
       <form id="promoForm">
         <div class="field">
