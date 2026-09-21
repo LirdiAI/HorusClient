@@ -357,20 +357,28 @@ async function startPurchase(plan) {
         </div>
         <div class="modal-text">Как вы оплатите доступ «${esc(plan)}»?</div>
         <div class="modal-btns" style="flex-direction:column;gap:10px">
-          <button class="btn btn-gold" data-yk="1">Карты / СБП / T-Pay</button>
-          <button class="btn btn-dark" data-yk="0">FunPay</button>
+          <button class="btn btn-gold" data-pm="card"><span class="pay-icon">💳</span> Карты (МИР / Visa / MC)</button>
+          <button class="btn btn-gold" data-pm="sbp"><span class="pay-icon">📲</span> СБП</button>
+          <button class="btn btn-gold" data-pm="tpay"><span class="pay-icon">🅣</span> T-Pay</button>
+          <button class="btn btn-dark" data-pm="funpay"><span class="pay-icon">🟢</span> FunPay</button>
+          <button class="btn btn-dark" data-pm="telegram"><span class="pay-icon">✈️</span> Через Telegram</button>
           <button class="btn btn-dark" data-cancel="1">Отмена</button>
         </div>
       </div>`;
     const close = () => { overlay.classList.add('hide'); setTimeout(() => overlay.remove(), 180); };
     overlay.addEventListener('click', (e) => {
-      const yk = e.target.closest('[data-yk]');
+      const pm = e.target.closest('[data-pm]');
       const cn = e.target.closest('[data-cancel]');
       if (cn) return close();
-      if (yk) {
+      if (pm) {
+        const type = pm.dataset.pm;
         close();
-        if (yk.dataset.yk === '1') return checkoutYooKassa(plan);
-        window.open('https://funpay.com/lots/offer?id=77228605', '_blank', 'noopener');
+        if (type === 'funpay') return window.open('https://funpay.com/lots/offer?id=77228605', '_blank', 'noopener');
+        if (type === 'telegram') return window.open('https://t.me/Agent_Horus_Bot', '_blank', 'noopener');
+        // Карты, СБП: направляем на общую страницу Юkassa (T-Pay она покажет сама
+        // как подключённый способ — отдельный method_data 'tinkoff_bank' не шлём,
+        // иначе Юkassa отвечает «требуется Real Id / Merchant ID (СБП T-Pay)»).
+        return checkoutYooKassa(plan, 'redirect');
       } else if (e.target === overlay) close();
     });
     document.body.appendChild(overlay);

@@ -62,6 +62,9 @@ function buildPayment({ amount, description, metadata, returnUrl, methodType }) 
     confirmation: { type: 'redirect', return_url: returnUrl }
   };
   if (methodType === 'sbp') body.payment_method_data = { type: 'sbp' };
+  // T-Pay отдельным payment_method_data не слать: Юkassa сама показывает
+  // T-Pay на странице оплаты магазинам с подключённым договором. Прямой
+  // 'tinkoff_bank' без merchant-договора Юkassa отклоняет (RealId/MerchantId).
   return body;
 }
 
