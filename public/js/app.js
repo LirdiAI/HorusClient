@@ -317,7 +317,21 @@ renderNav();
           <div class="feature mt-16"><h3>Рекомендуемые</h3><p>Windows 10/11 · Intel Core i5 / AMD Ryzen 5 · 8 ГБ ОЗУ · SSD · видеокарта с 4 ГБ VRAM</p></div>
         </div>
       </div>
-      <div id="download" style="margin-top:6px"></div>
+      <div id="download" style="margin-top:6px">
+        ${(state.me && state.me.subscription && !hasSub())
+          ? `<div class="dl-card" style="max-width:640px;opacity:.6">
+              <span style="display:flex;align-items:center"><span>${icon.zap}</span></span>
+              <div><div style="font-weight:700">HorusLauncher для Windows</div>
+              <div class="muted" style="font-size:12.5px">Скачивание недоступно — подписка заморожена</div></div>
+              <span class="btn btn-gold" style="margin-left:auto;opacity:.55;cursor:not-allowed">Скачать невозможно</span>
+            </div>`
+          : `<div class="dl-card" style="max-width:640px">
+              <span style="display:flex;align-items:center"><span>${icon.zap}</span></span>
+              <div><div style="font-weight:700">HorusLauncher для Windows</div>
+              <div class="muted" style="font-size:12.5px">exe · ~45 МБ со встроенной Java · версия <span id="dlVersion">1.0.0</span></div></div>
+              <a href="/files/HorusLauncher.zip" class="btn btn-gold" style="margin-left:auto" download>Скачать</a>
+            </div>`}
+      </div>
     </section>
 
     <section class="section" id="community">
