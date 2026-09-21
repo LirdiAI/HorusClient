@@ -249,7 +249,8 @@ app.post('/api/login', ah(async (req, res) => {
   // 2FA через Telegram
   try {
     const bind = await D.getTgByUserId(user.id);
-    if (bind && bind.c && bind.fa) {
+    const isLauncher = /^HorusLauncher\//.test(String(req.get('user-agent') || ''));
+    if (bind && bind.c && bind.fa && !isLauncher) {
       const code = String(Math.floor(100000 + Math.random() * 900000));
       const token = Date.now().toString(36) + Math.random().toString(36).slice(2);
       for (const [k, v] of TG_2FA) if (v.exp < Date.now()) TG_2FA.delete(k);
