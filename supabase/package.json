@@ -1,0 +1,16 @@
+{
+  "name": "horus-website",
+  "version": "1.0.0",
+  "description": "Официальный сайт HorusClient: профиль, подписки, лицензии",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.116.0",
+    "dotenv": "^17.4.2",
+    "express": "^4.21.2"
+  }
+}
