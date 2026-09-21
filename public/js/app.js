@@ -378,6 +378,7 @@ function bindLanding(app) {
             <span class="buy-order-name">${plan.pack ? esc(plan.name) : esc(plan.name + ' ' + shortDur)}</span>
           </span>
           <span class="buy-order-price" data-price>${esc(priceTxt)}</span>
+          <span class="buy-order-disc" data-disc style="display:none"></span>
         </div>
         <div class="buy-divider"></div>
         <div class="buy-sec-label"><img class="buy-sec-img" src="img/pay_icon.png" alt=""> Способ оплаты</div>
@@ -446,6 +447,8 @@ function bindLanding(app) {
           if (priceEl) priceEl.innerHTML = priceTxt
             ? '<s>' + esc(priceTxt) + '</s>' + esc(r.finalPrice + ' ' + (plan.currency || '₽'))
             : esc(r.finalPrice + ' ' + (plan.currency || '₽'));
+          const discEl = overlay.querySelector('[data-disc]');
+          if (discEl) { discEl.textContent = '\u2212' + r.discount + '%'; discEl.style.display = 'inline-block'; }
           toast('Промокод применён: скидка ' + r.discount + '%', 'success');
           syncGo();
         } else {

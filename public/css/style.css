@@ -469,6 +469,14 @@ input, textarea, [contenteditable="true"] { user-select: text; -webkit-user-sele
 .buy-order-sub { color: var(--muted); font-size: 12.5px; }
 .buy-order-price { margin-left: auto; font-family: var(--font-h); font-weight: 700; font-size: 17px; }
 .buy-order-price s { color: var(--muted); font-weight: 400; font-size: 13px; margin-right: 8px; }
+.buy-order-disc {
+  margin-left: 10px; padding: 3px 9px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 800; letter-spacing: .4px;
+  color: #d8b4fe; background: rgba(168,85,247,.16);
+  border: 1px solid rgba(168,85,247,.45);
+  box-shadow: 0 4px 12px -6px rgba(168,85,247,.6);
+  animation: buyFadeIn .25s ease;
+}
 
 .buy-divider { height: 1px; background: var(--line); margin: 0 22px; }
 

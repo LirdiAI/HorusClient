@@ -509,7 +509,7 @@ module.exports = {
   getLastHwReset, insertHwReset,
   getPromoByCode, promoCodeExists, insertPromo, listPromos, bumpPromoUsed, deletePromo,
   getDiscountPromoByCode, insertDiscountPromo, listDiscountPromos, deleteDiscountPromo, bumpDiscountPromoByCode,
-  insertOrder, insertTicket,
+  insertOrder, getOrderById, setOrderPaid, saveOrderPayment, insertTicket,
   getAllCfg, getCfg, setCfg, deleteCfg,
   getTgByUserId, getUserIdByTg, checkTgTaken, bindTg, unbindTg,
   setTgPending, getTgPending, findTgPendingByCode, clearTgPending,
