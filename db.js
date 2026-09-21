@@ -244,6 +244,30 @@ async function deletePromo(id) {
   if (error) throw error;
 }
 
+/* ---------------- custom_offers ---------------- */
+
+async function getCustomOfferById(id) {
+  const { data, error } = await sb.from('custom_offers').select('*').eq('id', id).maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
+async function insertCustomOffer(o) {
+  const { error } = await sb.from('custom_offers').insert(o);
+  if (error) throw error;
+}
+
+async function listCustomOffers() {
+  const { data, error } = await sb.from('custom_offers').select('*').order('id', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function deleteCustomOffer(id) {
+  const { error } = await sb.from('custom_offers').delete().eq('id', id);
+  if (error) throw error;
+}
+
 /* ---------------- discount_promos ---------------- */
 
 async function getDiscountPromoByCode(code) {
@@ -509,6 +533,7 @@ module.exports = {
   getLastHwReset, insertHwReset,
   getPromoByCode, promoCodeExists, insertPromo, listPromos, bumpPromoUsed, deletePromo,
   getDiscountPromoByCode, insertDiscountPromo, listDiscountPromos, deleteDiscountPromo, bumpDiscountPromoByCode,
+  getCustomOfferById, insertCustomOffer, listCustomOffers, deleteCustomOffer,
   insertOrder, getOrderById, setOrderPaid, saveOrderPayment, insertTicket,
   getAllCfg, getCfg, setCfg, deleteCfg,
   getTgByUserId, getUserIdByTg, checkTgTaken, bindTg, unbindTg,

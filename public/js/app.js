@@ -154,9 +154,48 @@ renderNav();
     if (path.startsWith('/cabinet')) { routeCabinet(path); return; }
     if (path === '/login' || path === '/register') { routeAuth(path); return; }
     if (path === '/forgot') { routeForgot(); return; }
+    if (path.startsWith('/pay-offer/')) { routePayOffer(path); return; }
     if (path.startsWith('/reset')) { routeReset(); return; }
 
     routeLanding(path);
+  }
+
+  /* ================= ОПЛАТА КАСТОМНОЙ ПОЗИЦИИ ================= */
+  async function routePayOffer(path) {
+    const id = Number(String(path).split('/')[2] || 0);
+    const appEl = $('#app');
+    document.title = 'Оплата — HorusClient';
+    appEl.innerHTML = '<div style="max-width:900px;margin:0 auto;padding:60px 20px">Загрузка…</div>';
+    let offer = null;
+    try {
+      const r = await api('/api/custom/get?id=' + id);
+      offer = r.offer;
+    } catch (e) { offer = null; }
+    if (!offer) {
+      appEl.innerHTML = '<div style="max-width:900px;margin:0 auto;padding:60px 20px"><div class="page-card">Позиция не найдена</div></div>';
+      return;
+    }
+    appEl.innerHTML = `
+    <div style="max-width:900px;margin:0 auto;padding:60px 20px">
+      <div class="page-card" style="max-width:520px;margin:0 auto">
+        <div class="page-title">${esc(offer.title)}</div>
+        <div class="page-sub" style="margin:10px 0 16px">Сумма: <b>${esc(String(offer.amount))} ₽</b></div>
+        ${offer.description ? `<div class="page-sub" style="margin-bottom:18px;line-height:1.6">${esc(offer.description)}</div>` : ''}
+        <button class="btn btn-gold" id="payOfferBtn" style="width:100%">Оплатить через СБП · ${esc(String(offer.amount))} ₽</button>
+      </div>
+    </div>`;
+    $('#payOfferBtn').addEventListener('click', async () => {
+      const btn = $('#payOfferBtn');
+      btn.disabled = true;
+      try {
+        const r = await api('/api/custom/pay', { method: 'POST', body: JSON.stringify({ id }) });
+        if (r && r.ok && r.confirmationUrl) { window.location.href = r.confirmationUrl; return; }
+        toast((r && (r.message || r.error)) || 'Ссылка на оплату не получена');
+      } catch (err) {
+        toast((err && err.message) || 'Ошибка подключения к оплате');
+      }
+      btn.disabled = false;
+    });
   }
 
   /* ================= LANDING ================= */
@@ -749,6 +788,7 @@ function bindLanding(app) {
     security: { icon: 'shield', title: 'Безопасность' },
     promo: { icon: 'spark', title: 'Раздача' },
     discounts: { icon: 'zap', title: 'Создание скидок' },
+    testing: { icon: 'bug', title: 'Тестирование' },
     mod: { icon: 'shield', title: 'Модификация' },
     support: { icon: 'support', title: 'Поддержка' },
     idea: { icon: 'idea', title: 'Предложить идею' },
@@ -794,7 +834,7 @@ ${sbGroup('Мой кабинет', [
           ['device', 'monitor', 'Привязка устройства'],
           ['buy', 'cart', 'Купить доступ'],
           ['security', 'shield', 'Безопасность'],
-          ...(isOwner() ? [['mod', 'shield', 'Модификация'], ['promo', 'spark', 'Раздача'], ['discounts', 'zap', 'Создание скидок']] : [])
+          ...(isOwner() ? [['mod', 'shield', 'Модификация'], ['promo', 'spark', 'Раздача'], ['discounts', 'zap', 'Создание скидок'], ['testing', 'bug', 'Тестирование']] : [])
         ])}
         ${sbGroup('Помощь', [
           ['support', 'support', 'Поддержка'],
@@ -841,6 +881,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
     else if (section === 'invoice') main.innerHTML = viewProfile();
     else if (section === 'promo' && isOwner()) main.innerHTML = viewPromo();
     else if (section === 'discounts' && isOwner()) main.innerHTML = viewDiscounts();
+    else if (section === 'testing' && isOwner()) main.innerHTML = viewTesting();
     else if (section === 'mod' && isOwner()) main.innerHTML = viewMod();
     else if (section === 'security') main.innerHTML = viewSecurity();
     else main.innerHTML = viewSupport(section, ap);
@@ -1033,6 +1074,30 @@ function viewRedeem() {
         <div class="page-sub">Список промокодов и их использование</div>
       </div></div>
       <div id="promoList"></div>
+    </div>`;
+  }
+
+  function viewTesting() {
+    return `
+    <div class="page-card" style="max-width:640px">
+      <div class="page-head"><div>
+        <div class="page-title">Тестирование</div>
+        <div class="page-sub">Свои позиции для оплаты: название, сумма и что даёт</div>
+      </div></div>
+      <form id="customForm">
+        <div class="field"><label>Название (что оплачиваю)</label>
+          <input name="title" required minlength="2" maxlength="100" placeholder="Например: Тестовый доступ">
+        </div>
+        <div class="field"><label>Сумма оплаты, ₽</label>
+          <input name="amount" type="number" min="1" max="1000000" required placeholder="100">
+        </div>
+        <div class="field"><label>Что даёт</label>
+          <textarea name="description" rows="3" placeholder="Описание, которое увидит покупатель"></textarea>
+        </div>
+        <button class="btn btn-gold" type="submit">Создать позицию</button>
+      </form>
+      <div class="page-title" style="margin-top:26px;font-size:17px">Созданные позиции</div>
+      <div id="customList" class="promo-list"></div>
     </div>`;
   }
 
@@ -1252,6 +1317,26 @@ if (section === 'redeem' && $('#promoForm')) {
       });
       loadPromoList();
     }
+    if (section === 'testing' && isOwner() && $('#customForm')) {
+      $('#customForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const title = e.target.title.value.trim();
+        const amount = Number(e.target.amount.value);
+        const description = e.target.description.value.trim();
+        if (!title || !(amount >= 1)) return toast('Проверьте название и сумму', 'error');
+        btn.disabled = true;
+        try {
+          const r = await api('/api/custom/create', { method: 'POST', body: JSON.stringify({ title, amount, description }) });
+          toast((r && r.message) || 'Позиция создана', 'success');
+          e.target.reset();
+          loadCustomList();
+        } catch (err) { toast(err.message, 'error'); }
+        btn.disabled = false;
+      });
+      loadCustomList();
+    }
+
     if (section === 'discounts' && isOwner() && $('#discountCreateForm')) {
       let mode = 'media';
       const plansBox = $('#discountPlans');
@@ -1497,6 +1582,41 @@ if (section === 'redeem' && $('#promoForm')) {
         }
       }));
     } catch (err) { el.innerHTML = '<div class="empty">Ошибка загрузки</div>'; }
+  }
+
+  async function loadCustomList() {
+    const el = $('#customList');
+    if (!el) return;
+    try {
+      const r = await api('/api/custom/list');
+      if (!r.offers || !r.offers.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">Пока нет позиций</div>'; return; }
+      el.innerHTML = r.offers.map(o => {
+        const link = location.origin + '/#/pay-offer/' + o.id;
+        return `<div class="promo-item">
+          <div>
+            <b>${esc(o.title)}</b> · ${esc(String(o.amount))} ₽
+            ${o.description ? `<div class="promo-item-sub">${esc(o.description)}</div>` : ''}
+            <div class="promo-item-sub"><a href="${link}" target="_blank" rel="noopener">${esc(link)}</a></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0">
+            <button class="btn btn-ghost" data-copy-offer="${esc(link)}">Копировать</button>
+            <button class="btn btn-ghost" data-del-offer="${o.id}">Удалить</button>
+          </div>
+        </div>`;
+      }).join('');
+      $$('[data-del-offer]', el).forEach(b => b.addEventListener('click', async () => {
+        if (!confirm('Удалить позицию?')) return;
+        try {
+          await api('/api/custom/delete', { method: 'POST', body: JSON.stringify({ id: Number(b.dataset.delOffer) }) });
+          toast('Удалено', 'success');
+          loadCustomList();
+        } catch (err) { toast(err.message, 'error'); }
+      }));
+      $$('[data-copy-offer]', el).forEach(b => b.addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(b.dataset.copyOffer); toast('Ссылка скопирована', 'success'); }
+        catch (err) { toast('Не удалось скопировать', 'error'); }
+      }));
+    } catch (err) { el.innerHTML = '<div class="empty" style="padding:18px 0">Ошибка загрузки</div>'; }
   }
 
   async function loadDiscountList() {

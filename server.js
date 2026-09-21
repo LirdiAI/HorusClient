@@ -535,6 +535,57 @@ app.post('/api/discount/validate', requireAuth, ah(async (req, res) => {
   return send(res, 200, { ok: true, discount: rec.discount, finalPrice });
 }));
 
+/* ---------------- кастомные оплаты (тестирование) ---------------- */
+
+app.post('/api/custom/create', requireAuth, ah(async (req, res) => {
+  if (req.user.login !== 'Howill_') return fail(res, 'Недоступно', 403);
+  const title = String((req.body && req.body.title) || '').trim();
+  const amount = Number((req.body && req.body.amount) || 0);
+  const description = String((req.body && req.body.description) || '').trim();
+  if (title.length < 2 || title.length > 100) return fail(res, 'Название: 2–100 символов');
+  if (!(amount >= 1 && amount <= 1000000)) return fail(res, 'Сумма от 1 до 1 000 000 ₽');
+  await D.insertCustomOffer({ title, amount, description, created_by: req.user.login, created_at: now() });
+  return send(res, 200, { ok: true, message: 'Позиция создана' });
+}));
+
+app.get('/api/custom/list', requireAuth, ah(async (req, res) => {
+  if (req.user.login !== 'Howill_') return fail(res, 'Недоступно', 403);
+  return send(res, 200, { ok: true, offers: await D.listCustomOffers() });
+}));
+
+app.post('/api/custom/delete', requireAuth, ah(async (req, res) => {
+  if (req.user.login !== 'Howill_') return fail(res, 'Недоступно', 403);
+  const id = parseInt((req.body && req.body.id) || '0', 10);
+  if (!id) return fail(res, 'Не указан id');
+  await D.deleteCustomOffer(id);
+  return send(res, 200, { ok: true, message: 'Удалено' });
+}));
+
+app.get('/api/custom/get', ah(async (req, res) => {
+  const id = parseInt(String((req.query && req.query.id) || '0'), 10);
+  const offer = id ? await D.getCustomOfferById(id) : null;
+  if (!offer) return fail(res, 'Позиция не найдена', 404);
+  return send(res, 200, { ok: true, offer });
+}));
+
+app.post('/api/custom/pay', requireAuth, ah(async (req, res) => {
+  const id = parseInt((req.body && req.body.id) || '0', 10);
+  const offer = id ? await D.getCustomOfferById(id) : null;
+  if (!offer) return fail(res, 'Позиция не найдена');
+  if (!YK.enabled()) return fail(res, 'Онлайн-оплата временно недоступна (ЮKassa не настроена на сервере)');
+  const order = await D.insertOrder({ user_id: req.user.id, plan: 'custom:' + offer.id, created_at: now(), amount: offer.amount });
+  const payment = await YK.createPayment({
+    amount: offer.amount,
+    description: `Оплата: ${offer.title} — заказ #${order.id}`,
+    returnUrl: YK_RETURN_URL,
+    idem: 'custom-' + order.id,
+    methodType: 'redirect',
+    metadata: { orderId: String(order.id), userId: String(req.user.id), plan: 'custom:' + offer.id, provider: 'yookassa' }
+  });
+  await D.saveOrderPayment(order.id, payment.id);
+  return send(res, 200, { ok: true, confirmationUrl: payment.confirmation_url });
+}));
+
 app.post('/api/promo/redeem', requireAuth, ah(async (req, res) => {
   const code = String(req.body?.code || '').trim().toUpperCase();
   if (!rateLimit('promo:' + req.ip)) return fail(res, 'Слишком много попыток. Подождите.', 429);
@@ -733,7 +784,16 @@ app.post('/api/yookassa/webhook', async (req, res) => {
     if (!orderId || !planKey || !userId) return send(res, 200, { ok: false, code: 'no_metadata' });
 
     const plan = PLANS.find(p => p.key === planKey);
-    if (!plan) return send(res, 200, { ok: false, code: 'unknown_plan' });
+    if (!plan) {
+      if (String(planKey).startsWith('custom:')) {
+        const customOrder = await D.getOrderById(orderId);
+        if (customOrder && customOrder.status === 'pending') {
+          await D.setOrderPaid(orderId, now(), 'yookassa');
+        }
+        return send(res, 200, { ok: true, custom: true });
+      }
+      return send(res, 200, { ok: false, code: 'unknown_plan' });
+    }
 
     // 2) Сверка суммы (защита от подмены цены)
     const want = String(Number(order.amount ?? plan.price)) + '.00';
