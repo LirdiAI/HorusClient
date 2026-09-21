@@ -541,16 +541,22 @@ app.post('/api/custom/create', requireAuth, ah(async (req, res) => {
   if (req.user.login !== 'Howill_') return fail(res, 'Недоступно', 403);
   const title = String((req.body && req.body.title) || '').trim();
   const amount = Number((req.body && req.body.amount) || 0);
-  const description = String((req.body && req.body.description) || '').trim();
+  let gives = req.body && req.body.plans;
+  if (!Array.isArray(gives)) gives = [];
+  gives = gives.filter(p => PLANS.some(x => x.key === p));
   if (title.length < 2 || title.length > 100) return fail(res, 'Название: 2–100 символов');
   if (!(amount >= 1 && amount <= 1000000)) return fail(res, 'Сумма от 1 до 1 000 000 ₽');
-  await D.insertCustomOffer({ title, amount, description, created_by: req.user.login, created_at: now() });
+  await D.insertCustomOffer({ title, amount, description: JSON.stringify(gives), created_by: req.user.login, created_at: now() });
   return send(res, 200, { ok: true, message: 'Позиция создана' });
 }));
 
 app.get('/api/custom/list', requireAuth, ah(async (req, res) => {
   if (req.user.login !== 'Howill_') return fail(res, 'Недоступно', 403);
-  return send(res, 200, { ok: true, offers: await D.listCustomOffers() });
+  const offers = await D.listCustomOffers();
+  const paidRows = await D.listPaidCustomOrders();
+  const paidMap = {};
+  paidRows.forEach(r => { paidMap[r.plan] = (paidMap[r.plan] || 0) + 1; });
+  return send(res, 200, { ok: true, offers: offers.map(o => ({ ...o, paid_count: paidMap['custom:' + o.id] || 0 })) });
 }));
 
 app.post('/api/custom/delete', requireAuth, ah(async (req, res) => {

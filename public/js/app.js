@@ -175,12 +175,17 @@ renderNav();
       appEl.innerHTML = '<div style="max-width:900px;margin:0 auto;padding:60px 20px"><div class="page-card">Позиция не найдена</div></div>';
       return;
     }
+    let givesTxt = '';
+    try {
+      const arr = JSON.parse(offer.description || '[]');
+      if (arr.length) givesTxt = 'Включает: ' + arr.map(k => { const p = (state.plans || []).find(x => x.key === k); return p ? p.name : k; }).join(', ');
+    } catch (e) { givesTxt = offer.description || ''; }
     appEl.innerHTML = `
     <div style="max-width:900px;margin:0 auto;padding:60px 20px">
       <div class="page-card" style="max-width:520px;margin:0 auto">
         <div class="page-title">${esc(offer.title)}</div>
         <div class="page-sub" style="margin:10px 0 16px">Сумма: <b>${esc(String(offer.amount))} ₽</b></div>
-        ${offer.description ? `<div class="page-sub" style="margin-bottom:18px;line-height:1.6">${esc(offer.description)}</div>` : ''}
+        ${givesTxt ? `<div class="page-sub" style="margin-bottom:18px;line-height:1.6">${esc(givesTxt)}</div>` : ''}
         <button class="btn btn-gold" id="payOfferBtn" style="width:100%">Оплатить через СБП · ${esc(String(offer.amount))} ₽</button>
       </div>
     </div>`;
@@ -1078,6 +1083,7 @@ function viewRedeem() {
   }
 
   function viewTesting() {
+    const plans = (state.plans || []);
     return `
     <div class="page-card" style="max-width:640px">
       <div class="page-head"><div>
@@ -1091,8 +1097,10 @@ function viewRedeem() {
         <div class="field"><label>Сумма оплаты, ₽</label>
           <input name="amount" type="number" min="1" max="1000000" required placeholder="100">
         </div>
-        <div class="field"><label>Что даёт</label>
-          <textarea name="description" rows="3" placeholder="Описание, которое увидит покупатель"></textarea>
+        <div class="field"><label>Что даёт (тарифы)</label>
+          <div class="promo-plans" id="customPlans">
+            ${plans.map(p => `<label class="promo-plan"><input type="checkbox" name="cplan" value="${p.key}"> <span>${esc(p.name)}${p.forever ? ' · Навсегда' : p.days ? ' · ' + p.days + ' дн.' : ''}</span></label>`).join('')}
+          </div>
         </div>
         <button class="btn btn-gold" type="submit">Создать позицию</button>
       </form>
@@ -1323,11 +1331,11 @@ if (section === 'redeem' && $('#promoForm')) {
         const btn = e.target.querySelector('button[type="submit"]');
         const title = e.target.title.value.trim();
         const amount = Number(e.target.amount.value);
-        const description = e.target.description.value.trim();
+        const plans = $$('input[name="cplan"]:checked', $('#customPlans')).map(inp => inp.value);
         if (!title || !(amount >= 1)) return toast('Проверьте название и сумму', 'error');
         btn.disabled = true;
         try {
-          const r = await api('/api/custom/create', { method: 'POST', body: JSON.stringify({ title, amount, description }) });
+          const r = await api('/api/custom/create', { method: 'POST', body: JSON.stringify({ title, amount, plans }) });
           toast((r && r.message) || 'Позиция создана', 'success');
           e.target.reset();
           loadCustomList();
@@ -1592,10 +1600,19 @@ if (section === 'redeem' && $('#promoForm')) {
       if (!r.offers || !r.offers.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">Пока нет позиций</div>'; return; }
       el.innerHTML = r.offers.map(o => {
         const link = location.origin + '/#/pay-offer/' + o.id;
+        const paid = Number(o.paid_count || 0);
+        const status = paid > 0
+          ? `<span style="margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#7ee2a8;background:rgba(46,204,113,.14);border:1px solid rgba(46,204,113,.4)">оплачено${paid > 1 ? ' · ' + paid : ''}</span>`
+          : `<span style="margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffb3b9;background:rgba(255,95,109,.12);border:1px solid rgba(255,95,109,.4)">не оплачено</span>`;
+        let gives = '';
+        try {
+          const arr = JSON.parse(o.description || '[]');
+          if (arr.length) gives = 'Даёт: ' + arr.map(k => { const p = (state.plans || []).find(x => x.key === k); return p ? p.name : k; }).join(', ');
+        } catch (e) { if (o.description) gives = o.description; }
         return `<div class="promo-item">
           <div>
-            <b>${esc(o.title)}</b> · ${esc(String(o.amount))} ₽
-            ${o.description ? `<div class="promo-item-sub">${esc(o.description)}</div>` : ''}
+            <b>${esc(o.title)}</b> · ${esc(String(o.amount))} ₽${status}
+            ${gives ? `<div class="promo-item-sub">${esc(gives)}</div>` : ''}
             <div class="promo-item-sub"><a href="${link}" target="_blank" rel="noopener">${esc(link)}</a></div>
           </div>
           <div style="display:flex;gap:8px;flex-shrink:0">

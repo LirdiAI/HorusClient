@@ -268,6 +268,12 @@ async function deleteCustomOffer(id) {
   if (error) throw error;
 }
 
+async function listPaidCustomOrders() {
+  const { data, error } = await sb.from('orders').select('plan').eq('status', 'paid').like('plan', 'custom:%');
+  if (error) throw error;
+  return data || [];
+}
+
 /* ---------------- discount_promos ---------------- */
 
 async function getDiscountPromoByCode(code) {
@@ -533,7 +539,7 @@ module.exports = {
   getLastHwReset, insertHwReset,
   getPromoByCode, promoCodeExists, insertPromo, listPromos, bumpPromoUsed, deletePromo,
   getDiscountPromoByCode, insertDiscountPromo, listDiscountPromos, deleteDiscountPromo, bumpDiscountPromoByCode,
-  getCustomOfferById, insertCustomOffer, listCustomOffers, deleteCustomOffer,
+  getCustomOfferById, insertCustomOffer, listCustomOffers, deleteCustomOffer, listPaidCustomOrders,
   insertOrder, getOrderById, setOrderPaid, saveOrderPayment, insertTicket,
   getAllCfg, getCfg, setCfg, deleteCfg,
   getTgByUserId, getUserIdByTg, checkTgTaken, bindTg, unbindTg,
