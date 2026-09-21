@@ -578,6 +578,8 @@ input, textarea, [contenteditable="true"] { user-select: text; -webkit-user-sele
 .mod-card-sub { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
 @media (max-width: 560px) { .mod-cards { grid-template-columns: 1fr; } }
 
+.mod-card.active { border-color: #a855f7; background: rgba(168,85,247,.13); box-shadow: 0 0 0 1px #a855f7 inset; }
+
 /* ---------- профиль: баннер и аватар ---------- */
 .profile-banner {
   height: 150px;

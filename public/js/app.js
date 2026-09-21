@@ -1212,32 +1212,33 @@ function viewRedeem() {
   function viewMod() {
     return `
     <div class="mod-cards">
-      <button type="button" class="mod-card" data-cab="promo">
-        <div class="mod-card-ic">${icon.spark}</div>
-        <div class="mod-card-title">Раздача</div>
-        <div class="mod-card-sub">Промокоды-раздачи на тарифы сайта</div>
-      </button>
-      <button type="button" class="mod-card" data-cab="discounts">
-        <div class="mod-card-ic">${icon.zap}</div>
-        <div class="mod-card-title">Создание скидок</div>
-        <div class="mod-card-sub">Скидочные промокоды на тарифы сайта</div>
-      </button>
-      <button type="button" class="mod-card" data-cab="testing">
-        <div class="mod-card-ic">${icon.bug}</div>
-        <div class="mod-card-title">Тестирование</div>
-        <div class="mod-card-sub">Свои позиции для оплаты: название, сумма и что даёт</div>
-      </button>
-      <button type="button" class="mod-card" data-cab="ops">
-        <div class="mod-card-ic">${icon.cart}</div>
-        <div class="mod-card-title">Операции</div>
-        <div class="mod-card-sub">Покупки игроков: статусы, суммы, поиск по логину</div>
-      </button>
-      <button type="button" class="mod-card" data-scroll-mod>
+      <button type="button" class="mod-card active" data-modsec="">
         <div class="mod-card-ic">${icon.shield}</div>
         <div class="mod-card-title">Модификация</div>
         <div class="mod-card-sub">Управление пользователями: поиск, блокировка, настройки лаунчера и новостей</div>
       </button>
+      <button type="button" class="mod-card" data-modsec="promo">
+        <div class="mod-card-ic">${icon.spark}</div>
+        <div class="mod-card-title">Раздача</div>
+        <div class="mod-card-sub">Промокоды-раздачи на тарифы сайта</div>
+      </button>
+      <button type="button" class="mod-card" data-modsec="discounts">
+        <div class="mod-card-ic">${icon.zap}</div>
+        <div class="mod-card-title">Создание скидок</div>
+        <div class="mod-card-sub">Скидочные промокоды на тарифы сайта</div>
+      </button>
+      <button type="button" class="mod-card" data-modsec="testing">
+        <div class="mod-card-ic">${icon.bug}</div>
+        <div class="mod-card-title">Тестирование</div>
+        <div class="mod-card-sub">Свои позиции для оплаты: название, сумма и что даёт</div>
+      </button>
+      <button type="button" class="mod-card" data-modsec="ops">
+        <div class="mod-card-ic">${icon.cart}</div>
+        <div class="mod-card-title">Операции</div>
+        <div class="mod-card-sub">Покупки игроков: статусы, суммы, поиск по логину</div>
+      </button>
     </div>
+    <div id="modContent">
     <div class="page-card" style="max-width:820px">
       <div class="page-head"><div>
         <div class="page-title">Модификация</div>
@@ -1264,6 +1265,7 @@ function viewRedeem() {
         <button type="submit" class="btn btn-gold">Сохранить</button>
         <div id="launcherMetaResult"></div>
       </form>
+    </div>
     </div>`;
   }
 
@@ -1345,6 +1347,8 @@ function viewRedeem() {
   }
 
   /* ---------- bind actions ---------- */
+  let modDefaultHtmlCache = '';
+
   function bindSection(section, main, ap) {
     if (section === 'profile' && $('[data-upload]')) {
       $$('[data-upload]').forEach(btn => btn.addEventListener('click', () => uploadProfileImage(btn, btn.dataset.upload)));
@@ -1481,11 +1485,23 @@ if (section === 'redeem' && $('#promoForm')) {
       loadDiscountList();
     }
     if (section === 'mod' && isOwner()) {
-      $$('[data-cab]', main).forEach(c => c.addEventListener('click', () => renderCabContent(c.dataset.cab, ap)));
-      const sm = $('[data-scroll-mod]', main);
-      if (sm) sm.addEventListener('click', () => {
-        const target = main.querySelector('.page-card');
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const modBox = $('#modContent', main);
+      if (modBox && !modDefaultHtmlCache) modDefaultHtmlCache = modBox.innerHTML;
+      const modViews = { promo: viewPromo, discounts: viewDiscounts, testing: viewTesting, ops: viewOps };
+      $$('.mod-card', main).forEach(card => {
+        card.onclick = () => {
+          const key = card.dataset.modsec || '';
+          if (!modBox) return;
+          $$('.mod-card', main).forEach(c => c.classList.toggle('active', c === card));
+          if (!key) {
+            modBox.innerHTML = modDefaultHtmlCache;
+            bindSection('mod', main, ap);
+            $$('.mod-card', main).forEach(c => c.classList.toggle('active', c === card));
+          } else {
+            modBox.innerHTML = modViews[key]();
+            bindSection(key, main, ap);
+          }
+        };
       });
       loadModUsers();
       loadLauncherMeta();
