@@ -564,6 +564,117 @@ html { scroll-padding-top: 76px; }
   .reveal { opacity: 1 !important; transform: none !important; }
   .grad-anim, .b1, .b2, .b3, .btn-gold::after, .hero-badge .dot { animation: none !important; }
 }
+
+/* ---------- окно покупки ---------- */
+.buy-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  background: rgba(4, 7, 14, 0.72); backdrop-filter: blur(6px);
+  opacity: 0; transition: opacity .22s ease;
+}
+.buy-overlay.show { opacity: 1; }
+.buy-overlay.hide { opacity: 0; }
+
+.buy-modal {
+  position: relative; width: 100%; max-width: 520px;
+  max-height: calc(100dvh - 40px); overflow-y: auto;
+  background: var(--panel-solid);
+  border: 1px solid var(--line-strong);
+  border-radius: 20px;
+  box-shadow: 0 30px 90px -18px rgba(0, 0, 0, 0.85);
+  transform: translateY(16px) scale(.96);
+  transition: transform .24s cubic-bezier(.2, .9, .3, 1.15);
+}
+.buy-overlay.show .buy-modal { transform: none; }
+.buy-overlay.hide .buy-modal { transform: translateY(10px) scale(.97); }
+
+.buy-close {
+  position: absolute; top: 12px; right: 12px; z-index: 2;
+  width: 34px; height: 34px; border-radius: 10px;
+  border: 1px solid var(--line); background: rgba(255,255,255,.04);
+  color: var(--muted); font-size: 14px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: color .15s, background .15s, border-color .15s;
+}
+.buy-close:hover { color: var(--text); background: rgba(255,255,255,.08); border-color: var(--line-strong); }
+
+.buy-head {
+  padding: 26px 24px 20px;
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(168,85,247,.14), transparent 55%),
+    radial-gradient(100% 120% at 0% 100%, rgba(62,195,244,.08), transparent 50%);
+}
+.buy-tag {
+  display: inline-block; font-size: 11.5px; font-weight: 700;
+  letter-spacing: .6px; text-transform: uppercase;
+  color: var(--gold-2); background: var(--gold-dim);
+  border: 1px solid rgba(168,85,247,.35);
+  padding: 4px 10px; border-radius: 999px; margin-bottom: 10px;
+}
+.buy-name { font-family: var(--font-h); font-weight: 700; font-size: 22px; letter-spacing: .3px; }
+.buy-price-row { display: flex; align-items: baseline; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+.buy-price { font-family: var(--font-h); font-weight: 700; font-size: 26px; color: var(--gold-2); }
+.buy-duration { color: var(--muted); font-size: 13.5px; font-weight: 600; }
+
+.buy-label {
+  padding: 18px 24px 0; font-size: 12px; font-weight: 700;
+  letter-spacing: .8px; text-transform: uppercase; color: var(--muted-2);
+}
+
+.buy-methods { display: flex; flex-direction: column; gap: 10px; padding: 12px 24px 0; }
+.buy-method {
+  display: flex; align-items: center; gap: 13px; width: 100%;
+  padding: 13px 14px; text-align: left;
+  border: 1px solid var(--line); border-radius: 14px;
+  background: rgba(255,255,255,.02); color: var(--text);
+  transition: border-color .15s, background .15s, transform .15s;
+}
+.buy-method:hover { border-color: var(--line-strong); background: rgba(255,255,255,.045); transform: translateY(-1px); }
+.buy-method.selected {
+  border-color: var(--gold); background: var(--gold-dim);
+  box-shadow: 0 0 0 1px var(--gold) inset, 0 8px 24px -14px rgba(168,85,247,.7);
+}
+.buy-method-icon {
+  width: 42px; height: 42px; min-width: 42px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 19px; background: rgba(255,255,255,.05); border: 1px solid var(--line);
+}
+.buy-method.selected .buy-method-icon { background: rgba(168,85,247,.18); border-color: rgba(168,85,247,.4); }
+.buy-method-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.buy-method-name { font-weight: 700; font-size: 14.5px; }
+.buy-method-sub { color: var(--muted); font-size: 12.5px; }
+.buy-method-check {
+  margin-left: auto; width: 20px; height: 20px; min-width: 20px;
+  border-radius: 50%; border: 2px solid var(--line-strong);
+  position: relative; transition: border-color .15s, background .15s;
+}
+.buy-method.selected .buy-method-check { border-color: var(--gold); background: var(--gold); }
+.buy-method.selected .buy-method-check::after {
+  content: ''; position: absolute; left: 5.5px; top: 2.5px;
+  width: 4px; height: 8px;
+  border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+
+.buy-perks { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 24px 0; }
+.buy-perk {
+  font-size: 12px; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 6px 12px; background: rgba(255,255,255,.02);
+}
+
+.buy-actions { display: flex; gap: 10px; padding: 18px 24px 22px; }
+.buy-actions .btn-gold { flex: 1; }
+.buy-actions .btn[disabled] { opacity: .6; cursor: wait; transform: none; }
+
+@media (max-width: 480px) {
+  .buy-overlay { padding: 12px; align-items: flex-end; }
+  .buy-modal { border-radius: 18px 18px 14px 14px; }
+  .buy-head { padding: 22px 18px 16px; }
+  .buy-label, .buy-methods, .buy-perks { padding-left: 18px; padding-right: 18px; }
+  .buy-actions { padding: 16px 18px 18px; flex-direction: column-reverse; }
+  .buy-actions .btn { width: 100%; }
+}
 </style>
 </head>
 <body>
@@ -636,6 +747,6 @@ html { scroll-padding-top: 76px; }
 </footer>
 
 <script src="js/fx.js"></script>
-<script src="js/app.js"></script>
+<script src="js/app.js?v=2"></script>
 </body>
 </html>
