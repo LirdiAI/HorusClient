@@ -301,6 +301,16 @@ async function setUserBanner(id, data) {
   if (error) throw error;
 }
 
+async function setTg2fa(userId, enabled) {
+  const raw = await getCfg(`tg_userid:${userId}`);
+  if (!raw) return false;
+  let obj;
+  try { obj = JSON.parse(raw); } catch { obj = { u: raw, c: null }; }
+  obj.fa = !!enabled;
+  await setCfg(`tg_userid:${userId}`, JSON.stringify(obj));
+  return true;
+}
+
 async function getUsersByIds(ids) {
   const uniq = [...new Set((ids || []).filter(Boolean))];
   if (!uniq.length) return [];
@@ -575,7 +585,7 @@ module.exports = {
   getPromoByCode, promoCodeExists, insertPromo, listPromos, bumpPromoUsed, deletePromo,
   getDiscountPromoByCode, insertDiscountPromo, listDiscountPromos, deleteDiscountPromo, bumpDiscountPromoByCode,
   getCustomOfferById, insertCustomOffer, listCustomOffers, deleteCustomOffer, listCustomOrderStatuses, updateOrderStatus, getOrderByPaymentId,
-  listRecentOrders, getUsersByIds, setUserAvatar, setUserBanner,
+  listRecentOrders, getUsersByIds, setUserAvatar, setUserBanner, setTg2fa,
   insertOrder, getOrderById, setOrderPaid, saveOrderPayment, insertTicket,
   getAllCfg, getCfg, setCfg, deleteCfg,
   getTgByUserId, getUserIdByTg, checkTgTaken, bindTg, unbindTg,

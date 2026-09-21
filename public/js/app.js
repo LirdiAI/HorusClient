@@ -628,6 +628,11 @@ function bindLanding(app) {
           state.me = r.user;
         } else {
           const r = await api('/api/login', { method: 'POST', body: JSON.stringify(body) });
+          if (r && r.ok && r.need2fa) {
+            btn.disabled = false;
+            showLogin2fa(r.token, body.login);
+            return;
+          }
           state.me = r.user;
         }
         renderNav();
@@ -1269,6 +1274,43 @@ function viewRedeem() {
     </div>`;
   }
 
+  function showLogin2fa(token, login) {
+    const app = $('#app');
+    app.innerHTML = `
+    <div style="max-width:440px;margin:70px auto;padding:0 16px">
+      <div class="page-card">
+        <div class="page-head"><div>
+          <div class="page-title">Код из Telegram</div>
+          <div class="page-sub">Отправили 6-значный код для аккаунта <b>${esc(login)}</b></div>
+        </div></div>
+        <form id="faForm">
+          <div class="field"><label>Код подтверждения</label>
+            <input name="code" required maxlength="6" minlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="123456" autocomplete="one-time-code">
+          </div>
+          <button type="submit" class="btn btn-gold" style="width:100%">Войти</button>
+        </form>
+        <div class="hint" style="margin-top:12px">Код действует 5 минут и пришёл в чат с ботом.</div>
+      </div>
+    </div>`;
+    $('#faForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button');
+      btn.disabled = true;
+      try {
+        const r = await api('/api/login/2fa', { method: 'POST', body: JSON.stringify({ token, code: e.target.code.value.trim() }) });
+        state.me = r.user;
+        renderNav();
+        toast('Добро пожаловать, ' + state.me.login + '!', 'success');
+        const buf = sessionStorage.getItem('pendingBuy');
+        sessionStorage.removeItem('pendingBuy');
+        location.hash = buf ? '#/cabinet/buy' : '#/cabinet/profile';
+      } catch (err) {
+        toast(err.message, 'error');
+        btn.disabled = false;
+      }
+    });
+  }
+
   function viewSecurity() {
     const u = state.me;
     const tg = u.tg;
@@ -1317,6 +1359,22 @@ function viewRedeem() {
       <div id="tgResult"></div>`}
     </div>
 
+    <div class="page-card" style="max-width:620px">
+      <div class="page-head"><div><div class="page-title" style="font-size:17px">Двухфакторная аутентификация</div>
+      <div class="page-sub">Код при входе в Telegram</div></div></div>
+      ${u.tgBound ? `
+      <div class="panel-row">
+        <div class="panel-ic ${u.tg2fa ? 'g' : ''}">${icon.lock}</div>
+        <div class="panel-rg">
+          <div class="pt">2FA ${u.tg2fa ? 'включена' : 'выключена'}</div>
+          <div class="ps">${u.tg2fa ? 'При входе на сайт в Telegram будет приходить код подтверждения.' : 'Для входа достаточно логина и пароля.'}</div>
+        </div>
+        <div class="panel-cta">
+          <button class="btn ${u.tg2fa ? 'btn-danger' : 'btn-gold'} btn-sm" id="tg2faBtn">${u.tg2fa ? 'Выключить' : 'Включить'}</button>
+        </div>
+      </div>` : `
+      <div class="warn">Сначала привяжите Telegram (раздел выше) — 2FA работает через бота.</div>`}
+    </div>
     <div class="page-card" style="max-width:620px">
       <div class="page-head"><div><div class="page-title" style="font-size:17px">Сессии</div>
       <div class="page-sub">Завершить вход на всех устройствах</div></div></div>
@@ -1539,6 +1597,18 @@ if (section === 'redeem' && $('#promoForm')) {
       });
     }
     if (section === 'security') {
+      const t2btn = $('#tg2faBtn');
+      if (t2btn) t2btn.addEventListener('click', async () => {
+        t2btn.disabled = true;
+        try {
+          const r = await api('/api/tg/2fa', { method: 'POST', body: JSON.stringify({ enabled: !(state.me && state.me.tg2fa) }) });
+          toast((r && r.message) || 'Готово', 'success');
+          if (state.me) state.me.tg2fa = !state.me.tg2fa;
+          renderCabContent('security');
+          bindSection('security', main, ap);
+        } catch (err) { toast(err.message, 'error'); }
+        t2btn.disabled = false;
+      });
       $('#passForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('button');

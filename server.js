@@ -191,6 +191,7 @@ async function publicUser(u) {
     hwid: u.hwid || null,
     hwidBound: !!u.hwid,
     tg: tgInfo ? tgInfo.u : null,
+    tg2fa: tgInfo ? !!tgInfo.fa : false,
     tgBound: tgInfo ? !!tgInfo.c : false,
     createdAt: u.created_at,
     lastHwidReset: lastReset ? lastReset.reset_at : null,
@@ -234,6 +235,8 @@ app.post('/api/register', ah(async (req, res) => {
   }
 }));
 
+const TG_2FA = new Map(); // token -> { userId, code, exp }
+
 app.post('/api/login', ah(async (req, res) => {
   const { login, password } = req.body || {};
   if (!rateLimit('login:' + req.ip)) return fail(res, 'Слишком много попыток. Подождите.', 429);
@@ -243,6 +246,34 @@ app.post('/api/login', ah(async (req, res) => {
   if (!user || !(await verifyPassword(password, user.pass_hash))) {
     return fail(res, 'Неверный логин или пароль', 401);
   }
+  // 2FA через Telegram
+  try {
+    const bind = await D.getTgByUserId(user.id);
+    if (bind && bind.c && bind.fa) {
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      const token = Date.now().toString(36) + Math.random().toString(36).slice(2);
+      for (const [k, v] of TG_2FA) if (v.exp < Date.now()) TG_2FA.delete(k);
+      TG_2FA.set(token, { userId: user.id, code, exp: Date.now() + 5 * 60 * 1000 });
+      const sent = await TGBot.sendTgToUser(user.id, '\uD83D\uDD11 <b>\u041A\u043E\u0434 \u0432\u0445\u043E\u0434\u0430 HorusClient:</b> <b>' + code + '</b>\n\u041A\u043E\u0434 \u0434\u0435\u0439\u0441\u0442\u0432\u0443\u0435\u0442 5 \u043C\u0438\u043D\u0443\u0442. \u0415\u0441\u043B\u0438 \u044D\u0442\u043E \u043D\u0435 \u0432\u044B \u2014 \u0441\u0440\u043E\u0447\u043D\u043E \u0441\u043C\u0435\u043D\u0438\u0442\u0435 \u043F\u0430\u0440\u043E\u043B\u044C.');
+      if (!sent) return fail(res, '2FA: не удалось отправить код в Telegram. Попробуйте позже.', 503);
+      return send(res, 200, { ok: true, need2fa: true, token });
+    }
+  } catch (_) { /* TG недоступен — не блокируем вход */ }
+
+  await setSession(req, res, user.id);
+  send(res, 200, { ok: true, user: await publicUser(user) });
+}));
+
+app.post('/api/login/2fa', ah(async (req, res) => {
+  const token = String((req.body && req.body.token) || '');
+  const code = String((req.body && req.body.code) || '').trim();
+  const rec = TG_2FA.get(token);
+  if (!rec) return fail(res, 'Сессия входа истекла. Войдите заново.', 401);
+  if (rec.exp < Date.now()) { TG_2FA.delete(token); return fail(res, 'Код истёк. Войдите заново.', 401); }
+  if (code !== rec.code) return fail(res, 'Неверный код', 401);
+  TG_2FA.delete(token);
+  const user = await D.getUserById(rec.userId);
+  if (!user) return fail(res, 'Аккаунт не найден', 401);
   await setSession(req, res, user.id);
   send(res, 200, { ok: true, user: await publicUser(user) });
 }));
@@ -288,6 +319,13 @@ app.get('/api/tg/bot', (req, res) => {
 });
 
 // Шаг 1: пользователь запрашивает привязку TG — генерируем код и ждём подтверждения через бота
+app.post('/api/tg/2fa', requireAuth, ah(async (req, res) => {
+  const bind = await D.getTgByUserId(req.user.id);
+  if (!bind || !bind.c) return fail(res, 'Сначала привяжите и подтвердите Telegram');
+  await D.setTg2fa(req.user.id, !!(req.body && req.body.enabled));
+  return send(res, 200, { ok: true, message: (req.body && req.body.enabled) ? '2FA включена. При входе нужен код из Telegram.' : '2FA выключена' });
+}));
+
 app.post('/api/tg/bind', requireAuth, ah(async (req, res) => {
   if (!TGBot.isEnabled()) return fail(res, 'Telegram-бот не настроен на сервере', 503);
   const raw = String(req.body?.tg || '').trim().replace(/^@/, '');
