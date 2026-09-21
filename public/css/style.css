@@ -386,7 +386,7 @@ input, textarea, [contenteditable="true"] { user-select: text; -webkit-user-sele
 .modal-overlay.hide { opacity: 0; }
 .modal-card {
   position: fixed; top: 50%; left: 50%; z-index: 101;
-  width: 360px; max-width: calc(100vw - 40px);
+  width: 420px; max-width: calc(100vw - 28px);
   background: var(--panel-solid); border: 1px solid var(--line-strong);
   border-radius: 16px;
   box-shadow: 0 30px 90px -18px rgba(0,0,0,0.85);
@@ -415,7 +415,8 @@ input, textarea, [contenteditable="true"] { user-select: text; -webkit-user-sele
 [data-pm], .modal-ship .pm-btn { width: 100% !important; justify-content: flex-start; }
 .modal-pay-grid { display: flex; gap: 14px; align-items: stretch; padding: 16px 20px 4px; flex-direction: row-reverse; }
 .modal-pay-left { flex: 2; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
-.modal-pay-left .btn { width: 100% !important; justify-content: flex-start; }
+.modal-pay-left .btn { width: 100% !important; justify-content: flex-start; min-height: 56px; cursor: pointer; }
+.modal-pay-left .btn:hover { transform: translateY(-1px); }
 .modal-pay-right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,196,0,.04); }
 .modal-recip-title { font-family: var(--font-h); font-weight: 700; font-size: 13.5px; }
 .modal-recip-item { color: var(--muted); font-size: 13px; line-height: 1.45; }
