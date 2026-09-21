@@ -356,6 +356,7 @@ function bindLanding(app) {
     const pricingGrid = $('#pricingGrid', app);
     if (pricingGrid) {
       pricingGrid.innerHTML = plansHTML('subs');
+      $$('[data-buy]', pricingGrid).forEach(b => b.addEventListener('click', () => startPurchase(b.dataset.buy)));
       $$('.subs-tab', app).forEach(t => t.addEventListener('click', () => {
         $$('.subs-tab', app).forEach(x => x.classList.toggle('active', x === t));
         pricingGrid.innerHTML = plansHTML(t.dataset.cat);
@@ -840,7 +841,7 @@ ${sbGroup('Мой кабинет', [
           ['device', 'monitor', 'Привязка устройства'],
           ['buy', 'cart', 'Купить доступ'],
           ['security', 'shield', 'Безопасность'],
-          ...(isOwner() ? [['mod', 'shield', 'Модификация'], ['promo', 'spark', 'Раздача'], ['discounts', 'zap', 'Создание скидок'], ['testing', 'bug', 'Тестирование'], ['ops', 'cart', 'Операции']] : [])
+          ...(isOwner() ? [['mod', 'shield', 'Модификация']] : [])
         ])}
         ${sbGroup('Помощь', [
           ['support', 'support', 'Поддержка'],
@@ -1210,6 +1211,33 @@ function viewRedeem() {
 
   function viewMod() {
     return `
+    <div class="mod-cards">
+      <button type="button" class="mod-card" data-cab="promo">
+        <div class="mod-card-ic">${icon.spark}</div>
+        <div class="mod-card-title">Раздача</div>
+        <div class="mod-card-sub">Промокоды-раздачи на тарифы сайта</div>
+      </button>
+      <button type="button" class="mod-card" data-cab="discounts">
+        <div class="mod-card-ic">${icon.zap}</div>
+        <div class="mod-card-title">Создание скидок</div>
+        <div class="mod-card-sub">Скидочные промокоды на тарифы сайта</div>
+      </button>
+      <button type="button" class="mod-card" data-cab="testing">
+        <div class="mod-card-ic">${icon.bug}</div>
+        <div class="mod-card-title">Тестирование</div>
+        <div class="mod-card-sub">Свои позиции для оплаты: название, сумма и что даёт</div>
+      </button>
+      <button type="button" class="mod-card" data-cab="ops">
+        <div class="mod-card-ic">${icon.cart}</div>
+        <div class="mod-card-title">Операции</div>
+        <div class="mod-card-sub">Покупки игроков: статусы, суммы, поиск по логину</div>
+      </button>
+      <button type="button" class="mod-card" data-scroll-mod>
+        <div class="mod-card-ic">${icon.shield}</div>
+        <div class="mod-card-title">Модификация</div>
+        <div class="mod-card-sub">Управление пользователями: поиск, блокировка, настройки лаунчера и новостей</div>
+      </button>
+    </div>
     <div class="page-card" style="max-width:820px">
       <div class="page-head"><div>
         <div class="page-title">Модификация</div>
@@ -1453,6 +1481,12 @@ if (section === 'redeem' && $('#promoForm')) {
       loadDiscountList();
     }
     if (section === 'mod' && isOwner()) {
+      $$('[data-cab]', main).forEach(c => c.addEventListener('click', () => renderCabContent(c.dataset.cab, ap)));
+      const sm = $('[data-scroll-mod]', main);
+      if (sm) sm.addEventListener('click', () => {
+        const target = main.querySelector('.page-card');
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
       loadModUsers();
       loadLauncherMeta();
       const form = $('#launcherMetaForm');

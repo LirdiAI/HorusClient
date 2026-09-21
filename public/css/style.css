@@ -562,6 +562,22 @@ input, textarea, [contenteditable="true"] { user-select: text; -webkit-user-sele
 }
 
 
+
+/* ---------- модификация: карточки-переходы ---------- */
+.mod-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+.mod-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+  padding: 18px; border-radius: 16px; text-align: left;
+  border: 1px solid var(--line); background: rgba(255,255,255,.03); color: var(--text);
+  transition: border-color .2s, background .2s, transform .2s, box-shadow .2s;
+}
+.mod-card:hover { border-color: rgba(168,85,247,.5); background: rgba(168,85,247,.08); transform: translateY(-2px); box-shadow: 0 12px 28px -14px rgba(168,85,247,.55); }
+.mod-card-ic { color: #d8b4fe; display: flex; }
+.mod-card-ic svg { width: 22px; height: 22px; }
+.mod-card-title { font-family: var(--font-h); font-weight: 700; font-size: 15.5px; }
+.mod-card-sub { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+@media (max-width: 560px) { .mod-cards { grid-template-columns: 1fr; } }
+
 /* ---------- профиль: баннер и аватар ---------- */
 .profile-banner {
   height: 150px;
