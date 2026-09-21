@@ -487,6 +487,7 @@ input, textarea, [contenteditable="true"] { user-select: text; -webkit-user-sele
   font-size: 19px; background: rgba(255,255,255,.05); border: 1px solid var(--line);
 }
 .buy-method.selected .buy-method-icon { background: rgba(168,85,247,.18); border-color: rgba(168,85,247,.4); }
+.buy-method-icon img { width: 100%; height: 100%; object-fit: contain; border-radius: 11px; display: block; }
 .buy-method-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .buy-method-name { font-weight: 700; font-size: 14.5px; }
 .buy-method-sub { color: var(--muted); font-size: 12.5px; }

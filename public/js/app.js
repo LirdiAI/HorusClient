@@ -348,11 +348,11 @@ function bindLanding(app) {
 
   /* ---------- окно покупки ---------- */
   const PAY_METHODS = [
-    { id: 'card',     icon: '💳', name: 'Банковская карта', sub: 'МИР · Visa · Mastercard',     kind: 'yookassa', cta: 'Перейти к оплате' },
-    { id: 'sbp',      icon: '📲', name: 'СБП',              sub: 'QR-код в приложении банка',   kind: 'yookassa', cta: 'Перейти к оплате' },
-    { id: 'tpay',     icon: '🅣', name: 'T-Pay',            sub: 'Через приложение Т-Банка',    kind: 'yookassa', cta: 'Перейти к оплате' },
-    { id: 'funpay',   icon: '🟢', name: 'FunPay',           sub: 'Покупка на площадке FunPay',  kind: 'external', url: 'https://funpay.com/lots/offer?id=77228605', cta: 'Открыть FunPay' },
-    { id: 'telegram', icon: '✈️', name: 'Telegram-бот',     sub: 'Оплата через @Agent_Horus_Bot', kind: 'external', url: 'https://t.me/Agent_Horus_Bot', cta: 'Написать боту' },
+    { id: 'card',     img: 'img/mir.png', name: 'Банковская карта', sub: 'МИР · Visa · Mastercard', kind: 'yookassa', cta: 'Перейти к оплате' },
+    { id: 'sbp',      img: 'img/sbp.jpg', name: 'СБП',      sub: 'QR-код в приложении банка',   kind: 'yookassa', cta: 'Перейти к оплате' },
+    { id: 'tpay',     img: 'img/tpay.png', name: 'T-Pay',    sub: 'Через приложение Т-Банка',    kind: 'yookassa', cta: 'Перейти к оплате' },
+    { id: 'funpay',   img: 'img/funpay.jpg', name: 'FunPay', sub: 'Покупка на площадке FunPay',  kind: 'external', url: 'https://funpay.com/lots/offer?id=77228605', cta: 'Открыть FunPay' },
+    { id: 'telegram', img: 'img/telegram.png', name: 'Telegram-бот', sub: 'Оплата через @Horusclientbot', kind: 'external', url: 'https://t.me/Horusclientbot', cta: 'Написать боту' },
   ];
 
   async function startPurchase(planKey) {
@@ -379,7 +379,7 @@ function bindLanding(app) {
         <div class="buy-methods">
           ${PAY_METHODS.map(m => `
             <button type="button" class="buy-method" data-method="${m.id}">
-              <span class="buy-method-icon">${m.icon}</span>
+              <span class="buy-method-icon">${m.img ? '<img src="' + m.img + '" alt="' + m.name + '">' : m.icon}</span>
               <span class="buy-method-info">
                 <span class="buy-method-name">${m.name}</span>
                 <span class="buy-method-sub">${m.sub}</span>
