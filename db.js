@@ -291,6 +291,16 @@ async function listRecentOrders(limit) {
   return data || [];
 }
 
+async function setUserAvatar(id, data) {
+  const { error } = await users().update({ avatar: data }).eq('id', id);
+  if (error) throw error;
+}
+
+async function setUserBanner(id, data) {
+  const { error } = await users().update({ banner: data }).eq('id', id);
+  if (error) throw error;
+}
+
 async function getUsersByIds(ids) {
   const uniq = [...new Set((ids || []).filter(Boolean))];
   if (!uniq.length) return [];
@@ -565,7 +575,7 @@ module.exports = {
   getPromoByCode, promoCodeExists, insertPromo, listPromos, bumpPromoUsed, deletePromo,
   getDiscountPromoByCode, insertDiscountPromo, listDiscountPromos, deleteDiscountPromo, bumpDiscountPromoByCode,
   getCustomOfferById, insertCustomOffer, listCustomOffers, deleteCustomOffer, listCustomOrderStatuses, updateOrderStatus, getOrderByPaymentId,
-  listRecentOrders, getUsersByIds,
+  listRecentOrders, getUsersByIds, setUserAvatar, setUserBanner,
   insertOrder, getOrderById, setOrderPaid, saveOrderPayment, insertTicket,
   getAllCfg, getCfg, setCfg, deleteCfg,
   getTgByUserId, getUserIdByTg, checkTgTaken, bindTg, unbindTg,

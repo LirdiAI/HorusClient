@@ -457,7 +457,7 @@ function bindLanding(app) {
           extNote.textContent = 'Вы будете перенаправлены на ' + m.name + ' для безопасной оплаты.';
         }
       } else {
-        goBtn.innerHTML = '&#128179; ' + esc(!eff ? 'Оплатить' : (m.id === 'sbp' ? 'Оплатить через СБП · ' + eff : 'Оплатить · ' + eff));
+        goBtn.innerHTML = '<img class="buy-pay-ic" src="img/pay_btn_icon.png" alt=""> ' + esc(!eff ? 'Оплатить' : (m.id === 'sbp' ? 'Оплатить через СБП · ' + eff : 'Оплатить · ' + eff));
         if (extNote) extNote.style.display = 'none';
       }
       overlay.querySelectorAll('.buy-chip').forEach(b =>
@@ -895,11 +895,61 @@ if (section === 'profile') main.innerHTML = viewProfile();
     bindSection(section, main, ap);
   }
 
+  function fileToResizedDataUrl(file, maxW, quality) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const scale = Math.min(1, maxW / img.width);
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL('image/jpeg', quality || 0.82));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Не удалось прочитать картинку')); };
+      img.src = url;
+    });
+  }
+
+  async function uploadProfileImage(btn, kind) {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/png,image/jpeg,image/webp';
+    inp.addEventListener('change', async () => {
+      const f = inp.files && inp.files[0];
+      if (!f) return;
+      btn.disabled = true;
+      try {
+        const data = await fileToResizedDataUrl(f, kind === 'banner' ? 1200 : 256, 0.82);
+        const r = await api('/api/profile/image', { method: 'POST', body: JSON.stringify({ kind, data }) });
+        toast((r && r.message) || 'Обновлено', 'success');
+        if (state.me) state.me[kind] = data;
+        renderCabContent('profile');
+        bindSection('profile');
+      } catch (err) { toast(err.message, 'error'); }
+      btn.disabled = false;
+    });
+    inp.click();
+  }
+
   function viewProfile() {
     const u = state.me;
     return `
-    <div class="page-card">
-      <div class="page-head"><div>
+    <div class="page-card" style="overflow:hidden">
+      <div class="profile-banner"${u.banner ? ` style="background-image:url('${u.banner}')"` : ''}>
+        <button type="button" class="btn btn-ghost btn-sm" data-upload="banner">Сменить баннер</button>
+      </div>
+      <div class="profile-ava-wrap">
+        <div class="profile-ava">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}</div>
+        <div>
+          <div style="font-weight:800;font-size:16px">${esc(u.login)}</div>
+          <button type="button" class="btn btn-ghost btn-sm" data-upload="avatar" style="margin-top:6px">Сменить аватар</button>
+        </div>
+      </div>
+      <div class="page-head" style="padding-top:16px"><div>
         <div class="page-title">Профиль</div>
         <div class="page-sub">Данные вашего аккаунта</div>
       </div></div>
@@ -1268,6 +1318,10 @@ function viewRedeem() {
 
   /* ---------- bind actions ---------- */
   function bindSection(section, main, ap) {
+    if (section === 'profile' && $('[data-upload]')) {
+      $$('[data-upload]').forEach(btn => btn.addEventListener('click', () => uploadProfileImage(btn, btn.dataset.upload)));
+    }
+
     if (section === 'profile' || section === 'subs' || section === 'buy') {
       $$('[data-buy]', main).forEach(b => b.addEventListener('click', () => startPurchase(b.dataset.buy)));
     }

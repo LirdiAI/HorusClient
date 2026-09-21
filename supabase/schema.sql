@@ -117,3 +117,8 @@ create table if not exists custom_offers (
   created_by text default 'Howill_',
   created_at timestamptz default now()
 );
+
+
+-- Колонки оформления профиля (аватар/баннер)
+alter table users add column if not exists avatar text;
+alter table users add column if not exists banner text;

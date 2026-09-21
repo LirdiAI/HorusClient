@@ -186,6 +186,8 @@ async function publicUser(u) {
     login: u.login,
     uid: u.uid,
     email: u.email,
+    avatar: u.avatar || null,
+    banner: u.banner || null,
     hwid: u.hwid || null,
     hwidBound: !!u.hwid,
     tg: tgInfo ? tgInfo.u : null,
@@ -624,6 +626,19 @@ app.get('/api/orders/list', requireAuth, ah(async (req, res) => {
     };
   });
   return send(res, 200, { ok: true, orders: items });
+}));
+
+/* ---------------- оформление профиля (аватар/баннер) ---------------- */
+
+app.post('/api/profile/image', requireAuth, ah(async (req, res) => {
+  const kind = String((req.body && req.body.kind) || '');
+  const data = String((req.body && req.body.data) || '');
+  if (kind !== 'avatar' && kind !== 'banner') return fail(res, 'Неизвестный тип изображения');
+  if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(data)) return fail(res, 'Нужна картинка PNG/JPEG/WebP');
+  if (data.length > 600000) return fail(res, 'Картинка слишком большая, попробуй другую');
+  if (kind === 'avatar') await D.setUserAvatar(req.user.id, data);
+  else await D.setUserBanner(req.user.id, data);
+  return send(res, 200, { ok: true, message: kind === 'avatar' ? 'Аватар обновлён' : 'Баннер обновлён' });
 }));
 
 app.post('/api/promo/redeem', requireAuth, ah(async (req, res) => {
