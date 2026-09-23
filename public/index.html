@@ -203,6 +203,7 @@ button { font-family: inherit; cursor: pointer; }
 
 /* ---------- подписки и наборы ---------- */
 .subs-tabs { display: flex; gap: 10px; margin-top: 40px; flex-wrap: wrap; }
+#shopTabs { margin-top: 16px; }
 .subs-tab {
   display: inline-flex; align-items: center; gap: 9px;
   padding: 12px 22px; border-radius: 999px; font-family: var(--font-h); font-weight: 700;
@@ -605,6 +606,24 @@ button { font-family: inherit; cursor: pointer; }
 .login-prev.is-active { border-style: solid; border-color: rgba(62,195,244,.5); }
 .shop-item.used { border-color: rgba(62,195,244,.35); }
 .grant-list { display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow-y: auto; padding-right: 4px; }
+
+/* ---------- Глобалка ---------- */
+.globka-search { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-top: 14px; }
+.globka-results { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.globka-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.02);
+}
+.globka-inv { display: flex; flex-direction: column; gap: 8px; }
+.globka-online { display: inline-flex; align-items: center; gap: 5px; color: var(--green); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; margin-top: 1px; }
+.globka-online .gdot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.25); animation: gdotpulse 1.6s ease-in-out infinite; }
+@keyframes gdotpulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+
+/* ---------- Тема сайта (Alpha) ---------- */
+.theme-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.theme-swatch { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; background: var(--sw); padding: 0; transition: transform .15s, box-shadow .15s; flex-shrink: 0; }
+.theme-swatch:hover { transform: scale(1.12); }
+.theme-swatch.active { border-color: #fff; box-shadow: 0 0 0 3px var(--sw); }
 .grant-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.02);

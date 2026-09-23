@@ -169,10 +169,10 @@ async function unfreezeSub(userId) {
   return true;
 }
 
-// Все пользователи (без паролей) для панели владельца
+// Все пользователи (без паролей) для панели владельца и Глобалки
 async function listUsers() {
   const { data, error } = await sb.from('users')
-    .select('id, login, email, uid, hwid, created_at')
+    .select('id, login, email, uid, hwid, avatar, banner, created_at')
     .order('id', { ascending: true });
   if (error) throw error;
   return data || [];
@@ -370,6 +370,45 @@ async function getUserRole(userId) {
 
 async function setUserRole(userId, role) {
   await setCfg(`role:${userId}`, role);
+}
+
+/* ---------------- друзья (Глобалка) ---------------- */
+
+async function getFriends(userId) {
+  const raw = await getCfg(`friends:${userId}`);
+  try { return JSON.parse(raw || '[]'); } catch { return []; }
+}
+
+async function setFriends(userId, logins) {
+  await setCfg(`friends:${userId}`, JSON.stringify(logins));
+}
+
+async function getFriendReqsIn(userId) {
+  const raw = await getCfg(`freq_in:${userId}`);
+  try { return JSON.parse(raw || '[]'); } catch { return []; }
+}
+
+async function setFriendReqsIn(userId, logins) {
+  await setCfg(`freq_in:${userId}`, JSON.stringify(logins));
+}
+
+async function getFriendReqsOut(userId) {
+  const raw = await getCfg(`freq_out:${userId}`);
+  try { return JSON.parse(raw || '[]'); } catch { return []; }
+}
+
+async function setFriendReqsOut(userId, logins) {
+  await setCfg(`freq_out:${userId}`, JSON.stringify(logins));
+}
+
+/* ---------------- тема сайта (Alpha) ---------------- */
+
+async function getTheme(userId) {
+  return (await getCfg(`theme:${userId}`)) || null;
+}
+
+async function setTheme(userId, key) {
+  await setCfg(`theme:${userId}`, key);
 }
 
 async function setTg2fa(userId, enabled) {
@@ -656,7 +695,7 @@ module.exports = {
   getPromoByCode, promoCodeExists, insertPromo, listPromos, bumpPromoUsed, deletePromo,
   getDiscountPromoByCode, insertDiscountPromo, listDiscountPromos, deleteDiscountPromo, bumpDiscountPromoByCode,
   getCustomOfferById, insertCustomOffer, listCustomOffers, deleteCustomOffer, listCustomOrderStatuses, updateOrderStatus, getOrderByPaymentId,
-  listRecentOrders, getUsersByIds, setUserAvatar, setUserBanner, setTg2fa, getGlossy, setGlossy, getAvaDeco, setAvaDeco, getDeco, setDeco, getLoginColor, setLoginColor, getActiveDeco, setActiveDeco, getRoleColor, setRoleColor, getUserRole, setUserRole,
+  listRecentOrders, getUsersByIds, setUserAvatar, setUserBanner, setTg2fa, getGlossy, setGlossy, getAvaDeco, setAvaDeco, getDeco, setDeco, getLoginColor, setLoginColor, getActiveDeco, setActiveDeco, getRoleColor, setRoleColor, getUserRole, setUserRole, getFriends, setFriends, getFriendReqsIn, setFriendReqsIn, getFriendReqsOut, setFriendReqsOut, getTheme, setTheme,
   insertOrder, getOrderById, setOrderPaid, saveOrderPayment, insertTicket,
   getAllCfg, getCfg, setCfg, deleteCfg,
   getTgByUserId, getUserIdByTg, checkTgTaken, bindTg, unbindTg,

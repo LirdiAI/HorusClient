@@ -6,6 +6,9 @@
   let modUsersCache = null;
   let TG_BOT_LINK = '';
   let TG_BOT_ENABLED = false;
+  let shopTabCat = '';
+  let globkaQuery = '';
+  let globkaOwnedCat = '';
 
   const state = {
     me: null,
@@ -81,6 +84,8 @@
     zap: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>',
     cooldown: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
 shieldFx: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l8 3.5v6c0 5-3.4 8.8-8 10.5-4.6-1.7-8-5.5-8-10.5v-6z"/><path d="M9 12l2 2 4-4"/></svg>',
+    globe: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14.6 14.6 0 0 1 0 18 14.6 14.6 0 0 1 0-18z"/></svg>',
+    search: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>',
     trash: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></svg>',
     copy: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>'
   };
@@ -128,6 +133,7 @@ renderNav();
   }
 
   function renderNav() {
+    applyTheme(state.me && state.me.theme);
     const el = $('#navAuth');
     if (state.me) {
       el.innerHTML = `
@@ -561,22 +567,6 @@ function bindLanding(app) {
     return !!(state.me && state.me.subscription && state.me.subscription.status === 'active');
   }
 
-  /* Баннер-таймер окончания подписки: за 3 дня и меньше — предупреждение */
-  function subExpiryBanner(sub) {
-    if (!sub || sub.status !== 'active' || sub.forever || !sub.expiresAt) return '';
-    const left = new Date(sub.expiresAt).getTime() - Date.now();
-    if (left > 3 * 24 * 60 * 60 * 1000) return '';
-    const days = Math.max(0, Math.ceil(left / (24 * 60 * 60 * 1000)));
-    const hours = left > 0 ? Math.floor((left % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000)) : 0;
-    let txt;
-    if (left <= 0) txt = '<b>Подписка истекла.</b>';
-    else if (days === 0) txt = 'До конца подписки осталось <b>' + hours + ' ч.</b>';
-    else if (days === 1) txt = 'Остался <b>1 день</b> подписки.';
-    else txt = 'Осталось <b>' + days + ' дня</b>.';
-    return `<div class="warn warn-sub" data-sub-warn>⏳ ${txt} Подписка закончится скоро — продлите, чтобы продолжить играть.
-      <span style="display:block;margin-top:8px"><a href="#/cabinet/buy" data-cab="buy" class="btn btn-gold btn-sm">Продлить подписку</a></span></div>`;
-  }
-
   /* Проверка доступа к скачиванию: только с активной подпиской */
   function requireSub() {
     if (hasSub()) return true;
@@ -808,6 +798,7 @@ function bindLanding(app) {
 
 /* ================= CABINET ================= */
   const CAB_SECTIONS = {
+    globa: { icon: 'globe', title: 'Глобалка' },
     shop: { icon: 'cart', title: 'Магазин' },
     profile: { icon: 'user', title: 'Профиль' },
     subs: { icon: 'crown', title: 'Подписки' },
@@ -825,7 +816,26 @@ function bindLanding(app) {
   };
 
   const isOwner = () => state.me && state.me.login === 'Howill_';
-  const roleLabel = (r) => r === 'admin' ? 'Администратор' : r === 'mod' ? 'Модератор' : 'User';
+  const roleLabel = (r) => r === 'admin' ? 'Администратор' : r === 'mod' ? 'Модератор' : r === 'media' ? 'Медиа' : 'User';
+
+  /* ---------- темы сайта (Alpha) ---------- */
+  const THEMES = {
+    violet:  { label: 'Фиолетовый', gold: '#a855f7', gold2: '#d8b4fe', dim: 'rgba(168,85,247,0.12)' },
+    red:     { label: 'Красный',    gold: '#ef4444', gold2: '#fca5a5', dim: 'rgba(239,68,68,0.12)' },
+    blue:    { label: 'Синий',      gold: '#3b82f6', gold2: '#93c5fd', dim: 'rgba(59,130,246,0.12)' },
+    emerald: { label: 'Изумрудный', gold: '#10b981', gold2: '#6ee7b7', dim: 'rgba(16,185,129,0.12)' },
+    gold:    { label: 'Золотой',    gold: '#f59e0b', gold2: '#fcd34d', dim: 'rgba(245,158,11,0.12)' },
+    cyan:    { label: 'Бирюзовый',  gold: '#06b6d4', gold2: '#67e8f9', dim: 'rgba(6,182,212,0.12)' },
+    pink:    { label: 'Розовый',    gold: '#ec4899', gold2: '#f9a8d4', dim: 'rgba(236,72,153,0.12)' }
+  };
+
+  function applyTheme(key) {
+    const t = THEMES[key] || THEMES.violet;
+    const r = document.documentElement.style;
+    r.setProperty('--gold', t.gold);
+    r.setProperty('--gold-2', t.gold2);
+    r.setProperty('--gold-dim', t.dim);
+  }
 
   function routeCabinet(path) {
     if (!state.me) {
@@ -860,9 +870,10 @@ function bindLanding(app) {
           <div class="sb-uid">UID: <b>${esc(u.uid)}</b></div></div>
         </div>
 ${sbGroup('Мой кабинет', [
+          ['profile', 'user', 'Профиль'],
+          ['globa', 'globe', 'Глобалка'],
           ['shop', 'cart', 'Магазин'],
           ['redeem', 'key', 'Активация ключа'],
-          ['profile', 'user', 'Профиль'],
           ['subs', 'crown', 'Подписки'],
           ['device', 'monitor', 'Привязка устройства'],
           ['buy', 'cart', 'Купить доступ'],
@@ -907,6 +918,7 @@ ${sbGroup('Мой кабинет', [
     const main = $('#cabMain');
     if (!main) return;
 if (section === 'profile') main.innerHTML = viewProfile();
+    else if (section === 'globa') main.innerHTML = viewGloba();
     else if (section === 'shop') main.innerHTML = viewShop();
     else if (section === 'subs') main.innerHTML = viewSubs();
     else if (section === 'device') main.innerHTML = viewDevice();
@@ -1001,6 +1013,16 @@ if (section === 'profile') main.innerHTML = viewProfile();
         </div>
         <button type="button" id="glossyToggle" class="btn btn-sm ${glossy ? 'btn-gold' : 'btn-dark'}">${glossy ? 'Выключить' : 'Включить'}</button>
       </div>` : ''}
+      ${u.hasAlpha ? `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;font-weight:700">Цвет темы сайта <span class="alpha-badge">${icon.crown} Только Alpha</span></div>
+          <div style="color:var(--muted);font-size:12.5px;margin-top:3px">Кастомный акцент для всего сайта — сохраняется на вашем аккаунте</div>
+        </div>
+        <div class="theme-swatches" id="themeSwatches">
+          ${Object.keys(THEMES).map(k => `<button type="button" class="theme-swatch${(u.theme || 'violet') === k ? ' active' : ''}" data-theme-key="${k}" title="${THEMES[k].label}" style="--sw:${THEMES[k].gold}"></button>`).join('')}
+        </div>
+      </div>` : ''}
       <div class="page-head" style="padding-top:16px"><div>
         <div class="page-title">Профиль</div>
         <div class="page-sub">Данные вашего аккаунта</div>
@@ -1026,7 +1048,6 @@ if (section === 'profile') main.innerHTML = viewProfile();
         <div class="page-sub">Текущая подписка на аккаунт</div>
       </div>
       ${u.subscription ? '' : `<a href="#/cabinet/buy" data-cab="buy" class="btn btn-gold">Купить доступ</a>`}</div>
-       ${subExpiryBanner(u.subscription)}
        ${u.subscription
         ? `<div class="sub-name">${esc(u.subscription.name)}</div>
            ${u.subscription.status === 'frozen'
@@ -1045,6 +1066,196 @@ if (section === 'profile') main.innerHTML = viewProfile();
     </div>`;
   }
 
+  /* ---------- Глобалка: поиск игроков, профили, друзья ---------- */
+  function viewGloba() {
+    return `
+    <div class="page-card" style="max-width:820px">
+      <div class="page-head"><div>
+        <div class="page-title">Глобалка</div>
+        <div class="page-sub">Поиск друзей по логину и просмотр их профилей</div>
+      </div><button type="button" class="btn btn-dark" id="globkaSelf">${icon.user} Свой профиль</button></div>
+      <div class="globka-search">
+        <div class="field" style="flex:1;margin-bottom:0;min-width:260px">
+          <label>Поиск по логину</label>
+          <input type="text" id="globkaSearch" placeholder="Например: 0_0_Krolik" maxlength="30" autocomplete="off" spellcheck="false">
+        </div>
+        <button type="button" class="btn btn-gold" id="globkaSearchBtn">${icon.search} Поиск</button>
+      </div>
+      <div id="globkaResults" class="globka-results"></div>
+    </div>
+    <div class="page-card" style="max-width:820px">
+      <div class="page-head"><div>
+        <div class="page-title">Уведомления</div>
+        <div class="page-sub">Заявки в друзья — примите или отклоните</div>
+      </div></div>
+      <div id="globkaReqs" class="globka-results"></div>
+    </div>
+    <div class="page-card" style="max-width:820px">
+      <div class="page-head"><div>
+        <div class="page-title">Мои друзья</div>
+        <div class="page-sub">Нажмите «Профиль», чтобы посмотреть, что купил друг в магазине</div>
+      </div></div>
+      <div id="globkaFriends" class="globka-results"></div>
+    </div>`;
+  }
+
+  function globkaRowHTML(u) {
+    const avaCls = 'sb-ava' + (u.decoActive === 'ava_deco' ? ' royal' : '') + (u.decoActive === 'ava_ice' ? ' sapphire' : '') + (u.decoActive === 'ava_white' ? ' white' : '');
+    const avaSpan = u.decoActive === 'ava_deco' ? '<span class="c-gold">♛</span>'
+      : u.decoActive === 'ava_ice' ? '<span class="c-ice">❄</span>'
+      : u.decoActive === 'ava_white' ? '<span class="c-white">✦</span>' : '';
+    const subTxt = u.subscription && u.subscription.status === 'active'
+      ? ` · <span style="color:var(--green)">${esc(u.subscription.name)}</span>` : '';
+    let friendBtn;
+    if (u.isFriend) friendBtn = `<button type="button" class="btn btn-sm ${u.isReqIn ? 'btn-gold' : 'btn-dark'}" data-globka-friend="${esc(u.login)}" data-globka-isfriend="1" data-globka-reqin="${u.isReqIn ? 1 : 0}">${u.isReqIn ? 'Принять заявку' : 'В друзьях ✓'}</button>`;
+    else if (u.isReqOut) friendBtn = `<button type="button" class="btn btn-sm btn-dark" data-globka-friend="${esc(u.login)}" data-globka-isfriend="0" data-globka-reqout="1" title="Отменить заявку">Заявка отправлена</button>`;
+    else friendBtn = `<button type="button" class="btn btn-sm btn-gold" data-globka-friend="${esc(u.login)}" data-globka-isfriend="0">Добавить в друзья</button>`;
+    return `
+    <div class="globka-row">
+      <div class="${avaCls}">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}${avaSpan}</div>
+      <div style="min-width:0">
+        <div class="sb-name${u.loginColor ? ' login-grad login-grad-' + u.loginColor : ''}">${esc(u.login)}</div>
+        ${u.online ? '<div class="globka-online"><span class="gdot"></span>Онлайн</div>' : ''}
+        ${u.role ? `<div class="sb-role ${u.roleColor ? 'role-grad role-grad-' + u.roleColor : ''}">${roleLabel(u.role)}</div>` : ''}
+        <div class="sb-uid">UID: <b>${esc(u.uid)}</b>${subTxt}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
+        ${friendBtn}
+        <button type="button" class="btn btn-sm btn-ghost" data-globka-profile="${esc(u.login)}">Профиль</button>
+      </div>
+    </div>`;
+  }
+
+  function globkaReqRowHTML(u) {
+    const avaCls = 'sb-ava' + (u.decoActive === 'ava_deco' ? ' royal' : '') + (u.decoActive === 'ava_ice' ? ' sapphire' : '') + (u.decoActive === 'ava_white' ? ' white' : '');
+    const avaSpan = u.decoActive === 'ava_deco' ? '<span class="c-gold">♛</span>'
+      : u.decoActive === 'ava_ice' ? '<span class="c-ice">❄</span>'
+      : u.decoActive === 'ava_white' ? '<span class="c-white">✦</span>' : '';
+    return `
+    <div class="globka-row">
+      <div class="${avaCls}">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}${avaSpan}</div>
+      <div style="min-width:0">
+        <div class="sb-name${u.loginColor ? ' login-grad login-grad-' + u.loginColor : ''}">${esc(u.login)}</div>
+        ${u.online ? '<div class="globka-online"><span class="gdot"></span>Онлайн</div>' : ''}
+        ${u.role ? `<div class="sb-role ${u.roleColor ? 'role-grad role-grad-' + u.roleColor : ''}">${roleLabel(u.role)}</div>` : ''}
+        <div class="sb-uid">UID: <b>${esc(u.uid)}</b> · хочет добавить вас в друзья</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
+        <button type="button" class="btn btn-sm btn-gold" data-globka-accept="${esc(u.login)}">${icon.check} Принять</button>
+        <button type="button" class="btn btn-sm btn-ghost" data-globka-decline="${esc(u.login)}">Отклонить</button>
+        <button type="button" class="btn btn-sm btn-ghost" data-globka-profile="${esc(u.login)}">Профиль</button>
+      </div>
+    </div>`;
+  }
+
+  function profileOwnedHTML(p, s, catFilter) {
+    const items = s.items || [];
+    const owned = s.owned || {};
+    const cats = [...new Set(items.filter(i => owned && owned[i.key]).map(i => i.cat || 'Товары'))];
+    const u = p;
+    const letter = esc(String(u.login || 'H')[0].toUpperCase());
+    const isActive = (it) => it.kind === 'login_color' ? s.activeColor === it.key
+      : it.kind === 'role_color' ? s.activeRole === it.key
+      : s.activeDeco === it.key;
+    const inCat = (it) => (it.cat || 'Товары') === catFilter;
+    return items.filter(i => owned && owned[i.key] && (!catFilter || inCat(i))).map(it => {
+      const used = isActive(it);
+      const st = DECO_STYLE[it.key] || { cls: '', span: '' };
+      return `
+      <div class="shop-item${used ? ' used' : ''}">
+        <div class="shop-prev">
+          ${it.kind === 'login_color'
+            ? `<div class="login-prev${used ? ' is-active' : ''}"><span class="login-grad login-grad-${it.key}">${esc(u.login)}</span></div>`
+            : it.kind === 'role_color'
+              ? `<div class="login-prev${used ? ' is-active' : ''}"><span class="role-grad role-grad-${it.key}">${esc(u.role ? roleLabel(u.role) : 'Роль')}</span></div>`
+              : `<div class="shop-ava ${st.cls}">${u.avatar ? `<img src="${u.avatar}" alt="">` : letter}${st.span}</div>`}
+        </div>
+        <div class="shop-info">
+          <div class="shop-name">${esc(it.name)}</div>
+          <div class="shop-sub">${esc(it.cat || '')}</div>
+        </div>
+        <div class="shop-cta">${used ? '<span class="stb stb-ok" style="white-space:nowrap">' + icon.check + ' Используется</span>' : '<span class="stb">Куплено</span>'}</div>
+      </div>`;
+    }).join('');
+  }
+
+  async function renderGlobaProfile(login, main) {
+    main.innerHTML = '<div class="page-card"><div class="empty" style="padding:22px 0">Загрузка профиля…</div></div>';
+    try {
+      const r = await api('/api/globka/profile?login=' + encodeURIComponent(login));
+      if (!r || !r.user) { main.innerHTML = '<div class="page-card"><div class="empty">Профиль не найден</div></div>'; return; }
+      const p = r.user;
+      const s = r.shop || { items: [], owned: {}, activeColor: null, activeRole: null, activeDeco: null };
+      const glossy = !!(p.glossy && p.glossyAllowed);
+      const loginCls = p.loginColor ? ' login-grad login-grad-' + p.loginColor : '';
+      const items = s.items || [];
+      const ownedItems = items.filter(i => s.owned && s.owned[i.key]);
+      const ownedCats = [...new Set(ownedItems.map(i => i.cat || 'Товары'))];
+      const activeCat = globkaOwnedCat && ownedCats.includes(globkaOwnedCat) ? globkaOwnedCat : (ownedCats[0] || '');
+      main.innerHTML = `
+      <div class="page-card${glossy ? ' glossy-card' : ''}" style="overflow:hidden;max-width:820px">
+        <div class="profile-banner${glossy ? ' glossy-banner' : ''}"${p.banner ? ` style="background-image:url('${p.banner}')"` : ''}></div>
+        <div class="profile-ava-wrap">
+          <div class="profile-ava${glossy ? ' glossy-ava' : ''}${p.decoActive === 'ava_deco' ? ' royal' : ''}${p.decoActive === 'ava_ice' ? ' sapphire' : ''}${p.decoActive === 'ava_white' ? ' white' : ''}">${p.avatar ? `<img src="${p.avatar}" alt="">` : esc(String(p.login || '?')[0].toUpperCase())}${p.decoActive === 'ava_deco' ? '<span class="c-gold">♛</span>' : ''}${p.decoActive === 'ava_ice' ? '<span class="c-ice">❄</span>' : ''}${p.decoActive === 'ava_white' ? '<span class="c-white">✦</span>' : ''}</div>
+          <div style="min-width:0">
+            <div class="${loginCls}" style="font-weight:800;font-size:16px">${esc(p.login)}</div>
+            ${p.online ? '<div class="globka-online" style="margin-top:2px"><span class="gdot"></span>Онлайн</div>' : ''}
+            <div style="color:var(--muted);font-size:12.5px;margin-top:3px">UID: <b>${esc(p.uid)}</b></div>
+            ${p.role ? `<div class="sb-role ${p.roleColor ? 'role-grad role-grad-' + p.roleColor : ''}" style="display:inline-flex;margin-top:2px">${roleLabel(p.role)}</div>` : ''}
+          </div>
+          ${p.isFriend ? '<span class="stb stb-ok" style="margin-left:auto">' + icon.check + ' Друзья</span>'
+          : (state.me && p.login !== state.me.login) ? `
+            <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+              <button type="button" class="btn btn-sm ${p.isReqOut ? 'btn-dark' : 'btn-gold'}" data-globka-profile-friend="${esc(p.login)}" data-globka-pfriend="0" data-globka-preqin="${p.isReqIn ? 1 : 0}" data-globka-preqout="${p.isReqOut ? 1 : 0}">${p.isReqIn ? 'Принять заявку' : (p.isReqOut ? 'Заявка отправлена' : 'Добавить в друзья')}</button>
+            </div>` : ''}
+        </div>
+        <div class="profile-grid">
+          <div class="pfield"><div class="pl">Подписка</div><div class="pv">${p.subscription ? esc(p.subscription.name) + (p.subscription.status === 'active' ? '' : ' · заморожена') : 'Нет подписки'}</div></div>
+          <div class="pfield"><div class="pl">Статус</div><div class="pv">${p.subscription ? (p.subscription.status === 'active' ? '<span style="color:var(--green)">Активна</span>' : 'Заморожена') : '—'}</div></div>
+          <div class="pfield"><div class="pl">Дата регистрации</div><div class="pv">${fmtDate(p.createdAt)}</div></div>
+          <div class="pfield"><div class="pl">Alpha</div><div class="pv">${p.hasAlpha ? '<span class="alpha-badge">' + icon.crown + ' GIF профиль</span>' : 'Нет'}</div></div>
+        </div>
+      </div>
+      <div class="page-card" style="max-width:820px">
+        <div class="page-head"><div>
+          <div class="page-title">Куплено в магазине</div>
+          <div class="page-sub">Украшения, цвета логина и роли @${esc(p.login)}</div>
+        </div></div>
+        ${ownedItems.length === 0 ? '<div class="empty">' + icon.cart + '<b>Пока ничего не куплено</b>В магазине пока пусто.</div>'
+          : `<div class="subs-tabs" id="shopTabs">
+              ${ownedCats.map(c => `<button type="button" class="subs-tab${c === activeCat ? ' active' : ''}" data-globka-owned-cat="${esc(c)}">${esc(c)}</button>`).join('')}
+            </div>
+            <div id="globkaOwned" class="globka-inv">${profileOwnedHTML(p, s, activeCat)}</div>`}
+        <button type="button" class="btn btn-dark" data-globka-back style="margin-top:16px">← Назад к поиску</button>
+      </div>`;
+      const pBackBtn = $('[data-globka-back]', main);
+      if (pBackBtn) pBackBtn.addEventListener('click', () => { main.innerHTML = viewGloba(); bindSection('globa', main); });
+      $$('[data-globka-owned-cat]', main).forEach(t => t.addEventListener('click', () => {
+        globkaOwnedCat = t.dataset.globkaOwnedCat;
+        $$('[data-globka-owned-cat]', main).forEach(x => x.classList.toggle('active', x === t));
+        const wrap = $('#globkaOwned', main);
+        if (wrap) wrap.innerHTML = profileOwnedHTML(p, s, globkaOwnedCat);
+      }));
+      $$('[data-globka-profile-friend]', main).forEach(b => b.addEventListener('click', async () => {
+        const tLogin = b.dataset.globkaProfileFriend;
+        const isReqIn = b.dataset.globkaPreqIn === '1';
+        const isReqOut = b.dataset.globkaPreqOut === '1';
+        b.disabled = true;
+        let ep;
+        if (isReqIn) ep = { u: '/api/friends/respond', body: { login: tLogin, accept: true } };
+        else if (isReqOut) ep = { u: '/api/friends/cancel', body: { login: tLogin } };
+        else ep = { u: '/api/friends/request', body: { login: tLogin } };
+        try {
+          const r = await api(ep.u, { method: 'POST', body: JSON.stringify(ep.body) });
+          toast(r.message, 'success');
+          renderGlobaProfile(tLogin, main);
+        } catch (err) { toast(err.message, 'error'); b.disabled = false; }
+      }));
+    } catch (err) {
+      main.innerHTML = '<div class="page-card"><div class="empty">' + esc(err.message) + '</div></div>';
+    }
+  }
+
   function viewSubs() {
     const u = state.me;
     return `
@@ -1053,7 +1264,6 @@ if (section === 'profile') main.innerHTML = viewProfile();
         <div class="page-title">Подписки</div>
         <div class="page-sub">Ваши подписки и продление</div>
       </div></div>
-      ${subExpiryBanner(u.subscription)}
       ${u.subscription ? `
         <div class="plan featured" style="max-width:520px;border-color:rgba(55,211,154,0.45)">
           <span class="stb stb-ok" style="position:absolute;top:18px;right:16px">${icon.check} Активна</span>
@@ -1074,7 +1284,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
     ava_white: { cls: 'white', span: '<span class="c-white">✦</span>' }
   };
 
-  function shopCardsHTML() {
+  function shopCardsHTML(catFilter) {
     const items = (state.shop && state.shop.items) || [];
     const owned = (state.shop && state.shop.owned) || {};
     const activeDeco = (state.shop && state.shop.activeDeco) || null;
@@ -1083,7 +1293,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
     const cats = [...new Set(items.map(i => i.cat || 'Товары'))];
     const u = state.me || {};
     const letter = esc(String(u.login || 'H')[0].toUpperCase());
-    return cats.map(cat => `
+    return cats.filter(c => !catFilter || c === catFilter).map(cat => `
         <div class="shop-cat-title">${esc(cat)}</div>
         ${items.filter(i => (i.cat || 'Товары') === cat).map(it => {
           const mine = !!owned[it.key];
@@ -1116,6 +1326,8 @@ if (section === 'profile') main.innerHTML = viewProfile();
 
   function viewShop() {
     const items = (state.shop && state.shop.items) || [];
+    const cats = [...new Set(items.map(i => i.cat || 'Товары'))];
+    const activeCat = shopTabCat && cats.includes(shopTabCat) ? shopTabCat : cats[0];
     const u = state.me || {};
     return `
     <div class="page-card" style="max-width:820px">
@@ -1125,7 +1337,11 @@ if (section === 'profile') main.innerHTML = viewProfile();
       </div>
       ${(u.login || '') === 'Howill_' ? '<button class="btn btn-sm" data-grant-shop style="font-size:12px">Выдача</button>' : ''}</div>
       ${u.loginColor ? `<div class="shop-my-login"><span class="muted">Ваш логин:</span> <span class="login-grad login-grad-${u.loginColor}">${esc(u.login)}</span></div>` : ''}
-      ${items.length === 0 ? '<div class="empty" style="padding:22px 0">Загрузка…</div>' : `<div id="shopItems">${shopCardsHTML()}</div>`}
+      ${items.length === 0 ? '<div class="empty" style="padding:22px 0">Загрузка…</div>'
+        : `<div class="subs-tabs" id="shopTabs">
+            ${cats.map(c => `<button type="button" class="subs-tab${c === activeCat ? ' active' : ''}" data-shop-cat="${esc(c)}">${esc(c)}</button>`).join('')}
+          </div>
+          <div id="shopItems">${shopCardsHTML(activeCat)}</div>`}
     </div>`;
   }
 
@@ -1510,8 +1726,8 @@ function viewRedeem() {
       </button>
       <button type="button" class="mod-card" data-modsec="moderation">
         <div class="mod-card-ic">${icon.shield}</div>
-        <div class="mod-card-title">Модерация</div>
-        <div class="mod-card-sub">Выдача ролей Модератор и Администратор</div>
+        <div class="mod-card-title">Выдача КПС</div>
+        <div class="mod-card-sub">Выдача ролей Модератор, Медиа и Администратор</div>
       </button>
     </div>
     <div id="modContent">
@@ -1549,8 +1765,8 @@ function viewRedeem() {
     return `
     <div class="page-card" style="max-width:820px">
       <div class="page-head"><div>
-        <div class="page-title">Модерация</div>
-        <div class="page-sub">Выдача ролей Модератор и Администратор по логину</div>
+        <div class="page-title">Выдача КПС</div>
+        <div class="page-sub">Выдача ролей Модератор, Медиа и Администратор по логину</div>
       </div></div>
       <form id="modRoleForm">
         <div class="field"><label>Логин пользователя</label>
@@ -1565,6 +1781,7 @@ function viewRedeem() {
             </button>
             <div class="dd-menu">
               <div class="dd-item selected" data-role-value="mod">Модератор</div>
+              <div class="dd-item" data-role-value="media">Медиа</div>
               <div class="dd-item" data-role-value="admin">Администратор</div>
               <div class="dd-item" data-role-value="">Снять роль</div>
             </div>
@@ -1718,7 +1935,6 @@ function viewRedeem() {
             if (meR && meR.authed && meR.user) state.me = meR.user;
           } catch (_) { state.shop = { items: [], owned: {} }; }
           renderCabContent('shop');
-          bindSection('shop');
         })();
         return;
       }
@@ -1735,7 +1951,7 @@ function viewRedeem() {
           else if (it && it.kind === 'role_color') { if (s) s.activeRole = target ? key : null; if (m) m.roleColor = target ? key : null; }
           else { if (s) s.activeDeco = target ? key : null; if (m) m.decoActive = target ? key : null; }
           const wrap = $('#shopItems');
-          if (wrap) { wrap.innerHTML = shopCardsHTML(); bindShopCards(wrap.parentElement); }
+          if (wrap) { wrap.innerHTML = shopCardsHTML(shopTabCat); bindShopCards(wrap.parentElement); }
         };
         $$('[data-use-shop]', scope).forEach(b => b.addEventListener('click', () => {
           const on = b.dataset.on === '1';
@@ -1753,12 +1969,129 @@ function viewRedeem() {
         }));
       };
       bindShopCards(main);
+      const shopTabs = $$('[data-shop-cat]', main);
+      if (shopTabs.length) {
+        shopTabs.forEach(t => t.addEventListener('click', () => {
+          shopTabCat = t.dataset.shopCat;
+          shopTabs.forEach(x => x.classList.toggle('active', x === t));
+          const wrap = $('#shopItems', main);
+          if (wrap) { wrap.innerHTML = shopCardsHTML(shopTabCat); bindShopCards(main); }
+        }));
+      }
       const grantBtn = $('[data-grant-shop]', main);
       if (grantBtn) grantBtn.addEventListener('click', () => grantShop());
       return;
     }
+    if (section === 'globa') {
+      const renderInto = (boxId, users, emptyText) => {
+        const box = $(boxId, main);
+        if (!box) return;
+        if (!users || !users.length) { box.innerHTML = '<div class="empty" style="padding:14px 0">' + (emptyText || 'Никого не найдено') + '</div>'; return; }
+        box.innerHTML = users.map(u => globkaRowHTML(u)).join('');
+      };
+      const renderReqs = (users, emptyText) => {
+        const box = $('#globkaReqs', main);
+        if (!box) return;
+        if (!users || !users.length) { box.innerHTML = '<div class="empty" style="padding:14px 0">' + (emptyText || 'Заявок нет') + '</div>'; return; }
+        box.innerHTML = users.map(u => globkaReqRowHTML(u)).join('');
+      };
+      const attachGlobkaActions = () => {
+        $$('[data-globka-friend]', main).forEach(b => b.addEventListener('click', async () => {
+          const login = b.dataset.globkaFriend;
+          const reqin = b.dataset.globkaReqIn === '1';
+          const reqout = b.dataset.globkaReqOut === '1';
+          const isfriend = b.dataset.globkaIsfriend === '1';
+          b.disabled = true;
+          let ep;
+          if (isfriend && reqin) ep = { u: '/api/friends/respond', body: { login, accept: true } };
+          else if (isfriend) ep = { u: '/api/friends/remove', body: { login } };
+          else if (reqout) ep = { u: '/api/friends/cancel', body: { login } };
+          else ep = { u: '/api/friends/request', body: { login } };
+          try {
+            const r = await api(ep.u, { method: 'POST', body: JSON.stringify(ep.body) });
+            toast(r.message, 'success');
+            await refreshGlobka(false);
+          } catch (err) { toast(err.message, 'error'); b.disabled = false; }
+        }));
+        $$('[data-globka-accept]', main).forEach(b => b.addEventListener('click', async () => {
+          const login = b.dataset.globkaAccept;
+          b.disabled = true;
+          try {
+            const r = await api('/api/friends/respond', { method: 'POST', body: JSON.stringify({ login, accept: true }) });
+            toast(r.message, 'success');
+            await refreshGlobka(false);
+          } catch (err) { toast(err.message, 'error'); b.disabled = false; }
+        }));
+        $$('[data-globka-decline]', main).forEach(b => b.addEventListener('click', async () => {
+          const login = b.dataset.globkaDecline;
+          b.disabled = true;
+          try {
+            const r = await api('/api/friends/respond', { method: 'POST', body: JSON.stringify({ login, accept: false }) });
+            toast(r.message, 'success');
+            await refreshGlobka(false);
+          } catch (err) { toast(err.message, 'error'); b.disabled = false; }
+        }));
+        $$('[data-globka-profile]', main).forEach(b => b.addEventListener('click', () => renderGlobaProfile(b.dataset.globkaProfile, main)));
+      };
+      const refreshGlobka = async (withSearch) => {
+        const loadAll = [];
+        if (withSearch && globkaQuery) {
+          loadAll.push(api('/api/globka/find?q=' + encodeURIComponent(globkaQuery)).then(r => renderInto('#globkaResults', r.users, 'Никого не найдено')));
+        }
+        loadAll.push(
+          api('/api/friends/requests').then(r => renderReqs(r.users, 'Заявок нет')).catch(() => renderReqs(null, 'Не удалось загрузить заявки')),
+          api('/api/friends').then(r => renderInto('#globkaFriends', r.users, 'Пока пусто — добавьте друзей через поиск')).catch(() => renderInto('#globkaFriends', null, 'Не удалось загрузить друзей'))
+        );
+        await Promise.all(loadAll);
+        attachGlobkaActions();
+      };
+      const searchBtn = $('#globkaSearchBtn', main);
+      if (searchBtn) {
+        const input = $('#globkaSearch', main);
+        const run = async () => {
+          const q = String((input && input.value) || '').trim();
+          const box = $('#globkaResults', main);
+          if (!q) { box.innerHTML = '<div class="empty" style="padding:14px 0">Введите логин для поиска</div>'; return; }
+          if (state.me && q.toLowerCase() === String(state.me.login).toLowerCase()) {
+            box.innerHTML = '<div class="empty" style="padding:14px 0">Это ваш логин. Откройте свой профиль кнопкой <b>«Свой профиль»</b> выше.</div>';
+            return;
+          }
+          globkaQuery = q;
+          box.innerHTML = '<div class="empty" style="padding:14px 0">Ищем…</div>';
+          try {
+            const r = await api('/api/globka/find?q=' + encodeURIComponent(q));
+            renderInto('#globkaResults', r.users, 'Никого не найдено');
+            attachGlobkaActions();
+          } catch (err) { box.innerHTML = '<div class="empty err" style="padding:14px 0">' + esc(err.message) + '</div>'; }
+        };
+        searchBtn.addEventListener('click', run);
+        if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); run(); } });
+      }
+      const selfBtn = $('#globkaSelf', main);
+      if (selfBtn) selfBtn.addEventListener('click', () => renderGlobaProfile(state.me.login, main));
+      const backBtn = $('[data-globka-back]', main);
+      if (backBtn) backBtn.addEventListener('click', () => { main.innerHTML = viewGloba(); bindSection('globa', main); });
+      attachGlobkaActions();
+      refreshGlobka(true);
+    }
     if (section === 'profile' && $('[data-upload]')) {
       $$('[data-upload]').forEach(btn => btn.addEventListener('click', () => uploadProfileImage(btn, btn.dataset.upload)));
+    }
+
+    const themeSwatches = $('.theme-swatches', main);
+    if (section === 'profile' && themeSwatches) {
+      $$('.theme-swatch', themeSwatches).forEach(s => s.addEventListener('click', async () => {
+        const key = s.dataset.themeKey;
+        s.disabled = true;
+        try {
+          const r = await api('/api/profile/theme', { method: 'POST', body: JSON.stringify({ key }) });
+          state.me = r.user;
+          applyTheme(r.user.theme);
+          $$('.theme-swatch', themeSwatches).forEach(x => x.classList.toggle('active', x === s));
+          toast('Цвет темы: ' + (THEMES[key] ? THEMES[key].label : 'Фиолетовый'), 'success');
+        } catch (err) { toast(err.message, 'error'); }
+        s.disabled = false;
+      }));
     }
 
     const glossyBtn = $('#glossyToggle');
@@ -1952,6 +2285,15 @@ if (section === 'redeem' && $('#promoForm')) {
           });
           toast(r.message, 'success');
           if (box) { box.className = 'okbox'; box.textContent = '✅ ' + r.message; }
+          try {
+            const meR = await api('/api/me');
+            if (meR && meR.authed && meR.user) {
+              state.me = meR.user;
+              const cur = $('[data-cab].active');
+              if (cur && cur.dataset.cab === 'profile') { renderCabContent('profile'); bindSection('profile'); }
+              applyTheme(state.me.theme);
+            }
+          } catch (_) {}
         } catch (err) {
           toast(err.message, 'error');
           if (box) { box.className = 'okbox err'; box.textContent = err.message; }

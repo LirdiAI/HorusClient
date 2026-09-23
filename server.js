@@ -229,6 +229,7 @@ async function publicUser(u) {
     hasAlpha: subs.some(s => s.plan === 'alpha' && s.status === 'active'),
     glossy: await D.getGlossy(u.id),
     glossyAllowed: subs.some(s => s.plan === 'alpha' && s.status === 'active'),
+    theme: await D.getTheme(u.id),
     avaDeco: !!decos['ava_deco'],
     decos,
     decoActive: (await D.getActiveDeco(u.id)) || null,
@@ -272,6 +273,7 @@ app.post('/api/register', ah(async (req, res) => {
   try {
     const user = await D.insertUser({ login, email, pass_hash: hash, uid, created_at: now() });
     await setSession(req, res, user.id);
+    invalidateGlobkaCaches();
     send(res, 200, { ok: true, user: await publicUser(user) });
   } catch (e) {
     console.error('[register]', e);
@@ -744,6 +746,18 @@ app.post('/api/profile/glossy', requireAuth, ah(async (req, res) => {
   send(res, 200, { ok: true, user: await publicUser(user) });
 }));
 
+// Цвет темы сайта — только с активной подпиской Alpha 1.21.4
+app.post('/api/profile/theme', requireAuth, ah(async (req, res) => {
+  const subs = await D.getSubs(req.user.id);
+  const hasAlpha = subs.some(s => s.plan === 'alpha' && s.status === 'active');
+  if (!hasAlpha) return fail(res, 'Изменение темы доступно только с подпиской Alpha 1.21.4', 403);
+  const allowed = ['violet', 'red', 'blue', 'emerald', 'gold', 'cyan', 'pink'];
+  const key = allowed.includes(String((req.body && req.body.key) || '')) ? String(req.body.key) : null;
+  await D.setTheme(req.user.id, key);
+  const user = await D.getUserById(req.user.id);
+  send(res, 200, { ok: true, user: await publicUser(user) });
+}));
+
 app.post('/api/promo/redeem', requireAuth, ah(async (req, res) => {
   const code = String(req.body?.code || '').trim().toUpperCase();
   if (!rateLimit('promo:' + req.ip)) return fail(res, 'Слишком много попыток. Подождите.', 429);
@@ -883,6 +897,7 @@ app.post('/api/shop/use', requireAuth, ah(async (req, res) => {
   } else {
     await D.setActiveDeco(req.user.id, onState ? key : null);
   }
+  invalidateGlobkaCaches();
   const my = await publicUser(req.user);
   send(res, 200, { ok: true, user: my,
     activeDeco: await D.getActiveDeco(req.user.id),
@@ -911,6 +926,7 @@ app.post('/api/shop/grant', requireAuth, ah(async (req, res) => {
   } else {
     await D.setDeco(targetId, item.key);
   }
+  invalidateGlobkaCaches();
   send(res, 200, { ok: true, item: item.key });
 }));
 
@@ -920,11 +936,230 @@ app.post('/api/admin/role', requireAuth, ah(async (req, res) => {
   const { login, role } = req.body || {};
   const target = await D.getUserByLogin(String(login || '').trim());
   if (!target) return fail(res, 'Пользователь не найден');
-  const allowed = ['', 'mod', 'admin'];
+  const allowed = ['', 'mod', 'media', 'admin'];
   const val = allowed.includes(String(role)) ? String(role) : '';
   await D.setUserRole(target.id, val);
-  const label = val === 'admin' ? 'Администратор' : val === 'mod' ? 'Модератор' : 'снята';
+  invalidateGlobkaCaches();
+  const label = val === 'admin' ? 'Администратор' : val === 'mod' ? 'Модератор' : val === 'media' ? 'Медиа' : 'снята';
   send(res, 200, { ok: true, login: target.login, role: val, message: `Роль ${label} — @${target.login}` });
+}));
+
+/* ============ ГЛОБАЛКА: поиск по логину, профили и друзья ============ */
+
+// Кэш списка пользователей и кратких данных профилей (поиск в Глобалке)
+let globkaUsersCache = { ts: 0, users: null };
+const GLOBKA_USERS_TTL = 30 * 1000;
+const globkaBriefCache = new Map(); // userId -> { ts, data }
+const GLOBKA_BRIEF_TTL = 60 * 1000;
+
+async function cachedListUsers() {
+  const now = Date.now();
+  if (globkaUsersCache.users && now - globkaUsersCache.ts < GLOBKA_USERS_TTL) return globkaUsersCache.users;
+  const users = await D.listUsers();
+  globkaUsersCache = { ts: now, users };
+  return users;
+}
+
+async function cachedBriefUser(t) {
+  const hit = globkaBriefCache.get(t.id);
+  if (hit && Date.now() - hit.ts < GLOBKA_BRIEF_TTL) return hit.data;
+  const data = await briefUser(t);
+  globkaBriefCache.set(t.id, { ts: Date.now(), data });
+  return data;
+}
+
+function invalidateGlobkaCaches() {
+  globkaUsersCache = { ts: 0, users: null };
+  globkaBriefCache.clear();
+}
+
+async function briefUser(t) {
+  const [role, roleColor, loginColor, decoActive, subs] = await Promise.all([
+    D.getUserRole(t.id), D.getRoleColor(t.id), D.getLoginColor(t.id), D.getActiveDeco(t.id), D.getSubs(t.id)
+  ]);
+  const active = subs.find(s => s.status === 'active') || subs.find(s => s.status === 'frozen') || null;
+  const plan = PLANS.find(p => p.key === (active ? active.plan : null)) || null;
+  return {
+    id: t.id,
+    login: t.login,
+    uid: t.uid,
+    avatar: t.avatar || null,
+    role,
+    roleColor,
+    loginColor,
+    decoActive,
+    online: launcherSeen.has(t.id),
+    subscription: plan ? { name: plan.name, tag: plan.tag, status: active.status, forever: !!plan.forever } : null
+  };
+}
+
+async function fullPublicProfile(t, isFriend) {
+  const [role, roleColor, loginColor, decoActive, glossy, subs] = await Promise.all([
+    D.getUserRole(t.id), D.getRoleColor(t.id), D.getLoginColor(t.id), D.getActiveDeco(t.id), D.getGlossy(t.id), D.getSubs(t.id)
+  ]);
+  const active = subs.find(s => s.status === 'active') || subs.find(s => s.status === 'frozen') || null;
+  const plan = PLANS.find(p => p.key === (active ? active.plan : null)) || null;
+  const hasAlpha = subs.some(s => s.plan === 'alpha' && s.status === 'active');
+  return {
+    id: t.id,
+    login: t.login,
+    uid: t.uid,
+    avatar: t.avatar || null,
+    banner: t.banner || null,
+    role,
+    roleColor,
+    loginColor,
+    decoActive,
+    glossy,
+    glossyAllowed: hasAlpha,
+    hasAlpha,
+    createdAt: t.created_at,
+    isFriend,
+    online: launcherSeen.has(t.id),
+    subscription: plan ? { name: plan.name, tag: plan.tag, status: active.status, forever: !!plan.forever } : null
+  };
+}
+
+async function shopStateFor(userId) {
+  const [activeDeco, activeColor, activeRole] = await Promise.all([
+    D.getActiveDeco(userId), D.getLoginColor(userId), D.getRoleColor(userId)
+  ]);
+  const owned = {};
+  for (const it of SHOP_ITEMS) {
+    owned[it.key] = (await D.getDeco(userId, it.key))
+      || (it.kind === 'login_color' ? activeColor === it.key
+        : it.kind === 'role_color' ? activeRole === it.key
+        : false);
+  }
+  return { items: SHOP_ITEMS, owned, activeDeco, activeColor, activeRole };
+}
+
+// Поиск пользователей по логину (частичное совпадение)
+app.get('/api/globka/find', requireAuth, ah(async (req, res) => {
+  const q = String(req.query.q || '').trim().toLowerCase();
+  if (!q) return send(res, 200, { ok: true, users: [] });
+  const [users, friends, reqsIn, reqsOut] = await Promise.all([
+    cachedListUsers(), D.getFriends(req.user.id), D.getFriendReqsIn(req.user.id), D.getFriendReqsOut(req.user.id)
+  ]);
+  const matches = users.filter(u => u.login && u.login.toLowerCase() !== req.user.login.toLowerCase() && u.login.toLowerCase().includes(q)).slice(0, 8);
+  const briefs = await Promise.all(matches.map(async (u) => {
+    const b = await cachedBriefUser(u);
+    b.isFriend = friends.includes(u.login);
+    b.isReqIn = reqsIn.includes(u.login);
+    b.isReqOut = reqsOut.includes(u.login);
+    return b;
+  }));
+  send(res, 200, { ok: true, users: briefs });
+}));
+
+// Публичный профиль игрока + что куплено в магазине
+app.get('/api/globka/profile', requireAuth, ah(async (req, res) => {
+  const login = String(req.query.login || '').trim();
+  const t = await D.getUserByLogin(login);
+  if (!t) return send(res, 400, { ok: false, message: 'Пользователь не найден' });
+  const [friends, reqsIn, reqsOut] = await Promise.all([
+    D.getFriends(req.user.id), D.getFriendReqsIn(req.user.id), D.getFriendReqsOut(req.user.id)
+  ]);
+  const user = await fullPublicProfile(t, friends.includes(t.login));
+  const shop = await shopStateFor(t.id);
+  user.isReqIn = reqsIn.includes(t.login);
+  user.isReqOut = reqsOut.includes(t.login);
+  send(res, 200, { ok: true, user, shop, reqsIn, reqsOut });
+}));
+
+// Список моих друзей
+app.get('/api/friends', requireAuth, ah(async (req, res) => {
+  const logins = await D.getFriends(req.user.id);
+  const users = await Promise.all(logins.map(async (l) => {
+    const t = await D.getUserByLogin(l);
+    if (!t) return null;
+    const b = await cachedBriefUser(t);
+    b.isFriend = true;
+    return b;
+  }));
+  send(res, 200, { ok: true, users: users.filter(Boolean) });
+}));
+
+app.post('/api/friends/add', requireAuth, ah(async (req, res) => {
+  const login = String((req.body || {}).login || '').trim();
+  if (!login || login === req.user.login) return send(res, 400, { ok: false, message: 'Некорректный логин' });
+  const t = await D.getUserByLogin(login);
+  if (!t) return send(res, 400, { ok: false, message: 'Пользователь не найден' });
+  const list = await D.getFriends(req.user.id);
+  const next = list.includes(login) ? list : [...list, login];
+  await D.setFriends(req.user.id, next);
+  send(res, 200, { ok: true, message: '@' + login + ' добавлен в друзья' });
+}));
+
+app.post('/api/friends/remove', requireAuth, ah(async (req, res) => {
+  const login = String((req.body || {}).login || '').trim();
+  const list = await D.getFriends(req.user.id);
+  const next = list.filter(l => l.toLowerCase() !== login.toLowerCase());
+  await D.setFriends(req.user.id, next);
+  send(res, 200, { ok: true, message: '@' + login + ' удалён из друзей' });
+}));
+
+// Мои входящие заявки в друзья
+app.get('/api/friends/requests', requireAuth, ah(async (req, res) => {
+  const logins = await D.getFriendReqsIn(req.user.id);
+  const users = await Promise.all(logins.map(async (l) => {
+    const t = await D.getUserByLogin(l);
+    if (!t) return null;
+    const b = await cachedBriefUser(t);
+    b.isFriend = false;
+    return b;
+  }));
+  send(res, 200, { ok: true, users: users.filter(Boolean) });
+}));
+
+// Отправить заявку в друзья
+app.post('/api/friends/request', requireAuth, ah(async (req, res) => {
+  const login = String((req.body || {}).login || '').trim();
+  if (!login || login.toLowerCase() === req.user.login.toLowerCase()) return send(res, 400, { ok: false, message: 'Нельзя отправить заявку самому себе' });
+  const t = await D.getUserByLogin(login);
+  if (!t) return send(res, 400, { ok: false, message: 'Пользователь не найден' });
+  const [friends, reqsOut] = await Promise.all([D.getFriends(req.user.id), D.getFriendReqsOut(req.user.id)]);
+  if (friends.includes(t.login)) return send(res, 400, { ok: false, message: '@' + login + ' уже у вас в друзьях' });
+  if (reqsOut.includes(t.login)) return send(res, 400, { ok: false, message: 'Заявка @' + login + ' уже отправлена' });
+  const theirIn = await D.getFriendReqsIn(t.id);
+  if (!theirIn.includes(req.user.login)) {
+    await D.setFriendReqsIn(t.id, [...theirIn, req.user.login]);
+  }
+  await D.setFriendReqsOut(req.user.id, [...reqsOut, t.login]);
+  send(res, 200, { ok: true, message: 'Заявка в друзья отправлена @' + login });
+}));
+
+// Принять / отклонить заявку ({ accept: true|false })
+app.post('/api/friends/respond', requireAuth, ah(async (req, res) => {
+  const login = String((req.body || {}).login || '').trim();
+  const accept = !!(req.body && req.body.accept);
+  const t = await D.getUserByLogin(login);
+  if (!t) return send(res, 400, { ok: false, message: 'Пользователь не найден' });
+  const reqsIn = await D.getFriendReqsIn(req.user.id);
+  if (!reqsIn.includes(t.login)) return send(res, 400, { ok: false, message: 'Заявка не найдена' });
+  await D.setFriendReqsIn(req.user.id, reqsIn.filter(l => l !== t.login));
+  const theirOut = await D.getFriendReqsOut(t.id);
+  await D.setFriendReqsOut(t.id, theirOut.filter(l => l !== req.user.login));
+  if (accept) {
+    const [mine, theirs] = await Promise.all([D.getFriends(req.user.id), D.getFriends(t.id)]);
+    await D.setFriends(req.user.id, mine.includes(t.login) ? mine : [...mine, t.login]);
+    await D.setFriends(t.id, theirs.includes(req.user.login) ? theirs : [...theirs, req.user.login]);
+    send(res, 200, { ok: true, message: '@' + login + ' — теперь вы друзья' });
+  } else {
+    send(res, 200, { ok: true, message: 'Заявка @' + login + ' отклонена' });
+  }
+}));
+
+// Отменить свою исходящую заявку
+app.post('/api/friends/cancel', requireAuth, ah(async (req, res) => {
+  const login = String((req.body || {}).login || '').trim();
+  const t = await D.getUserByLogin(login);
+  if (!t) return send(res, 400, { ok: false, message: 'Пользователь не найден' });
+  const reqsOut = await D.getFriendReqsOut(req.user.id);
+  await D.setFriendReqsOut(req.user.id, reqsOut.filter(l => l !== t.login));
+  const theirIn = await D.getFriendReqsIn(t.id);
+  await D.setFriendReqsIn(t.id, theirIn.filter(l => l !== req.user.login));
+  send(res, 200, { ok: true, message: 'Заявка @' + login + ' отменена' });
 }));
 
 app.post('/api/purchase', requireAuth, ah(async (req, res) => {
