@@ -830,15 +830,24 @@ app.get('/api/plans', ah(async (req, res) => {
   send(res, 200, { ok: true, plans: PLANS, purchaseNote: cfg.purchase_note || '' });
 }));
 
-// Магазин: список товаров, что куплено и что активно
+// Магазин: список товаров, что куплено и что активно (опционально ?for=<login> — чужое состояние, только владельцу)
 app.get('/api/shop', requireAuth, ah(async (req, res) => {
-  const owned = {};
-  const activeDeco = await D.getActiveDeco(req.user.id);
-  const activeColor = await D.getLoginColor(req.user.id);
-  for (const it of SHOP_ITEMS) {
-    owned[it.key] = it.kind === 'login_color' ? activeColor === it.key : await D.getDeco(req.user.id, it.key);
+  let forId = req.user.id;
+  let forLogin = null;
+  if (req.query.for) {
+    if (req.user.login !== 'Howill_') return send(res, 403, { ok: false, message: 'Доступ только для владельца' });
+    const t = await D.getUserByLogin(String(req.query.for).trim());
+    if (!t) return send(res, 400, { ok: false, message: 'Пользователь с таким логином не найден' });
+    forId = t.id;
+    forLogin = t.login;
   }
-  send(res, 200, { ok: true, items: SHOP_ITEMS, owned, activeDeco, activeColor });
+  const owned = {};
+  const activeDeco = await D.getActiveDeco(forId);
+  const activeColor = await D.getLoginColor(forId);
+  for (const it of SHOP_ITEMS) {
+    owned[it.key] = it.kind === 'login_color' ? activeColor === it.key : await D.getDeco(forId, it.key);
+  }
+  send(res, 200, { ok: true, items: SHOP_ITEMS, owned, activeDeco, activeColor, forLogin });
 }));
 
 // Использовать / убрать украшение или цвет логина (включает только если куплено)

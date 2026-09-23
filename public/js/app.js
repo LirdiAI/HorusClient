@@ -1194,6 +1194,15 @@ if (section === 'profile') main.innerHTML = viewProfile();
   async function grantShop() {
     const items = (state.shop && state.shop.items) || [];
     if (!items.length) return toast('Магазин ещё не загружен');
+    let grantOwned = Object.assign({}, (state.shop && state.shop.owned) || {});
+    let targetLogin = '';
+    const rowsHTML = () => items.map(it => {
+      const owned = !!grantOwned[it.key];
+      return `<div class="grant-row">
+        <div class="grant-name">${esc(it.name)} <span class="muted">· ${esc(it.cat || '')}</span></div>
+        <button class="btn btn-sm ${owned ? 'btn-dark' : 'btn-gold'}" data-grant-item="${it.key}" ${owned ? 'disabled' : ''}>${owned ? 'Выдано ✓' : 'Выдать'}</button>
+      </div>`;
+    }).join('');
     const overlay = document.createElement('div');
     overlay.className = 'buy-overlay';
     overlay.innerHTML = `
@@ -1203,16 +1212,9 @@ if (section === 'profile') main.innerHTML = viewProfile();
         <div class="grant-target">
           <label for="grantLogin">Логин получателя</label>
           <input type="text" id="grantLogin" placeholder="Например: TestUser (пусто — себе)" maxlength="30" autocomplete="off">
+          <div class="hint" id="grantStatus">Выдаётся себе (${esc(state.me.login)})</div>
         </div>
-        <div class="grant-list">
-          ${items.map(it => {
-            const owned = !!(state.shop.owned && state.shop.owned[it.key]);
-            return `<div class="grant-row">
-              <div class="grant-name">${esc(it.name)} <span class="muted">· ${esc(it.cat || '')}</span></div>
-              <button class="btn btn-sm ${owned ? 'btn-dark' : 'btn-gold'}" data-grant-item="${it.key}">${owned ? 'Выдано ✓' : 'Выдать'}</button>
-            </div>`;
-          }).join('')}
-        </div>
+        <div class="grant-list" id="grantList">${rowsHTML()}</div>
       </div>`;
     document.body.style.overflow = 'hidden';
     const onKey = (e) => { if (e.key === 'Escape') close(); };
@@ -1223,24 +1225,50 @@ if (section === 'profile') main.innerHTML = viewProfile();
       overlay.classList.add('hide');
       setTimeout(() => overlay.remove(), 220);
     };
+    const input = $('#grantLogin', overlay);
+    const status = $('#grantStatus', overlay);
+    const listEl = $('#grantList', overlay);
+    let deb = null;
+    input.addEventListener('input', () => {
+      clearTimeout(deb);
+      deb = setTimeout(async () => {
+        const v = input.value.trim();
+        if (!v) {
+          targetLogin = '';
+          grantOwned = Object.assign({}, (state.shop && state.shop.owned) || {});
+          status.textContent = 'Выдаётся себе (' + state.me.login + ')';
+          listEl.innerHTML = rowsHTML();
+          return;
+        }
+        status.textContent = 'Ищем @' + v + '…';
+        try {
+          const r = await api('/api/shop?for=' + encodeURIComponent(v));
+          if (r && r.ok) { targetLogin = r.forLogin; grantOwned = r.owned; status.innerHTML = 'Выдаётся: <b>' + esc(r.forLogin) + '</b>'; listEl.innerHTML = rowsHTML(); }
+          else status.textContent = (r && r.message) || 'Пользователь не найден';
+        } catch (err) { status.textContent = err.message || 'Ошибка'; }
+      }, 450);
+    });
     overlay.addEventListener('click', async (e) => {
       if (e.target.closest('[data-close]') || e.target === overlay) return close();
       const b = e.target.closest('[data-grant-item]');
       if (!b) return;
       b.disabled = true;
-      const login = (($('#grantLogin', overlay) || {}).value || '').trim();
+      const login = targetLogin || input.value.trim() || '';
       try {
         const r = await api('/api/shop/grant', { method: 'POST', body: JSON.stringify({ key: b.dataset.grantItem, target: login || undefined }) });
         if (r && r.ok) {
-          toast('Выдано: ' + ((items.find(i => i.key === b.dataset.grantItem) || {}).name || '') + (login ? ' → ' + login : ''), 'success');
-          state.shop = await api('/api/shop');
-          if (!login) {
+          grantOwned[b.dataset.grantItem] = true;
+          listEl.innerHTML = rowsHTML();
+          toast('Выдано' + (login ? ' @' + login : '') + ': ' + ((items.find(i => i.key === b.dataset.grantItem) || {}).name || ''), 'success');
+          if (login) {
+            try { const rr = await api('/api/shop?for=' + encodeURIComponent(login)); if (rr && rr.ok) { grantOwned = rr.owned; listEl.innerHTML = rowsHTML(); } } catch (_) {}
+          } else {
+            state.shop = await api('/api/shop');
             const meR = await api('/api/me');
             if (meR && meR.authed && meR.user) state.me = meR.user;
+            renderCabContent('shop');
+            bindSection('shop');
           }
-          close();
-          renderCabContent('shop');
-          bindSection('shop');
         } else { b.disabled = false; toast((r && r.message) || 'Не удалось выдать'); }
       } catch (err) { b.disabled = false; toast(err.message, 'error'); }
     });
