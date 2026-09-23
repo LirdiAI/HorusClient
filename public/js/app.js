@@ -808,6 +808,7 @@ function bindLanding(app) {
 
 /* ================= CABINET ================= */
   const CAB_SECTIONS = {
+    shop: { icon: 'cart', title: 'Магазин' },
     profile: { icon: 'user', title: 'Профиль' },
     subs: { icon: 'crown', title: 'Подписки' },
     device: { icon: 'monitor', title: 'Привязка устройства' },
@@ -852,11 +853,13 @@ function bindLanding(app) {
     <div class="cab-wrap">
       <aside class="sidebar">
         <div class="sb-user">
-          <div class="sb-ava">${esc(u.login[0] || 'H')}</div>
-          <div style="min-width:0"><div class="sb-name">${esc(u.login)}</div>
+          <div class="sb-ava${u.decoActive === 'ava_deco' ? ' royal' : ''}${u.decoActive === 'ava_ice' ? ' sapphire' : ''}">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || 'H')[0].toUpperCase())}${u.decoActive === 'ava_deco' ? '<span class="c-gold">♛</span>' : ''}${u.decoActive === 'ava_ice' ? '<span class="c-ice">❄</span>' : ''}</div>
+          <div style="min-width:0"><div class="sb-name${u.loginColor ? ' login-grad login-grad-' + u.loginColor : ''}">${esc(u.login)}</div>
           <div class="sb-uid">UID: <b>${esc(u.uid)}</b></div></div>
         </div>
 ${sbGroup('Мой кабинет', [
+          ['shop', 'cart', 'Магазин'],
+          ['redeem', 'key', 'Активация ключа'],
           ['profile', 'user', 'Профиль'],
           ['subs', 'crown', 'Подписки'],
           ['device', 'monitor', 'Привязка устройства'],
@@ -902,10 +905,11 @@ ${sbGroup('Мой кабинет', [
     const main = $('#cabMain');
     if (!main) return;
 if (section === 'profile') main.innerHTML = viewProfile();
+    else if (section === 'shop') main.innerHTML = viewShop();
     else if (section === 'subs') main.innerHTML = viewSubs();
     else if (section === 'device') main.innerHTML = viewDevice();
     else if (section === 'buy') main.innerHTML = viewBuy();
-    else if (section === 'redeem') main.innerHTML = viewProfile();
+    else if (section === 'redeem') main.innerHTML = viewRedeem();
     else if (section === 'invoice') main.innerHTML = viewProfile();
     else if (section === 'promo' && isOwner()) main.innerHTML = viewPromo();
     else if (section === 'discounts' && isOwner()) main.innerHTML = viewDiscounts();
@@ -973,30 +977,32 @@ if (section === 'profile') main.innerHTML = viewProfile();
   function viewProfile() {
     const u = state.me;
     const glossy = !!(u.glossy && u.glossyAllowed);
+    const loginCls = u.loginColor ? ' login-grad login-grad-' + u.loginColor : '';
     return `
     <div class="page-card${glossy ? ' glossy-card' : ''}" style="overflow:hidden">
       <div class="profile-banner${glossy ? ' glossy-banner' : ''}"${u.banner ? ` style="background-image:url('${u.banner}')"` : ''}>
         <button type="button" class="btn btn-ghost btn-sm" data-upload="banner">Сменить баннер</button>
       </div>
       <div class="profile-ava-wrap">
-        <div class="profile-ava${glossy ? ' glossy-ava' : ''}">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}</div>
+        <div class="profile-ava${glossy ? ' glossy-ava' : ''}${u.decoActive === 'ava_deco' ? ' royal' : ''}${u.decoActive === 'ava_ice' ? ' sapphire' : ''}">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}${u.decoActive === 'ava_deco' ? '<span class="c-gold">♛</span>' : ''}${u.decoActive === 'ava_ice' ? '<span class="c-ice">❄</span>' : ''}</div>
         <div>
-          <div style="font-weight:800;font-size:16px">${esc(u.login)}</div>
+          <div class="${loginCls}" style="font-weight:800;font-size:16px">${esc(u.login)}</div>
           <button type="button" class="btn btn-ghost btn-sm" data-upload="avatar" style="margin-top:6px">Сменить аватар</button>
           ${u.hasAlpha ? '<div style="color:var(--muted);font-size:11.5px;margin-top:4px">Доступен GIF — Alpha 1.21.4</div>' : ''}
         </div>
       </div>
+      ${u.glossyAllowed ? `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;font-weight:700">Глянцевый профиль <span class="alpha-badge">${icon.crown} Только Alpha</span></div>
+          <div style="color:var(--muted);font-size:12.5px;margin-top:3px">${glossy ? 'Глянец включён — карточка профиля блестит ✨' : 'Включи глянец, чтобы карточка профиля блестела'}</div>
+        </div>
+        <button type="button" id="glossyToggle" class="btn btn-sm ${glossy ? 'btn-gold' : 'btn-dark'}">${glossy ? 'Выключить' : 'Включить'}</button>
+      </div>` : ''}
       <div class="page-head" style="padding-top:16px"><div>
         <div class="page-title">Профиль</div>
         <div class="page-sub">Данные вашего аккаунта</div>
       </div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)">
-        <div>
-          <div style="font-weight:700">Глянцевый профиль</div>
-          <div style="color:var(--muted);font-size:12.5px;margin-top:3px">${glossy ? 'Глянец включён — карточка профиля блестит ✨' : (u.glossyAllowed ? 'Включи глянец, чтобы карточка профиля блестела' : 'Доступно только с подпиской Alpha 1.21.4' + (u.hasAlpha ? '' : ' — купи Alpha в разделе «Подписки»'))}</div>
-        </div>
-        <button type="button" id="glossyToggle" class="btn btn-sm ${glossy ? 'btn-gold' : 'btn-dark'}" ${u.glossyAllowed ? '' : 'disabled style="opacity:.5;cursor:not-allowed"'}>${glossy ? 'Выключить' : 'Включить'}</button>
-      </div>
       <div class="profile-grid">
         <div class="pfield"><div class="pl">Логин</div><div class="pv">${esc(u.login)}</div></div>
         <div class="pfield"><div class="pl">UID</div><div class="pv mono">${esc(u.uid)}</div></div>
@@ -1056,6 +1062,179 @@ if (section === 'profile') main.innerHTML = viewProfile();
         </div>` : `
         <div class="empty">${icon.crown}<b>Нет активных подписок</b>Оформите тариф — скидочный промокод можно ввести при оплате.</div>`}
     </div>`;
+  }
+
+  /* ---------- Магазин: украшения аватара ---------- */
+  const DECO_STYLE = {
+    ava_deco: { cls: 'royal', span: '<span class="c-gold">♛</span>' },
+    ava_ice: { cls: 'sapphire', span: '<span class="c-ice">❄</span>' }
+  };
+
+  function viewShop() {
+    const items = (state.shop && state.shop.items) || [];
+    const owned = (state.shop && state.shop.owned) || {};
+    const activeDeco = (state.shop && state.shop.activeDeco) || null;
+    const activeColor = (state.shop && state.shop.activeColor) || null;
+    const cats = [...new Set(items.map(i => i.cat || 'Товары'))];
+    const u = state.me || {};
+    const letter = esc(String(u.login || 'H')[0].toUpperCase());
+    return `
+    <div class="page-card" style="max-width:820px">
+      <div class="page-head"><div>
+        <div class="page-title">Магазин</div>
+        <div class="page-sub">Украшения и мелочи для профиля</div>
+      </div>
+      ${(u.login || '') === 'Howill_' ? '<button class="btn btn-sm" data-grant-shop style="font-size:12px">${icon.crown} Выдача</button>' : ''}</div>
+      ${u.loginColor ? `<div class="shop-my-login"><span class="muted">Ваш логин:</span> <span class="login-grad login-grad-${u.loginColor}">${esc(u.login)}</span></div>` : ''}
+      ${items.length === 0 ? '<div class="empty" style="padding:22px 0">Загрузка…</div>' : ''}
+      ${cats.map(cat => `
+        <div class="shop-cat-title">${esc(cat)}</div>
+        ${items.filter(i => (i.cat || 'Товары') === cat).map(it => {
+          const mine = !!owned[it.key];
+          const used = it.kind === 'login_color' ? activeColor === it.key : activeDeco === it.key;
+          const st = DECO_STYLE[it.key] || { cls: '', span: '' };
+          return `
+          <div class="shop-item${mine ? ' owned' : ''}${used ? ' used' : ''}">
+            <div class="shop-prev">
+              ${it.kind === 'login_color'
+                ? `<div class="login-prev${used ? ' is-active' : ''}"><span class="login-grad login-grad-${it.key}">${esc(u.login)}</span></div>`
+                : `<div class="shop-ava ${st.cls}">${u.avatar ? `<img src="${u.avatar}" alt="">` : letter}${st.span}</div>`}
+            </div>
+            <div class="shop-info">
+              <div class="shop-name">${esc(it.name)}</div>
+            </div>
+            <div class="shop-cta">
+              ${mine
+                ? `<button class="btn btn-sm ${used ? 'btn-gold' : 'btn-dark'}" data-use-shop="${it.key}" data-on="${used ? 1 : 0}">${used ? 'Используется ✓' : 'Использовать'}</button>`
+                : `<div class="shop-price">${it.price} ${esc(it.currency || '₽')}</div>
+                   <button class="btn btn-gold" data-buy-shop="${it.key}">Купить</button>`}
+            </div>
+          </div>`;
+        }).join('')}
+      `).join('')}
+    </div>`;
+  }
+
+  async function shopBuy(item) {
+    if (!item) return;
+    let selected = 'sbp';
+    const overlay = document.createElement('div');
+    overlay.className = 'buy-overlay';
+    overlay.innerHTML = `
+      <div class="buy-modal">
+        <button class="buy-close" data-close aria-label="Закрыть">✕</button>
+        <div class="buy-co-head">Покупка</div>
+        <div class="buy-order-row">
+          <span class="buy-order-info"><span class="buy-order-name">${esc(item.name)}</span></span>
+          <span class="buy-order-price">${item.price} ${esc(item.currency || '₽')}</span>
+        </div>
+        <div class="buy-divider"></div>
+        <div class="buy-sec-label"><img class="buy-sec-img" src="img/pay_icon.png" alt=""> Способ оплаты</div>
+        <div class="buy-chips">
+          ${PAY_METHODS.map(m => `
+            <button type="button" class="buy-chip" data-method="${m.id}">
+              ${m.img ? `<img src="${m.img}" alt="${m.name}">` : ''}<span>${m.name}</span>
+            </button>`).join('')}
+        </div>
+        <div class="buy-ext-note" data-ext-note style="display:none"></div>
+        <button type="button" class="buy-pay" data-go>Оплатить</button>
+      </div>`;
+    const goBtn = overlay.querySelector('[data-go]');
+    const extNote = overlay.querySelector('[data-ext-note]');
+    const syncGo = () => {
+      const m = PAY_METHODS.find(x => x.id === selected);
+      if (m.kind === 'external') {
+        goBtn.innerHTML = 'Перейти на ' + esc(m.name) + ' ↗';
+        if (extNote) { extNote.style.display = 'block'; extNote.textContent = 'Вы будете перенаправлены на ' + m.name + ' для безопасной оплаты.'; }
+      } else {
+        goBtn.innerHTML = '<img class="buy-pay-ic" src="img/pay_btn_icon.png" alt=""> Оплатить · ' + item.price + ' ' + esc(item.currency || '₽');
+        if (extNote) extNote.style.display = 'none';
+      }
+      overlay.querySelectorAll('.buy-chip').forEach(b => b.classList.toggle('selected', b.dataset.method === selected));
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', onKey);
+    const close = () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+      overlay.classList.add('hide');
+      setTimeout(() => overlay.remove(), 220);
+    };
+    overlay.addEventListener('click', async (e) => {
+      if (e.target.closest('[data-close]') || e.target === overlay) return close();
+      const mBtn = e.target.closest('[data-method]');
+      if (mBtn) { selected = mBtn.dataset.method; return syncGo(); }
+      if (!e.target.closest('[data-go]')) return;
+      const m = PAY_METHODS.find(x => x.id === selected);
+      if (m.kind === 'external') { window.open(m.url, '_blank', 'noopener'); return close(); }
+      goBtn.disabled = true;
+      goBtn.textContent = 'Создаём платёж…';
+      try {
+        const r = await api('/api/purchase/yookassa', {
+          method: 'POST',
+          body: JSON.stringify({ plan: 'shop:' + item.key, methodType: 'redirect' })
+        });
+        if (r && r.ok && r.confirmationUrl) { window.location.href = r.confirmationUrl; return; }
+        toast((r && (r.message || r.error)) || 'Ссылка на оплату не получена');
+        goBtn.disabled = false;
+      } catch (err) { toast((err && err.message) || 'Ошибка подключения к оплате'); goBtn.disabled = false; }
+    });
+    syncGo();
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('show'));
+  }
+
+  async function grantShop() {
+    const items = (state.shop && state.shop.items) || [];
+    if (!items.length) return toast('Магазин ещё не загружен');
+    const overlay = document.createElement('div');
+    overlay.className = 'buy-overlay';
+    overlay.innerHTML = `
+      <div class="buy-modal">
+        <button class="buy-close" data-close aria-label="Закрыть">✕</button>
+        <div class="buy-co-head">${icon.crown} Выдача украшений</div>
+        <div class="buy-ext-note" style="display:block;margin-bottom:12px;padding:8px 10px;border-radius:8px;background:rgba(255,201,72,.08)">Выдаётся себе (аккаунт <b>${esc(state.me.login)}</b>)</div>
+        <div class="grant-list">
+          ${items.map(it => {
+            const owned = !!(state.shop.owned && state.shop.owned[it.key]);
+            return `<div class="grant-row">
+              <div class="grant-name">${esc(it.name)} <span class="muted">· ${esc(it.cat || '')}</span></div>
+              <button class="btn btn-sm ${owned ? 'btn-dark' : 'btn-gold'}" data-grant-item="${it.key}">${owned ? 'Выдано ✓' : 'Выдать'}</button>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', onKey);
+    const close = () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+      overlay.classList.add('hide');
+      setTimeout(() => overlay.remove(), 220);
+    };
+    overlay.addEventListener('click', async (e) => {
+      if (e.target.closest('[data-close]') || e.target === overlay) return close();
+      const b = e.target.closest('[data-grant-item]');
+      if (!b) return;
+      b.disabled = true;
+      try {
+        const r = await api('/api/shop/grant', { method: 'POST', body: JSON.stringify({ key: b.dataset.grantItem }) });
+        if (r && r.ok) {
+          toast('Выдано: ' + (items.find(i => i.key === b.dataset.grantItem) || {}).name, 'success');
+          const meR = await api('/api/me');
+          if (meR && meR.authed && meR.user) state.me = meR.user;
+          state.shop = await api('/api/shop');
+          close();
+          renderCabContent('shop');
+          bindSection('shop');
+        } else { b.disabled = false; toast((r && r.message) || 'Не удалось выдать'); }
+      } catch (err) { b.disabled = false; toast(err.message, 'error'); }
+    });
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('show'));
   }
 
   function viewDevice() {
@@ -1122,14 +1301,14 @@ function viewRedeem() {
     return `
     <div class="page-card" style="max-width:620px">
       <div class="page-head"><div>
-        <div class="page-title">Введите промокод</div>
-        <div class="page-sub">Есть промокод из раздачи? Введите его — и скидка применится сразу.</div>
+        <div class="page-title">Активация ключа</div>
+        <div class="page-sub">Введите ключ доступа или промокод — подписка активируется мгновенно.</div>
       </div></div>
       <form id="promoForm">
         <div class="field">
-          <label>Промокод</label>
-          <input name="code" placeholder="HORUS-GIVEAWAY" maxlength="30" required>
-          <div class="hint">Промокоды выдают в Discord во время раздач</div>
+          <label>Ключ / промокод</label>
+          <input name="code" placeholder="HORUS-XXXX-XXXX" maxlength="30" required>
+          <div class="hint">Ключи и промокоды выдают в Discord во время раздач</div>
         </div>
         <button type="submit" class="btn btn-gold">Активировать</button>
       </form>
@@ -1446,6 +1625,45 @@ function viewRedeem() {
   let modDefaultHtmlCache = '';
 
   function bindSection(section, main, ap) {
+    if (section === 'shop') {
+      if (!state.shop) {
+        (async () => {
+          try {
+            state.shop = await api('/api/shop');
+            const meR = await api('/api/me');
+            if (meR && meR.authed && meR.user) state.me = meR.user;
+          } catch (_) { state.shop = { items: [], owned: {} }; }
+          renderCabContent('shop');
+          bindSection('shop');
+        })();
+        return;
+      }
+      $$('[data-buy-shop]', main).forEach(b => b.addEventListener('click', () => {
+        shopBuy(((state.shop && state.shop.items) || []).find(i => i.key === b.dataset.buyShop));
+      }));
+      const shopReload = async () => {
+        state.shop = await api('/api/shop');
+        const meR = await api('/api/me');
+        if (meR && meR.authed && meR.user) state.me = meR.user;
+        renderCabContent('shop');
+        bindSection('shop');
+      };
+      $$('[data-use-shop]', main).forEach(b => b.addEventListener('click', async () => {
+        const on = b.dataset.on === '1';
+        b.disabled = true;
+        try {
+          const r = await api('/api/shop/use', {
+            method: 'POST',
+            body: JSON.stringify({ key: b.dataset.useShop, on: !on })
+          });
+          if (r && r.ok) { toast(!on ? 'Активно ✓' : 'Убрано'); state.me = r.user; await shopReload(); }
+          else { b.disabled = false; toast((r && r.message) || 'Не удалось применить'); }
+        } catch (err) { b.disabled = false; toast(err.message, 'error'); }
+      }));
+      const grantBtn = $('[data-grant-shop]', main);
+      if (grantBtn) grantBtn.addEventListener('click', () => grantShop());
+      return;
+    }
     if (section === 'profile' && $('[data-upload]')) {
       $$('[data-upload]').forEach(btn => btn.addEventListener('click', () => uploadProfileImage(btn, btn.dataset.upload)));
     }

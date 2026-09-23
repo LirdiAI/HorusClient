@@ -5,3 +5,9 @@ data/
 .env.local
 .DS_Store
 public/files/HorusLauncher.exe
+server.out.log
+server.pid
+
+server.err.log
+server.out.log
+server.pid

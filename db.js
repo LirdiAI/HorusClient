@@ -313,6 +313,45 @@ async function setGlossy(userId, enabled) {
   await setCfg(`glossy:${userId}`, enabled ? '1' : '0');
 }
 
+/* ---------------- украшения аватарки (магазин) ---------------- */
+
+async function getDeco(userId, key) {
+  const raw = await getCfg(`deco:${key}:${userId}`);
+  return raw === '1';
+}
+
+async function setDeco(userId, key) {
+  await setCfg(`deco:${key}:${userId}`, '1');
+}
+
+async function getAvaDeco(userId) {
+  return getDeco(userId, 'ava_deco');
+}
+
+async function setAvaDeco(userId) {
+  return setDeco(userId, 'ava_deco');
+}
+
+/* ---------------- цвет логина (магазин) ---------------- */
+
+async function getLoginColor(userId) {
+  return (await getCfg(`login_color:${userId}`)) || null;
+}
+
+async function setLoginColor(userId, key) {
+  await setCfg(`login_color:${userId}`, key);
+}
+
+/* ---------------- активное украшение аватара ---------------- */
+
+async function getActiveDeco(userId) {
+  return (await getCfg(`deco_active:${userId}`)) || null;
+}
+
+async function setActiveDeco(userId, key) {
+  await setCfg(`deco_active:${userId}`, key);
+}
+
 async function setTg2fa(userId, enabled) {
   const raw = await getCfg(`tg_userid:${userId}`);
   if (!raw) return false;
@@ -597,7 +636,7 @@ module.exports = {
   getPromoByCode, promoCodeExists, insertPromo, listPromos, bumpPromoUsed, deletePromo,
   getDiscountPromoByCode, insertDiscountPromo, listDiscountPromos, deleteDiscountPromo, bumpDiscountPromoByCode,
   getCustomOfferById, insertCustomOffer, listCustomOffers, deleteCustomOffer, listCustomOrderStatuses, updateOrderStatus, getOrderByPaymentId,
-  listRecentOrders, getUsersByIds, setUserAvatar, setUserBanner, setTg2fa, getGlossy, setGlossy,
+  listRecentOrders, getUsersByIds, setUserAvatar, setUserBanner, setTg2fa, getGlossy, setGlossy, getAvaDeco, setAvaDeco, getDeco, setDeco, getLoginColor, setLoginColor, getActiveDeco, setActiveDeco,
   insertOrder, getOrderById, setOrderPaid, saveOrderPayment, insertTicket,
   getAllCfg, getCfg, setCfg, deleteCfg,
   getTgByUserId, getUserIdByTg, checkTgTaken, bindTg, unbindTg,

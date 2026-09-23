@@ -325,7 +325,27 @@ button { font-family: inherit; cursor: pointer; }
   padding: 18px; position: sticky; top: 86px; display: flex; flex-direction: column; gap: 18px;
 }
 .sb-user { display: flex; gap: 12px; align-items: center; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
-.sb-ava { width: 42px; height: 42px; border-radius: 12px; background: var(--gold-dim); color: var(--gold); display: grid; place-items: center; flex-shrink: 0; font-family: var(--font-h); font-weight: 700; }
+.sb-ava { width: 42px; height: 42px; border-radius: 12px; background: var(--gold-dim); color: var(--gold); display: grid; place-items: center; flex-shrink: 0; font-family: var(--font-h); font-weight: 700; position: relative; }
+.sb-ava.royal, .sb-ava.sapphire { background: rgba(255,255,255,.05); }
+.sb-ava.royal::before, .sb-ava.sapphire::before {
+  content: ''; position: absolute; inset: -2px; border-radius: 14px;
+  padding: 2px;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.sb-ava.royal::before {
+  background: linear-gradient(135deg, #ffc948, #a855f7, #ffc948);
+  box-shadow: 0 0 0 2px rgba(255,201,72,.55), 0 0 16px -2px rgba(243,201,72,.6);
+}
+.sb-ava.sapphire::before {
+  background: linear-gradient(135deg, #3ec3f4, #7aa7ff, #3ec3f4);
+  box-shadow: 0 0 0 3px rgba(62,195,244,.5), 0 0 16px -2px rgba(62,195,244,.75);
+}
+.sb-ava .c-gold, .profile-ava .c-gold, .shop-ava .c-gold { position: absolute; top: -9px; right: -7px; font-size: 16px; line-height: 1; color: #ffd977; filter: drop-shadow(0 0 5px rgba(255,201,72,.9)); }
+.sb-ava .c-ice, .profile-ava .c-ice, .shop-ava .c-ice { position: absolute; top: -9px; left: -7px; font-size: 16px; line-height: 1; color: #9fe6ff; filter: drop-shadow(0 0 6px rgba(62,195,244,.95)); }
+.sb-ava img { width: 100%; height: 100%; border-radius: 12px; object-fit: cover; }
 .sb-name { font-weight: 700; font-size: 14.5px; line-height: 1.2; }
 .sb-uid { font-size: 12px; color: var(--muted-2); }
 .sb-uid b { color: var(--gold); font-weight: 700; }
@@ -449,6 +469,7 @@ button { font-family: inherit; cursor: pointer; }
   display: flex; align-items: flex-end; justify-content: flex-end;
   padding: 12px;
   border-bottom: 1px solid var(--line);
+  border-radius: 18px 18px 0 0;
 }
 .profile-ava-wrap {
   display: flex; align-items: flex-end; gap: 16px;
@@ -456,30 +477,32 @@ button { font-family: inherit; cursor: pointer; }
 }
 .profile-ava {
   width: 86px; height: 86px; min-width: 86px;
-  border-radius: 50%; overflow: hidden;
+  border-radius: 50%;
+  position: relative;
   border: 3px solid var(--panel-solid);
   background: rgba(168,85,247,.22);
   display: flex; align-items: center; justify-content: center;
   font-size: 34px; font-weight: 800; color: #d8b4fe;
   box-shadow: 0 8px 24px -10px rgba(0,0,0,.7);
 }
-.profile-ava img { width: 100%; height: 100%; object-fit: cover; }
+.profile-ava img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .btn-sm { padding: 6px 12px; font-size: 12.5px; border-radius: 9px; }
 
 /* ---------- глянцевый профиль (Alpha) ---------- */
 .glossy-card { position: relative; }
 .glossy-card::after {
-  content: ''; position: absolute; top: 0; left: -80%; height: 100%; width: 45%;
-  background: linear-gradient(100deg, transparent, rgba(255,255,255,.16), transparent);
-  transform: skewX(-20deg); animation: glossyShine 4s ease-in-out infinite;
+  content: ''; position: absolute; top: 0; left: -80%; height: 100%; width: 55%;
+  background:
+    linear-gradient(100deg, transparent 0%, rgba(255,255,255,.10) 35%, rgba(255,255,255,.42) 50%, rgba(255,255,255,.10) 65%, transparent 100%);
+  transform: skewX(-20deg); animation: glossyShine 3.2s ease-in-out infinite;
   pointer-events: none;
 }
 @keyframes glossyShine { 0%, 55% { left: -80%; } 100% { left: 160%; } }
 .glossy-banner::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background:
-    radial-gradient(700px circle at 50% -30%, rgba(255,255,255,.28), transparent 55%),
-    linear-gradient(180deg, rgba(255,255,255,.06), transparent 40%);
+    radial-gradient(700px circle at 50% -30%, rgba(255,255,255,.42), transparent 58%),
+    linear-gradient(180deg, rgba(255,255,255,.12), transparent 45%);
   mix-blend-mode: screen;
 }
 .profile-ava.glossy-ava {
@@ -489,10 +512,125 @@ button { font-family: inherit; cursor: pointer; }
     linear-gradient(135deg, #a855f7, #3ec3f4, #f7c948, #a855f7) border-box;
   background-size: 100% 100%, 220% 220%;
   animation: glossyBorder 5s linear infinite;
-  box-shadow: 0 0 0 3px rgba(168,85,247,.3), 0 0 26px -4px rgba(243,201,72,.55), 0 8px 24px -10px rgba(0,0,0,.7);
+  box-shadow: 0 0 0 3px rgba(168,85,247,.45), 0 0 18px 2px rgba(243,201,72,.75), 0 8px 30px -8px rgba(0,0,0,.7);
 }
 @keyframes glossyBorder { 0% { background-position: 0 0, 0% 50%; } 50% { background-position: 0 0, 100% 50%; } 100% { background-position: 0 0, 0% 50%; } }
 .profile-ava.glossy-ava img { border-radius: 50%; }
+
+/* ---------- королевское украшение аватарки (магазин) ---------- */
+.profile-ava.royal, .profile-ava.sapphire { border-color: transparent; }
+.profile-ava.royal::before, .profile-ava.sapphire::before {
+  content: ''; position: absolute; inset: -2px; border-radius: 50%;
+  padding: 3px;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none; z-index: 2;
+}
+.profile-ava.royal::before {
+  background: linear-gradient(135deg, #ffc948, #a855f7, #ffc948);
+  animation: royalSpin 4s linear infinite;
+  box-shadow: 0 0 0 3px rgba(255,201,72,.45), 0 0 20px -3px rgba(255,201,72,.7), 0 8px 24px -10px rgba(0,0,0,.7);
+}
+.profile-ava.sapphire::before {
+  background: linear-gradient(135deg, #3ec3f4, #7aa7ff, #3ec3f4);
+  animation: sapphireSpin 4s linear infinite;
+  box-shadow: 0 0 0 3px rgba(62,195,244,.5), 0 0 20px -3px rgba(62,195,244,.8), 0 8px 24px -10px rgba(0,0,0,.7);
+}
+@keyframes royalSpin { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+@keyframes sapphireSpin { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(-360deg); } }
+.profile-ava .c-gold, .profile-ava .c-ice { z-index: 3; }
+.alpha-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+  color: #ffd977; background: linear-gradient(135deg, rgba(255,201,72,.22), rgba(168,85,247,.22));
+  border: 1px solid rgba(255,201,72,.45); border-radius: 999px; padding: 2px 8px;
+}
+.shop-my-login {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 12px; border: 1px solid var(--line); border-radius: 10px;
+  background: rgba(255,255,255,.02);
+}
+.shop-my-login .muted { font-size: 12px; }
+.shop-my-login .login-grad { font-weight: 800; font-size: 15px; }
+
+/* ---------- переливающиеся цвета логина ---------- */
+.login-grad {
+  background-clip: text; -webkit-background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+  background-size: 220% 100%;
+  animation: loginFlow 2.4s linear infinite;
+}
+@keyframes loginFlow { 0% { background-position: 0% 50%; } 100% { background-position: 220% 50%; } }
+.login-grad-lc_magma   { background-image: linear-gradient(90deg, #ff7b00, #ffd000, #ff3d00, #ff7b00); }
+.login-grad-lc_volt    { background-image: linear-gradient(90deg, #4f6dff, #b44dff, #2ee6ff, #4f6dff); }
+.login-grad-lc_emerald { background-image: linear-gradient(90deg, #00c98a, #b8f25a, #00d5c4, #00c98a); }
+.login-grad-lc_kings   { background-image: linear-gradient(90deg, #ffd977, #ff8ac2, #ff5d8f, #ffd977); }
+.login-grad-lc_aurora  { background-image: linear-gradient(90deg, #ff5d8f, #b44dff, #38d5ff, #3affa0, #ffd000, #ff5d8f); }
+.login-prev {
+  min-width: 118px; height: 72px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.03); border: 1px dashed var(--line);
+  font-size: 19px; font-weight: 800;
+}
+.login-prev.is-active { border-style: solid; border-color: rgba(62,195,244,.5); }
+.shop-item.used { border-color: rgba(62,195,244,.35); }
+.grant-list { display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow:hidden; }
+.grant-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.02);
+}
+.grant-name { font-size: 13.5px; }
+.grant-name .muted { color: var(--muted-2); }
+
+/* ---------- магазин ---------- */
+.shop-cat-title {
+  font-family: var(--font-h); font-size: 12px; font-weight: 700; letter-spacing: 1.4px;
+  text-transform: uppercase; color: var(--gold);
+  margin: 24px 2px 4px;
+}
+.shop-cat-title:first-of-type { margin-top: 4px; }
+.shop-item {
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  padding: 16px 18px; border: 1px solid var(--line); border-radius: 14px;
+  margin-top: 12px; background: rgba(255,255,255,.02);
+}
+.shop-item.owned { border-color: rgba(55,211,154,.4); background: rgba(55,211,154,.04); }
+.shop-prev { flex-shrink: 0; }
+.shop-ava {
+  width: 72px; height: 72px; border-radius: 50%; position: relative;
+  border: 3px solid var(--panel-solid);
+  background: rgba(168,85,247,.22); color: #d8b4fe;
+  display: grid; place-items: center; font-size: 28px; font-weight: 800;
+}
+.shop-ava.royal, .shop-ava.sapphire { border-color: transparent; }
+.shop-ava.royal::before, .shop-ava.sapphire::before {
+  content: ''; position: absolute; inset: -2px; border-radius: 50%;
+  padding: 3px;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.shop-ava.royal::before {
+  background: linear-gradient(135deg, #ffc948, #a855f7, #ffc948);
+  animation: royalSpin 4s linear infinite;
+  box-shadow: 0 0 0 3px rgba(255,201,72,.45), 0 0 20px -3px rgba(255,201,72,.7);
+}
+.shop-ava.sapphire::before {
+  background: linear-gradient(135deg, #3ec3f4, #7aa7ff, #3ec3f4);
+  animation: sapphireSpin 4s linear infinite;
+  box-shadow: 0 0 0 3px rgba(62,195,244,.45), 0 0 20px -3px rgba(62,195,244,.7);
+}
+.shop-ava .c-gold { position: absolute; top: -9px; right: -7px; font-size: 16px; filter: drop-shadow(0 0 5px rgba(255,201,72,.9)); }
+.shop-ava .c-ice { position: absolute; top: -9px; left: -7px; font-size: 16px; filter: drop-shadow(0 0 6px rgba(62,195,244,.95)); }
+.shop-ava img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.shop-info { flex: 1; min-width: 220px; }
+.shop-name { font-weight: 800; font-size: 15.5px; }
+.shop-feats { margin: 10px 0 0; }
+.shop-feats li { font-size: 13px; color: var(--muted); }
+.shop-cta { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.shop-price { font-weight: 800; font-size: 19px; color: var(--gold); }
 
 /* ---------- футер ---------- */
 .footer { border-top: 1px solid var(--line); margin-top: 70px; background: rgba(5,8,15,0.7); }

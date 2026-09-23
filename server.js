@@ -174,6 +174,24 @@ const PLANS = [
     desc: ['Разовое снятие привязки к устройству', 'Новый HWID можно привязать сразу'] }
 ];
 
+/* Товары магазина (раздел «Магазин»). Ключи оплаты: shop:<key> */
+const SHOP_ITEMS = [
+  { key: 'ava_deco', kind: 'deco', cat: 'Украшение аватарки', name: 'Золотой Ореол', price: 99, currency: '₽', forever: true,
+    desc: ['Золотой переливающийся ободок с короной ♛', 'Видно в профиле, кабинете и сайдбаре', 'Навсегда, один раз на аккаунт'] },
+  { key: 'ava_ice', kind: 'deco', cat: 'Украшение аватарки', name: 'Сапфировый Ореол', price: 149, currency: '₽', forever: true,
+    desc: ['Ледяной сияющий ободок с искрой ❄', 'Видно в профиле, кабинете и сайдбаре', 'Навсегда, один раз на аккаунт'] },
+  { key: 'lc_magma', kind: 'login_color', cat: 'Цвет логина', name: 'Магма', price: 49, currency: '₽', forever: true,
+    desc: ['Огненно-оранжевое свечение логина', 'Переливающийся градиент', 'Навсегда'] },
+  { key: 'lc_volt', kind: 'login_color', cat: 'Цвет логина', name: 'Электро', price: 49, currency: '₽', forever: true,
+    desc: ['Сине-фиолетовый неоновый градиент', 'Переливающийся градиент', 'Навсегда'] },
+  { key: 'lc_emerald', kind: 'login_color', cat: 'Цвет логина', name: 'Изумруд', price: 49, currency: '₽', forever: true,
+    desc: ['Зелёно-бирюзовое свечение', 'Переливающийся градиент', 'Навсегда'] },
+  { key: 'lc_kings', kind: 'login_color', cat: 'Цвет логина', name: 'Королевский', price: 49, currency: '₽', forever: true,
+    desc: ['Золотисто-розовый дворцовый градиент', 'Переливающийся градиент', 'Навсегда'] },
+  { key: 'lc_aurora', kind: 'login_color', cat: 'Цвет логина', name: 'Аврора', price: 49, currency: '₽', forever: true,
+    desc: ['Радужный перелив всех цветов', 'Переливающийся градиент', 'Навсегда'] }
+];
+
 async function publicUser(u) {
   const subs = await D.getSubs(u.id);
   const active = subs.find(s => s.status === 'active') || subs.find(s => s.status === 'frozen') || null;
@@ -181,6 +199,8 @@ async function publicUser(u) {
   const plan = PLANS.find(p => p.key === planKey) || null;
   const lastReset = await D.getLastHwReset(u.id);
   const tgInfo = await D.getTgByUserId(u.id);
+  const decos = {};
+  for (const it of SHOP_ITEMS) decos[it.key] = await D.getDeco(u.id, it.key);
   return {
     id: u.id,
     login: u.login,
@@ -199,6 +219,10 @@ async function publicUser(u) {
     hasAlpha: subs.some(s => s.plan === 'alpha' && s.status === 'active'),
     glossy: await D.getGlossy(u.id),
     glossyAllowed: subs.some(s => s.plan === 'alpha' && s.status === 'active'),
+    avaDeco: !!decos['ava_deco'],
+    decos,
+    decoActive: (await D.getActiveDeco(u.id)) || null,
+    loginColor: await D.getLoginColor(u.id),
     subscription: plan ? {
       plan: plan.key,
       name: plan.name,
@@ -801,6 +825,53 @@ app.get('/api/plans', ah(async (req, res) => {
   send(res, 200, { ok: true, plans: PLANS, purchaseNote: cfg.purchase_note || '' });
 }));
 
+// Магазин: список товаров, что куплено и что активно
+app.get('/api/shop', requireAuth, ah(async (req, res) => {
+  const owned = {};
+  const activeDeco = await D.getActiveDeco(req.user.id);
+  const activeColor = await D.getLoginColor(req.user.id);
+  for (const it of SHOP_ITEMS) {
+    owned[it.key] = it.kind === 'login_color' ? activeColor === it.key : await D.getDeco(req.user.id, it.key);
+  }
+  send(res, 200, { ok: true, items: SHOP_ITEMS, owned, activeDeco, activeColor });
+}));
+
+// Использовать / убрать украшение или цвет логина (включает только если куплено)
+app.post('/api/shop/use', requireAuth, ah(async (req, res) => {
+  const { key, on } = req.body || {};
+  const item = SHOP_ITEMS.find(i => i.key === key);
+  if (!item) return send(res, 400, { ok: false, message: 'Товар не найден' });
+  const owned = item.kind === 'login_color'
+    ? (await D.getLoginColor(req.user.id)) === key
+    : await D.getDeco(req.user.id, key);
+  if (!owned) return send(res, 403, { ok: false, message: 'Украшение не куплено' });
+  const onState = on !== false;
+  if (item.kind === 'login_color') {
+    await D.setLoginColor(req.user.id, onState ? key : null);
+  } else {
+    await D.setActiveDeco(req.user.id, onState ? key : null);
+  }
+  const my = await publicUser(req.user);
+  send(res, 200, { ok: true, user: my,
+    activeDeco: await D.getActiveDeco(req.user.id), activeColor: await D.getLoginColor(req.user.id) });
+}));
+
+// Выдача украшений (только для Howill_)
+app.post('/api/shop/grant', requireAuth, ah(async (req, res) => {
+  if (req.user.login !== 'Howill_') return send(res, 403, { ok: false, message: 'Доступ только для владельца' });
+  const { key, target } = req.body || {};
+  const item = SHOP_ITEMS.find(i => i.key === key);
+  if (!item) return send(res, 400, { ok: false, message: 'Товар не найден' });
+  const targetId = target || req.user.id;
+  if (item.kind === 'login_color') {
+    await D.setDeco(targetId, item.key);
+    await D.setLoginColor(targetId, item.key);
+  } else {
+    await D.setDeco(targetId, item.key);
+  }
+  send(res, 200, { ok: true, item: item.key });
+}));
+
 app.post('/api/purchase', requireAuth, ah(async (req, res) => {
   const plan = String(req.body?.plan || '');
   const p = PLANS.find(x => x.key === plan);
@@ -826,7 +897,12 @@ const YK_RETURN_URL = (process.env.SITE_ORIGIN || '') + '/cabinet?paid=1';
 // Создать платёж в ЮKassa и вернуть confirmation_url для редиректа
 app.post('/api/purchase/yookassa', requireAuth, ah(async (req, res) => {
   const { plan: planKey, methodType } = req.body || {};
-  const plan = PLANS.find(p => p.key === planKey);
+  // Товар магазина (shop:<key>) — платится как разовая покупка без привязки к тарифам
+  const shopItem = /^shop:/.test(planKey) ? SHOP_ITEMS.find(i => i.key === planKey.slice(5)) : null;
+  const isShop = !!shopItem;
+  const plan = shopItem
+    ? { key: planKey, name: shopItem.name, price: shopItem.price, currency: shopItem.currency || '₽', forever: true }
+    : PLANS.find(p => p.key === planKey);
   if (!plan) return fail(res, 'Неизвестный тариф');
   if (!YK.enabled()) return fail(res, 'Онлайн-оплата временно недоступна (ЮKassa не настроена на сервере)');
 
@@ -844,7 +920,7 @@ app.post('/api/purchase/yookassa', requireAuth, ah(async (req, res) => {
   let promoCode = null;
   let finalAmount = plan.price;
   const rawPromo = String((req.body && req.body.promo) || '').trim().toUpperCase();
-  if (rawPromo) {
+  if (rawPromo && !isShop) {
     const rec = await D.getDiscountPromoByCode(rawPromo);
     if (!rec) return fail(res, 'Промокод не найден');
     let allowed = true;
@@ -861,7 +937,7 @@ app.post('/api/purchase/yookassa', requireAuth, ah(async (req, res) => {
   // Идемпотентность: связываем платёж с нашим заказом через метод-данные и метаданные
   const payment = await YK.createPayment({
     amount: finalAmount,
-    description: `Подписка «${plan.name}»${plan.forever ? ' навсегда' : ''} — заказ #${order.id}`,
+    description: `${isShop ? 'Товар' : 'Подписка'} «${plan.name}»${!isShop && plan.forever ? ' навсегда' : ''} — заказ #${order.id}`,
     returnUrl: YK_RETURN_URL,
     idem,
     methodType,
@@ -934,6 +1010,22 @@ app.post('/api/yookassa/webhook', async (req, res) => {
           await D.setOrderPaid(orderId, now(), 'yookassa');
         }
         return send(res, 200, { ok: true, custom: true });
+      }
+      if (String(planKey).startsWith('shop:')) {
+        const shopItem = SHOP_ITEMS.find(i => i.key === planKey.slice(5));
+        const order = await D.getOrderById(orderId);
+        if (!order) return send(res, 200, { ok: false, code: 'no_order' });
+        const want = String(Number(order.amount ?? shopItem?.price ?? 0)) + '.00';
+        const got = remote.amount && remote.amount.value;
+        if (got !== want) return send(res, 200, { ok: false, code: 'amount_mismatch' });
+        if (order.status === 'pending') {
+          await D.setOrderPaid(orderId, now(), 'yookassa');
+          if (shopItem) {
+            if (shopItem.kind === 'login_color') await D.setLoginColor(order.user_id, shopItem.key);
+            else await D.setDeco(order.user_id, shopItem.key);
+          }
+        }
+        return send(res, 200, { ok: true, shop: true });
       }
       return send(res, 200, { ok: false, code: 'unknown_plan' });
     }
