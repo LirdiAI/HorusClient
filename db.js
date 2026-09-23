@@ -497,9 +497,25 @@ async function getDm(aId, bId) {
 
 async function appendDm(aId, bId, msg) {
   const arr = await getDm(aId, bId);
+  msg.read = false;
   arr.push(msg);
   while (arr.length > 200) arr.shift();
   await setCfg(dmKey(aId, bId), JSON.stringify(arr));
+}
+
+// Отметить все сообщения от fromId в диалоге [aId, bId] как прочитанные
+// Если передан уже загруженный массив — не делать лишний запрос к БД
+async function markDmRead(aId, bId, fromId, existingArr) {
+  const arr = existingArr || await getDm(aId, bId);
+  let changed = false;
+  for (const m of arr) {
+    if (Number(m.from) === Number(fromId) && !m.read) {
+      m.read = true;
+      changed = true;
+    }
+  }
+  if (changed) await setCfg(dmKey(aId, bId), JSON.stringify(arr));
+  return changed;
 }
 
 async function getDmNotifs(userId) {
@@ -819,7 +835,7 @@ module.exports = {
   getDiscountPromoByCode, insertDiscountPromo, listDiscountPromos, deleteDiscountPromo, bumpDiscountPromoByCode,
   getCustomOfferById, insertCustomOffer, listCustomOffers, deleteCustomOffer, listCustomOrderStatuses, updateOrderStatus, getOrderByPaymentId,
   listRecentOrders, getUsersByIds, setUserAvatar, setUserBanner, setTg2fa, getGlossy, setGlossy, getAvaDeco, setAvaDeco, getDeco, setDeco, getLoginColor, setLoginColor, getActiveDeco, setActiveDeco, getRoleColor, setRoleColor, getUserRole, setUserRole, getFriends, setFriends, getFriendReqsIn, setFriendReqsIn, getFriendReqsOut, setFriendReqsOut, getTheme, setTheme,
-  getDm, appendDm, getDmNotifs, setDmNotifs, pushDmNotif, clearDmNotifsFrom,
+  getDm, appendDm, markDmRead, getDmNotifs, setDmNotifs, pushDmNotif, clearDmNotifsFrom,
   getMediaPoints, setMediaPoints, getMediaLastBuy, setMediaLastBuy, getMediaItemCd, setMediaItemCd, revokeMediaSubs,
   getInventory, setInventory, addInvItem, removeInvItem, getInvKey, setInvKey, deleteInvKey,
   insertOrder, getOrderById, setOrderPaid, saveOrderPayment, insertTicket,

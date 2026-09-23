@@ -93,6 +93,8 @@
     monitor2: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M9 21h6M12 17v4"/></svg>',
     zap: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>',
     cooldown: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    tick1: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>',
+    tick2: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L15 8.5"/><path d="M13 17l2 2 5-6"/></svg>',
 shieldFx: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l8 3.5v6c0 5-3.4 8.8-8 10.5-4.6-1.7-8-5.5-8-10.5v-6z"/><path d="M9 12l2 2 4-4"/></svg>',
     globe: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14.6 14.6 0 0 1 0 18 14.6 14.6 0 0 1 0-18z"/></svg>',
     search: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>',
@@ -1635,11 +1637,14 @@ if (section === 'profile') main.innerHTML = viewProfile();
   function dmUsl(msg, meLogin) {
     const isMine = msg.login.toLowerCase() === String(meLogin || '').toLowerCase();
     const t = utcTime(msg.ts);
+    const ticks = (isMine && msg.read)
+      ? '<span class="dm-tick read" title="Прочитано">' + icon.tick2 + '</span>'
+      : (isMine ? '<span class="dm-tick" title="Отправлено">' + icon.tick1 + '</span>' : '');
     return `
     <div class="dm-bubble ${isMine ? 'mine' : ''}">
       <div class="dm-bubble-login">${isMine ? 'Вы' : esc(msg.login)}</div>
       <div class="dm-bubble-text">${esc(msg.text)}</div>
-      <div class="dm-bubble-time">${t}</div>
+      <div class="dm-bubble-time">${t}${ticks ? ' ' + ticks : ''}</div>
     </div>`;
   }
   function utcTime(iso) {
@@ -1658,9 +1663,15 @@ if (section === 'profile') main.innerHTML = viewProfile();
       <div class="buy-modal dm-modal">
         <button class="buy-close" data-close aria-label="Закрыть">✕</button>
         <div class="buy-co-head">${icon.support} Сообщения — @${esc(login)}</div>
+        <div class="dm-header" id="dmHeader">
+          <span class="dm-hlog">@${esc(login)}</span>
+          <span>Роль: <b data-h-role>…</b></span>
+          <span>UID: <b data-h-uid>…</b></span>
+          <span class="dm-hdot" id="dmOnline">В сети</span>
+        </div>
         <div class="dm-messages" id="dmMsgs"><div class="empty">Загрузка…</div></div>
         <div class="dm-send-row">
-          <input type="text" id="dmInput" maxlength="500" placeholder="Напишите сообщение…" autocomplete="off" spellcheck="false">
+          <input type="text" id="dmInput" maxlength="500" placeholder="Писать в чат…" autocomplete="off" spellcheck="false">
           <button type="button" class="btn btn-gold" id="dmSendBtn">${icon.arrow} Отправить</button>
         </div>
       </div>`;
@@ -1677,18 +1688,29 @@ if (section === 'profile') main.innerHTML = viewProfile();
     };
     const onKey = (e) => { if (e.key === 'Escape') close(); };
     document.addEventListener('keydown', onKey);
+    let lastSig = '';
     const load = async (silent) => {
       try {
         const r = await api('/api/dm?with=' + encodeURIComponent(login));
         const msgs = (r && r.messages) || [];
-        const prev = msgsEl.scrollHeight - msgsEl.scrollTop;
-        msgsEl.innerHTML = msgs.length ? msgs.map(m => dmUsl(m, meLogin)).join('') : '<div class="empty" style="padding:22px 0">Напишите первым!</div>';
-        if (!silent || msgs.length) {
-          msgsEl.scrollTop = msgsEl.scrollHeight;
-        } else {
-          msgsEl.scrollTop = msgsEl.scrollHeight - prev;
+        // Инкрементальный рендер: пересобираем DOM только когда набор сообщений изменился
+        const sig = msgs.length + '|' + msgs.map(m => m.ts + ':' + m.from + (m.read ? 'r' : '')).join('|');
+        if (sig !== lastSig) {
+          const wasAtBottom = msgsEl.scrollHeight - msgsEl.scrollTop - msgsEl.clientHeight < 40;
+          const prev = msgsEl.scrollHeight - msgsEl.scrollTop;
+          msgsEl.innerHTML = msgs.length ? msgs.map(m => dmUsl(m, meLogin)).join('') : '<div class="empty" style="padding:22px 0">Напишите первым!</div>';
+          if (!lastSig || wasAtBottom || !silent) {
+            msgsEl.scrollTop = msgsEl.scrollHeight;
+          } else {
+            msgsEl.scrollTop = msgsEl.scrollHeight - prev;
+          }
+          lastSig = sig;
         }
-        if (r && r.user && r.user.online !== undefined) {
+        if (r && r.user) {
+          const hrole = $('[data-h-role]', overlay);
+          if (hrole) hrole.textContent = roleLabel(r.user.role || 'User');
+          const huid = $('[data-h-uid]', overlay);
+          if (huid) huid.textContent = (r.user.uid != null && r.user.uid !== '') ? r.user.uid : '—';
           const chip = $('#dmOnline', overlay);
           if (chip) chip.style.display = r.user.online ? '' : 'none';
         }
@@ -1697,13 +1719,22 @@ if (section === 'profile') main.innerHTML = viewProfile();
     const send = async () => {
       const text = input.value.trim();
       if (!text) return;
+      // Мгновенный (оптимистичный) показ: пузырь рисуем сразу, сервер догоняет в фоне
+      const optimistic = { from: state.me ? state.me.id : null, login: meLogin, text, ts: new Date().toISOString() };
+      const empty = msgsEl.querySelector('.empty');
+      if (empty) empty.remove();
+      msgsEl.insertAdjacentHTML('beforeend', dmUsl(optimistic, meLogin));
+      msgsEl.scrollTop = msgsEl.scrollHeight;
+      input.value = '';
       sendBtn.disabled = true;
       try {
         const r = await api('/api/dm/send', { method: 'POST', body: JSON.stringify({ to: login, text }) });
-        input.value = '';
-        toast(r.message, 'success');
-        await load(false);
-      } catch (err) { toast(err.message, 'error'); }
+        toast(r.message || 'Отправлено', 'success');
+        load(true);
+      } catch (err) {
+        toast(err.message, 'error');
+        load(true);
+      }
       sendBtn.disabled = false;
       input.focus();
     };
@@ -1713,7 +1744,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
     document.body.appendChild(overlay);
     requestAnimationFrame(() => overlay.classList.add('show'));
     if (dmPoll) clearInterval(dmPoll);
-    dmPoll = setInterval(() => load(true), 2000);
+    dmPoll = setInterval(() => load(true), 1000);
     load(false);
     setTimeout(() => input.focus(), 250);
   }

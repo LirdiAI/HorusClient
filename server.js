@@ -1145,6 +1145,23 @@ let globkaUsersCache = { ts: 0, users: null };
 const GLOBKA_USERS_TTL = 30 * 1000;
 const globkaBriefCache = new Map(); // userId -> { ts, data }
 const GLOBKA_BRIEF_TTL = 60 * 1000;
+const loginUserCache = new Map(); // login(lowercased) -> { ts, user }
+const LOGIN_USER_TTL = 10 * 1000;
+
+async function cachedUserByLogin(login) {
+  const key = String(login || '').toLowerCase();
+  const hit = loginUserCache.get(key);
+  if (hit && Date.now() - hit.ts < LOGIN_USER_TTL) return hit.user;
+  const user = await D.getUserByLogin(login);
+  if (user) loginUserCache.set(key, { ts: Date.now(), user });
+  return user;
+}
+
+function invalidateGlobkaCaches() {
+  globkaUsersCache = { ts: 0, users: null };
+  globkaBriefCache.clear();
+  loginUserCache.clear();
+}
 
 async function cachedListUsers() {
   const now = Date.now();
@@ -1160,11 +1177,6 @@ async function cachedBriefUser(t) {
   const data = await briefUser(t);
   globkaBriefCache.set(t.id, { ts: Date.now(), data });
   return data;
-}
-
-function invalidateGlobkaCaches() {
-  globkaUsersCache = { ts: 0, users: null };
-  globkaBriefCache.clear();
 }
 
 async function briefUser(t) {
@@ -1384,21 +1396,38 @@ const BAD_WORDS_RE = new RegExp(
   '(?<![\\p{L}\\p{N}_])(?:' + BAD_WORDS.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')(?![\\p{L}\\p{N}_])',
   'giu'
 );
+const filterCache = new Map(); // текст -> отфильтрованный (лимит записей)
+const FILTER_CACHE_MAX = 3000;
 function filterBadWords(text) {
-  return String(text).replace(BAD_WORDS_RE, (m) => '*'.repeat(m.length));
+  if (typeof text !== 'string') return String(text);
+  const hit = filterCache.get(text);
+  if (hit !== undefined) return hit;
+  const out = String(text).replace(BAD_WORDS_RE, (m) => '*'.repeat(m.length));
+  if (filterCache.size >= FILTER_CACHE_MAX) {
+    const first = filterCache.keys().next().value;
+    if (first !== undefined) filterCache.delete(first);
+  }
+  filterCache.set(text, out);
+  return out;
 }
 
 app.get('/api/dm', requireAuth, ah(async (req, res) => {
   const login = String(req.query.with || '').trim();
   if (!login) return fail(res, 'Укажите собеседника');
   if (login.toLowerCase() === req.user.login.toLowerCase()) return fail(res, 'Это ваш логин');
-  const t = await D.getUserByLogin(login);
+  const t = await cachedUserByLogin(login);
   if (!t) return fail(res, 'Пользователь не найден');
   const [messages, notifs] = await Promise.all([D.getDm(req.user.id, t.id), D.getDmNotifs(req.user.id)]);
   messages.forEach(m => { if (m.text) m.text = filterBadWords(m.text); });
   // Убрать уведомления от этого собеседника (диалог просмотрен)
   const rest = notifs.filter(n => n.login.toLowerCase() !== t.login.toLowerCase());
   if (rest.length !== notifs.length) await D.setDmNotifs(req.user.id, rest);
+  // Отметить сообщения собеседника как прочитанные (галочки) — сообщения каша передаются из messages
+  const unread = messages.some(m => Number(m.from) === Number(t.id) && !m.read);
+  if (unread) {
+    await D.markDmRead(req.user.id, t.id, t.id, messages);
+    messages.forEach(m => { if (Number(m.from) === Number(t.id)) m.read = true; });
+  }
   const brief = await cachedBriefUser(t);
   send(res, 200, { ok: true, user: brief, messages });
 }));
@@ -1412,7 +1441,7 @@ app.post('/api/dm/send', requireAuth, ah(async (req, res) => {
   if (rawText.length > 500) return fail(res, 'Сообщение слишком длинное (макс. 500 символов)');
   if (!rateLimit('dm:' + req.user.id, 20, 60000)) return fail(res, 'Слишком много сообщений, подождите', 429);
   if (to.toLowerCase() === req.user.login.toLowerCase()) return fail(res, 'Нельзя писать самому себе');
-  const t = await D.getUserByLogin(to);
+  const t = await cachedUserByLogin(to);
   if (!t) return fail(res, 'Пользователь не найден');
   const text = filterBadWords(rawText);
   if (!text) return fail(res, 'Сообщение пустое');
