@@ -372,6 +372,86 @@ async function setUserRole(userId, role) {
   await setCfg(`role:${userId}`, role);
 }
 
+/* ---------------- медийка: баллы и покупки ---------------- */
+
+// Баллы Медийки хранятся в site_cfg:
+//   mp:<userId>          -> строка с числом баллов
+//   mp_last:<userId>     -> ISO времени последней покупки (кулдаун 3 дня)
+
+async function getMediaPoints(userId) {
+  const raw = await getCfg(`mp:${userId}`);
+  const n = parseInt(raw || '0', 10);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+async function setMediaPoints(userId, n) {
+  await setCfg(`mp:${userId}`, String(Math.max(0, Math.floor(n))));
+}
+
+async function getMediaLastBuy(userId) {
+  const raw = await getCfg(`mp_last:${userId}`);
+  return raw || null;
+}
+
+async function setMediaLastBuy(userId, iso) {
+  await setCfg(`mp_last:${userId}`, iso);
+}
+
+// Кулдаун по конкретному товару Медийки: mp_cd:<userId>:<key> -> ISO
+async function getMediaItemCd(userId, itemKey) {
+  const raw = await getCfg(`mp_cd:${userId}:${itemKey}`);
+  return raw || null;
+}
+
+async function setMediaItemCd(userId, itemKey, iso) {
+  await setCfg(`mp_cd:${userId}:${itemKey}`, iso);
+}
+
+// Гашение прежних активных подписок, выданных через Медийку
+async function revokeMediaSubs(userId) {
+  await sb.from('subs').update({ status: 'revoked' })
+    .eq('user_id', userId).eq('status', 'active').eq('source', 'media');
+}
+
+/* ---------------- инвентарь (Медийка → предметы и ключи) ---------------- */
+
+// Инвентарь хранится в site_cfg: inv:<userId> -> JSON-массив предметов
+//   [{ id, itemKey, name, created_at, status: 'item'|'key', code|null }]
+async function getInventory(userId) {
+  const raw = await getCfg(`inv:${userId}`);
+  try { return JSON.parse(raw || '[]'); } catch { return []; }
+}
+
+async function setInventory(userId, items) {
+  await setCfg(`inv:${userId}`, JSON.stringify(items));
+}
+
+async function addInvItem(userId, item) {
+  const arr = await getInventory(userId);
+  arr.push(item);
+  await setInventory(userId, arr);
+}
+
+async function removeInvItem(userId, itemId) {
+  const arr = await getInventory(userId);
+  await setInventory(userId, arr.filter(i => String(i.id) !== String(itemId)));
+}
+
+// Ключи инвентаря: inv_key:<CODE> -> JSON { userId, itemId }
+async function getInvKey(code) {
+  const raw = await getCfg(`inv_key:${code}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+async function setInvKey(code, payload) {
+  await setCfg(`inv_key:${code}`, JSON.stringify(payload));
+}
+
+async function deleteInvKey(code) {
+  await deleteCfg(`inv_key:${code}`);
+}
+
 /* ---------------- друзья (Глобалка) ---------------- */
 
 async function getFriends(userId) {
@@ -399,6 +479,49 @@ async function getFriendReqsOut(userId) {
 
 async function setFriendReqsOut(userId, logins) {
   await setCfg(`freq_out:${userId}`, JSON.stringify(logins));
+}
+
+/* ---------------- личные сообщения (ЛС в Глобалке) ---------------- */
+
+// Переписка хранится в site_cfg: dm:<минId>:<максId> -> JSON [{from, login, text, ts}]
+// Уведомления: dm_notifs:<userId> -> JSON [{from, login, text, ts}]
+
+function dmKey(aId, bId) {
+  return 'dm:' + (Number(aId) < Number(bId) ? aId + ':' + bId : bId + ':' + aId);
+}
+
+async function getDm(aId, bId) {
+  const raw = await getCfg(dmKey(aId, bId));
+  try { return JSON.parse(raw || '[]'); } catch { return []; }
+}
+
+async function appendDm(aId, bId, msg) {
+  const arr = await getDm(aId, bId);
+  arr.push(msg);
+  while (arr.length > 200) arr.shift();
+  await setCfg(dmKey(aId, bId), JSON.stringify(arr));
+}
+
+async function getDmNotifs(userId) {
+  const raw = await getCfg(`dm_notifs:${userId}`);
+  try { return JSON.parse(raw || '[]'); } catch { return []; }
+}
+
+async function setDmNotifs(userId, arr) {
+  await setCfg(`dm_notifs:${userId}`, JSON.stringify(arr));
+}
+
+async function pushDmNotif(userId, nt) {
+  const arr = await getDmNotifs(userId);
+  arr.push(nt);
+  while (arr.length > 50) arr.shift();
+  await setDmNotifs(userId, arr);
+}
+
+async function clearDmNotifsFrom(userId, fromLogin) {
+  const arr = await getDmNotifs(userId);
+  const next = arr.filter(n => n.login.toLowerCase() !== fromLogin.toLowerCase());
+  if (next.length !== arr.length) await setDmNotifs(userId, next);
 }
 
 /* ---------------- тема сайта (Alpha) ---------------- */
@@ -696,6 +819,9 @@ module.exports = {
   getDiscountPromoByCode, insertDiscountPromo, listDiscountPromos, deleteDiscountPromo, bumpDiscountPromoByCode,
   getCustomOfferById, insertCustomOffer, listCustomOffers, deleteCustomOffer, listCustomOrderStatuses, updateOrderStatus, getOrderByPaymentId,
   listRecentOrders, getUsersByIds, setUserAvatar, setUserBanner, setTg2fa, getGlossy, setGlossy, getAvaDeco, setAvaDeco, getDeco, setDeco, getLoginColor, setLoginColor, getActiveDeco, setActiveDeco, getRoleColor, setRoleColor, getUserRole, setUserRole, getFriends, setFriends, getFriendReqsIn, setFriendReqsIn, getFriendReqsOut, setFriendReqsOut, getTheme, setTheme,
+  getDm, appendDm, getDmNotifs, setDmNotifs, pushDmNotif, clearDmNotifsFrom,
+  getMediaPoints, setMediaPoints, getMediaLastBuy, setMediaLastBuy, getMediaItemCd, setMediaItemCd, revokeMediaSubs,
+  getInventory, setInventory, addInvItem, removeInvItem, getInvKey, setInvKey, deleteInvKey,
   insertOrder, getOrderById, setOrderPaid, saveOrderPayment, insertTicket,
   getAllCfg, getCfg, setCfg, deleteCfg,
   getTgByUserId, getUserIdByTg, checkTgTaken, bindTg, unbindTg,

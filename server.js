@@ -944,6 +944,200 @@ app.post('/api/admin/role', requireAuth, ah(async (req, res) => {
   send(res, 200, { ok: true, login: target.login, role: val, message: `Роль ${label} — @${target.login}` });
 }));
 
+/* ============ МЕДИЙКА: баллы и мини-магазин ============ */
+
+const MEDIA_ITEMS = [
+  { key: 'kamiki30', name: 'Kamiki 1.21.4 · 30 дней', cost: 5, plan: 'kamiki30', forever: false, days: 30 },
+  { key: 'kamiki365', name: 'Kamiki 1.21.4 · 365 дней', cost: 12, plan: 'kamiki365', forever: false, days: 365 },
+  { key: 'kamiki', name: 'Kamiki 1.21.4 · Навсегда', cost: 15, plan: 'kamiki', forever: true },
+  { key: 'alpha', name: 'Alpha 1.21.4 · Навсегда', cost: 30, plan: 'alpha', forever: true },
+  { key: 'hwid_reset', name: 'Сброс HWID', cost: 3, plan: 'hwid_reset' }
+];
+
+const MEDIA_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000;
+
+async function genInvKey() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  for (let i = 0; i < 200; i++) {
+    let s = '';
+    for (let j = 0; j < 10; j++) s += chars[crypto.randomInt(chars.length)];
+    const code = 'HORUS-INV-' + s;
+    if (!(await D.getInvKey(code))) return code;
+  }
+  return 'HORUS-INV-' + Array.from({ length: 10 }, () => chars[crypto.randomInt(chars.length)]).join('');
+}
+
+async function requireMedia(req, res) {
+  const role = await D.getUserRole(req.user.id);
+  if (req.user.login !== 'Howill_' && role !== 'media' && role !== 'admin') {
+    fail(res, 'Доступно только ролям Медиа и Администратор', 403);
+    return false;
+  }
+  return true;
+}
+
+// Состояние Медийки: баллы и список товаров с персональным кулдауном
+app.get('/api/media/state', requireAuth, ah(async (req, res) => {
+  if (!(await requireMedia(req, res))) return;
+  const points = await D.getMediaPoints(req.user.id);
+  const items = [];
+  for (const it of MEDIA_ITEMS) {
+    const cdIso = await D.getMediaItemCd(req.user.id, it.key);
+    let cdLeft = 0;
+    if (cdIso) {
+      const left = MEDIA_COOLDOWN_MS - (Date.now() - new Date(cdIso).getTime());
+      if (left > 0) cdLeft = Math.ceil(left / 1000);
+    }
+    items.push({ ...it, cdLeft });
+  }
+  const lastBuy = await D.getMediaLastBuy(req.user.id);
+  let cooldownLeft = 0;
+  if (lastBuy) {
+    const left = MEDIA_COOLDOWN_MS - (Date.now() - new Date(lastBuy).getTime());
+    if (left > 0) cooldownLeft = Math.ceil(left / 1000);
+  }
+  send(res, 200, { ok: true, points, cooldownLeft, items, canGrant: req.user.login === 'Howill_' });
+}));
+
+// Выдача баллов (только Howill_)
+app.post('/api/media/grant', requireAuth, ah(async (req, res) => {
+  if (req.user.login !== 'Howill_') return fail(res, 'Баллы может выдавать только владелец', 403);
+  const { login, amount } = req.body || {};
+  const target = await D.getUserByLogin(String(login || '').trim());
+  if (!target) return fail(res, 'Пользователь не найден');
+  const amt = Math.floor(Number(amount));
+  if (!Number.isFinite(amt) || amt < 1 || amt > 1000000) return fail(res, 'Некорректное количество баллов');
+  const cur = await D.getMediaPoints(target.id);
+  await D.setMediaPoints(target.id, cur + amt);
+  send(res, 200, { ok: true, message: `@${target.login}: выдано ${amt} баллов (баланс ${cur + amt})` });
+}));
+
+// Покупка подарка любому игроку по логину (Медиа / Админ / владелец)
+app.post('/api/media/buy', requireAuth, ah(async (req, res) => {
+  if (!(await requireMedia(req, res))) return;
+  const { login, itemKey } = req.body || {};
+  const item = MEDIA_ITEMS.find(i => i.key === itemKey);
+  if (!item) return fail(res, 'Товар не найден');
+  const target = await D.getUserByLogin(String(login || '').trim());
+  if (!target) return fail(res, 'Пользователь не найден');
+
+  const points = await D.getMediaPoints(req.user.id);
+  if (points < item.cost) return fail(res, `Недостаточно баллов (нужно ${item.cost})`);
+
+  // Кулдаун вешается на конкретный товар, а не на все сразу
+  const itemCd = await D.getMediaItemCd(req.user.id, item.key);
+  if (itemCd) {
+    const left = MEDIA_COOLDOWN_MS - (Date.now() - new Date(itemCd).getTime());
+    if (left > 0) {
+      const hms = Math.floor(left / 1000);
+      const h = Math.floor(hms / 3600);
+      const m = Math.floor((hms % 3600) / 60);
+      return fail(res, `Кулдаун на «${item.name}»: ещё ${h} ч ${m} мин`);
+    }
+  }
+
+  await D.setMediaPoints(req.user.id, points - item.cost);
+  await D.setMediaLastBuy(req.user.id, now());
+  await D.setMediaItemCd(req.user.id, item.key, now());
+
+  // Предмет ложится в инвентарь игрока — он сам его применит или превратит в ключ
+  await D.addInvItem(target.id, {
+    id: randomToken(12),
+    itemKey: item.plan,
+    name: item.name,
+    created_at: now(),
+    status: 'item',
+    code: null
+  });
+
+  invalidateGlobkaCaches();
+  if (TGBot.isEnabled()) {
+    TGBot.sendTgToOwner(
+      '🎁 Медийка: ' + item.name +
+      ' → в инвентарь @' + target.login + '\nВыдал: @' + req.user.login + ' (баллов осталось: ' + (points - item.cost) + ')'
+    ).catch(() => {});
+  }
+  send(res, 200, { ok: true, message: `${item.name} → инвентарь @${target.login}`, points: points - item.cost });
+}));
+
+/* ============ ИНВЕНТАРЬ: предметы из Медийки ============ */
+
+// Предметы текущего пользователя
+app.get('/api/inventory', requireAuth, ah(async (req, res) => {
+  const items = await D.getInventory(req.user.id);
+  send(res, 200, { ok: true, items: items.slice().reverse() });
+}));
+
+// Применить предмет к своему аккаунту (своему)
+app.post('/api/inventory/apply', requireAuth, ah(async (req, res) => {
+  const id = String((req.body && req.body.id) || '');
+  const items = await D.getInventory(req.user.id);
+  const item = items.find(i => String(i.id) === String(id) && i.status === 'item');
+  if (!item) return fail(res, 'Предмет не найден');
+  try { await applyInvItem(req.user.id, item); } catch (e) { return fail(res, e.message || 'Не удалось применить', 400); }
+  await D.removeInvItem(req.user.id, id);
+  invalidateGlobkaCaches();
+  const user = await D.getUserById(req.user.id);
+  send(res, 200, { ok: true, user: await publicUser(user), message: `${item.name} — применён!` });
+}));
+
+// Превратить предмет в ключ (чтобы другой игрок мог активировать)
+app.post('/api/inventory/key', requireAuth, ah(async (req, res) => {
+  const id = String((req.body && req.body.id) || '');
+  const items = await D.getInventory(req.user.id);
+  const item = items.find(i => String(i.id) === String(id) && i.status === 'item');
+  if (!item) return fail(res, 'Предмет не найден');
+  const code = await genInvKey();
+  item.status = 'key';
+  item.code = code;
+  await D.setInventory(req.user.id, items);
+  await D.setInvKey(code, { userId: req.user.id, itemId: item.id });
+  send(res, 200, { ok: true, code, message: 'Ключ создан: ' + code });
+}));
+
+// Активация ключа другим игроком: ключ уходит из инвентаря владельца, предмет применяется активатору
+app.post('/api/inventory/activate', requireAuth, ah(async (req, res) => {
+  const code = String((req.body && req.body.code) || '').trim().toUpperCase();
+  if (!rateLimit('inv:' + req.ip)) return fail(res, 'Слишком много попыток. Подождите.', 429);
+  if (!code) return fail(res, 'Введите код ключа');
+  const ref = await D.getInvKey(code);
+  if (!ref) return fail(res, 'Ключ не найден');
+  const ownerItems = await D.getInventory(ref.userId);
+  const item = ownerItems.find(i => String(i.id) === String(ref.itemId) && i.status === 'key');
+  if (!item) { await D.deleteInvKey(code); return fail(res, 'Ключ не найден'); }
+  if (String(ref.userId) === String(req.user.id)) return fail(res, 'Нельзя активировать свой собственный ключ');
+
+  try { await applyInvItem(req.user.id, item); } catch (e) { return fail(res, e.message || 'Не удалось активировать', 400); }
+
+  await D.removeInvItem(ref.userId, ref.itemId);
+  await D.deleteInvKey(code);
+  invalidateGlobkaCaches();
+
+  const user = await D.getUserById(req.user.id);
+  const owner = await D.getUserById(ref.userId);
+  if (TGBot.isEnabled()) {
+    TGBot.sendTgToOwner(
+      '🔑 Ключ активирован: ' + item.name + '\nАктивировал: @' + user.login + '\nВыдал(владелец ключа): @' + (owner ? owner.login : '?')
+    ).catch(() => {});
+  }
+  send(res, 200, { ok: true, user: await publicUser(user), message: `${item.name} — активирован!` });
+}));
+
+// Общая логика применения предмета инвентаря к аккаунту (подписка / сброс HWID)
+async function applyInvItem(userId, item) {
+  const spec = MEDIA_ITEMS.find(i => i.plan === item.itemKey);
+  if (item.itemKey === 'hwid_reset') {
+    if (!(await D.getUserById(userId)).hwid) throw new Error('Устройство ещё не привязано');
+    await D.resetHwid(userId, now());
+    await D.insertHwReset(userId, now());
+    return;
+  }
+  if (!spec) throw new Error('Неизвестный предмет');
+  await D.revokeMediaSubs(userId);
+  const expires_at = spec.forever ? null : new Date(Date.now() + spec.days * 86400000).toISOString();
+  await D.insertSub({ user_id: userId, plan: spec.plan, status: 'active', source: 'media', purchased_at: now(), expires_at });
+}
+
 /* ============ ГЛОБАЛКА: поиск по логину, профили и друзья ============ */
 
 // Кэш списка пользователей и кратких данных профилей (поиск в Глобалке)
@@ -1166,6 +1360,89 @@ app.post('/api/friends/cancel', requireAuth, ah(async (req, res) => {
   const theirIn = await D.getFriendReqsIn(t.id);
   await D.setFriendReqsIn(t.id, theirIn.filter(l => l !== req.user.login));
   send(res, 200, { ok: true, message: 'Заявка @' + login + ' отменена' });
+}));
+
+// ============ ЛИЧНЫЕ СООБЩЕНИЯ (ЛС в Глобалке) ============
+
+// Мой диалог с игроком ({ with: login })
+// Фильтр нецензурной лексики в личных сообщениях:
+// плохие слова заменяются на *, по одной звездочке на каждую букву
+const BAD_WORDS = [
+  'хуй', 'хуя', 'хуе', 'хуи', 'хуёв', 'хуев', 'хуйня', 'хуйни', 'хуйню', 'хуйней',
+  'нахуй', 'нахуя', 'нихуя', 'похуй', 'похуя', 'охуен', 'охуител', 'ахуен', 'хуйло',
+  'хуесос', 'херня', 'нафиг', 'нахер', 'нахрак',
+  'пизд', 'пися', 'пиздец', 'пизда', 'пиздаг', 'пиздюк', 'распизд',
+  'бля', 'блять', 'блядь', 'бляд', 'блд',
+  'сука', 'суки', 'сук', 'сучар', 'сучка', 'сучье',
+  'ебать', 'ебат', 'ебан', 'ебаш', 'уёб', 'уеб', 'ёб', 'ебу', 'выеб', 'заеб',
+  'гандон', 'гандонский', 'шлюха', 'проститутк', 'козел', 'мудак', 'мудацк',
+  'говно', 'гавно', 'дерьмо', 'ссанина', 'ссать', 'залупа', 'член', 'манда',
+  'педрил', 'пидор', 'пидорк', 'петух', 'гомик', 'гомосек',
+  'fuck', 'fck', 'fuc', 'shit', 'bitch', 'asshole', 'dick', 'pussy', 'cunt', 'bastard', 'damn'
+].sort((a, b) => b.length - a.length);
+const BAD_WORDS_RE = new RegExp(
+  '(?<![\\p{L}\\p{N}_])(?:' + BAD_WORDS.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')(?![\\p{L}\\p{N}_])',
+  'giu'
+);
+function filterBadWords(text) {
+  return String(text).replace(BAD_WORDS_RE, (m) => '*'.repeat(m.length));
+}
+
+app.get('/api/dm', requireAuth, ah(async (req, res) => {
+  const login = String(req.query.with || '').trim();
+  if (!login) return fail(res, 'Укажите собеседника');
+  if (login.toLowerCase() === req.user.login.toLowerCase()) return fail(res, 'Это ваш логин');
+  const t = await D.getUserByLogin(login);
+  if (!t) return fail(res, 'Пользователь не найден');
+  const [messages, notifs] = await Promise.all([D.getDm(req.user.id, t.id), D.getDmNotifs(req.user.id)]);
+  messages.forEach(m => { if (m.text) m.text = filterBadWords(m.text); });
+  // Убрать уведомления от этого собеседника (диалог просмотрен)
+  const rest = notifs.filter(n => n.login.toLowerCase() !== t.login.toLowerCase());
+  if (rest.length !== notifs.length) await D.setDmNotifs(req.user.id, rest);
+  const brief = await cachedBriefUser(t);
+  send(res, 200, { ok: true, user: brief, messages });
+}));
+
+// Отправить сообщение игроку ({ to: login, text })
+app.post('/api/dm/send', requireAuth, ah(async (req, res) => {
+  const to = String((req.body || {}).to || '').trim();
+  const rawText = String((req.body || {}).text || '').trim();
+  if (!to) return fail(res, 'Кому пишем?');
+  if (!rawText) return fail(res, 'Сообщение пустое');
+  if (rawText.length > 500) return fail(res, 'Сообщение слишком длинное (макс. 500 символов)');
+  if (!rateLimit('dm:' + req.user.id, 20, 60000)) return fail(res, 'Слишком много сообщений, подождите', 429);
+  if (to.toLowerCase() === req.user.login.toLowerCase()) return fail(res, 'Нельзя писать самому себе');
+  const t = await D.getUserByLogin(to);
+  if (!t) return fail(res, 'Пользователь не найден');
+  const text = filterBadWords(rawText);
+  if (!text) return fail(res, 'Сообщение пустое');
+  const msg = { from: req.user.id, login: req.user.login, text, ts: now() };
+  await D.appendDm(req.user.id, t.id, msg);
+  await D.pushDmNotif(t.id, msg);
+  invalidateGlobkaCaches();
+  send(res, 200, { ok: true, message: 'Сообщение отправлено ' + '@' + t.login });
+}));
+
+// Мои уведомления о новых сообщениях
+app.get('/api/dm/notifs', requireAuth, ah(async (req, res) => {
+  const notifs = await D.getDmNotifs(req.user.id);
+  // Группируем по собеседникам: оставляем только последнее сообщение от каждого + счётчик
+  const byLogin = {};
+  for (const n of notifs) {
+    const k = n.login.toLowerCase();
+    if (!byLogin[k]) byLogin[k] = { login: n.login, text: n.text, ts: n.ts, count: 0 };
+    byLogin[k].count++;
+    if (new Date(n.ts) >= new Date(byLogin[k].ts)) { byLogin[k].text = n.text; byLogin[k].ts = n.ts; }
+  }
+  const list = Object.values(byLogin);
+  list.forEach(n => { if (n.text) n.text = filterBadWords(n.text); });
+  const enriched = await Promise.all(list.map(async (n) => {
+    const t = await D.getUserByLogin(n.login);
+    if (!t) return n;
+    const b = await cachedBriefUser(t);
+    return Object.assign(n, b);
+  }));
+  send(res, 200, { ok: true, notifs: enriched });
 }));
 
 app.post('/api/purchase', requireAuth, ah(async (req, res) => {

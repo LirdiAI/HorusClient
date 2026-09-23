@@ -9,6 +9,10 @@
   let shopTabCat = '';
   let globkaQuery = '';
   let globkaOwnedCat = '';
+  let mediaPoll = null;
+  let mediaCdTick = null;
+  let dmPoll = null;
+  let globaPoll = null;
 
   const state = {
     me: null,
@@ -57,6 +61,12 @@
   };
 
   const fmtNum = (n) => Number(n).toLocaleString('ru-RU');
+
+  const fmtMediaCd = (sec) => {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    return (h > 0 ? h + ' ч ' : '') + (m > 0 ? m + ' мин' : '');
+  };
 
   const icon = {
     eye: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.4"/></svg>',
@@ -810,12 +820,15 @@ function bindLanding(app) {
     testing: { icon: 'bug', title: 'Тестирование' },
     ops: { icon: 'cart', title: 'Операции' },
     mod: { icon: 'shield', title: 'Модификация' },
+    media: { icon: 'spark', title: 'Медийка' },
+    inv: { icon: 'layers', title: 'Инвентарь' },
     support: { icon: 'support', title: 'Поддержка' },
     idea: { icon: 'idea', title: 'Предложить идею' },
     bug: { icon: 'bug', title: 'Сообщить о баге' }
   };
 
   const isOwner = () => state.me && state.me.login === 'Howill_';
+  const isMedia = () => state.me && (state.me.role === 'media' || state.me.role === 'admin' || isOwner());
   const roleLabel = (r) => r === 'admin' ? 'Администратор' : r === 'mod' ? 'Модератор' : r === 'media' ? 'Медиа' : 'User';
 
   /* ---------- темы сайта (Alpha) ---------- */
@@ -844,6 +857,7 @@ function bindLanding(app) {
     }
     const parts = path.split('/').filter(Boolean);
     let section = parts[1] || 'profile';
+    if (section === 'media' && !isMedia()) section = 'profile';
     const ap = $('#app');
 
     document.title = (CAB_SECTIONS[section] ? CAB_SECTIONS[section].title + ' — ' : '') + 'HorusClient · Кабинет';
@@ -873,6 +887,8 @@ ${sbGroup('Мой кабинет', [
           ['profile', 'user', 'Профиль'],
           ['globa', 'globe', 'Глобалка'],
           ['shop', 'cart', 'Магазин'],
+          ...(isMedia() ? [['media', 'spark', 'Медийка']] : []),
+          ['inv', 'layers', 'Инвентарь'],
           ['redeem', 'key', 'Активация ключа'],
           ['subs', 'crown', 'Подписки'],
           ['device', 'monitor', 'Привязка устройства'],
@@ -920,6 +936,8 @@ ${sbGroup('Мой кабинет', [
 if (section === 'profile') main.innerHTML = viewProfile();
     else if (section === 'globa') main.innerHTML = viewGloba();
     else if (section === 'shop') main.innerHTML = viewShop();
+    else if (section === 'media' && isMedia()) main.innerHTML = viewMedia();
+    else if (section === 'inv') main.innerHTML = viewInv();
     else if (section === 'subs') main.innerHTML = viewSubs();
     else if (section === 'device') main.innerHTML = viewDevice();
     else if (section === 'buy') main.innerHTML = viewBuy();
@@ -1092,6 +1110,13 @@ if (section === 'profile') main.innerHTML = viewProfile();
     </div>
     <div class="page-card" style="max-width:820px">
       <div class="page-head"><div>
+        <div class="page-title">Сообщения</div>
+        <div class="page-sub">Новые личные сообщения от игроков</div>
+      </div></div>
+      <div id="globkaDm" class="globka-results"></div>
+    </div>
+    <div class="page-card" style="max-width:820px">
+      <div class="page-head"><div>
         <div class="page-title">Мои друзья</div>
         <div class="page-sub">Нажмите «Профиль», чтобы посмотреть, что купил друг в магазине</div>
       </div></div>
@@ -1121,6 +1146,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
         ${friendBtn}
+        <button type="button" class="btn btn-sm btn-ghost" data-globka-dm="${esc(u.login)}">${icon.support} Сообщение</button>
         <button type="button" class="btn btn-sm btn-ghost" data-globka-profile="${esc(u.login)}">Профиль</button>
       </div>
     </div>`;
@@ -1143,7 +1169,27 @@ if (section === 'profile') main.innerHTML = viewProfile();
       <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
         <button type="button" class="btn btn-sm btn-gold" data-globka-accept="${esc(u.login)}">${icon.check} Принять</button>
         <button type="button" class="btn btn-sm btn-ghost" data-globka-decline="${esc(u.login)}">Отклонить</button>
+        <button type="button" class="btn btn-sm btn-ghost" data-globka-dm="${esc(u.login)}">${icon.support} Сообщение</button>
         <button type="button" class="btn btn-sm btn-ghost" data-globka-profile="${esc(u.login)}">Профиль</button>
+      </div>
+    </div>`;
+  }
+
+  function globkaDmRowHTML(n) {
+    const avaCls = 'sb-ava' + (n.decoActive === 'ava_deco' ? ' royal' : '') + (n.decoActive === 'ava_ice' ? ' sapphire' : '') + (n.decoActive === 'ava_white' ? ' white' : '');
+    const avaSpan = n.decoActive === 'ava_deco' ? '<span class="c-gold">♛</span>'
+      : n.decoActive === 'ava_ice' ? '<span class="c-ice">❄</span>'
+      : n.decoActive === 'ava_white' ? '<span class="c-white">✦</span>' : '';
+    return `
+    <div class="globka-row">
+      <div class="${avaCls}">${n.avatar ? `<img src="${n.avatar}" alt="">` : esc(String(n.login || '?')[0].toUpperCase())}${avaSpan}</div>
+      <div style="min-width:0">
+        <div class="sb-name${n.loginColor ? ' login-grad login-grad-' + n.loginColor : ''}">${esc(n.login)}</div>
+        ${n.online ? '<div class="globka-online"><span class="gdot"></span>Онлайн</div>' : ''}
+        <div class="dm-notif-text">${icon.cooldown} Что написано: <span>${esc(n.text)}</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
+        <button type="button" class="btn btn-sm btn-gold" data-globka-dm="${esc(n.login)}">${icon.support} Сообщения (Перейти в чат)</button>
       </div>
     </div>`;
   }
@@ -1164,6 +1210,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
         <button type="button" class="btn btn-sm btn-ghost" data-globka-cancel="${esc(u.login)}">Отменить</button>
+        <button type="button" class="btn btn-sm btn-ghost" data-globka-dm="${esc(u.login)}">${icon.support} Сообщение</button>
         <button type="button" class="btn btn-sm btn-ghost" data-globka-profile="${esc(u.login)}">Профиль</button>
       </div>
     </div>`;
@@ -1224,9 +1271,12 @@ if (section === 'profile') main.innerHTML = viewProfile();
             <div style="color:var(--muted);font-size:12.5px;margin-top:3px">UID: <b>${esc(p.uid)}</b></div>
             ${p.role ? `<div class="sb-role ${p.roleColor ? 'role-grad role-grad-' + p.roleColor : ''}" style="display:inline-flex;margin-top:2px">${roleLabel(p.role)}</div>` : ''}
           </div>
-          ${p.isFriend ? '<span class="stb stb-ok" style="margin-left:auto">' + icon.check + ' Друзья</span>'
+          ${p.isFriend ? `<div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+            <button type="button" class="btn btn-sm btn-ghost" data-globka-dm="${esc(p.login)}">${icon.support} Сообщение</button>
+            <span class="stb stb-ok" style="white-space:nowrap">${icon.check} Друзья</span></div>`
           : (state.me && p.login !== state.me.login) ? `
             <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+              <button type="button" class="btn btn-sm btn-ghost" data-globka-dm="${esc(p.login)}">${icon.support} Сообщение</button>
               <button type="button" class="btn btn-sm ${p.isReqOut ? 'btn-dark' : 'btn-gold'}" data-globka-profile-friend="${esc(p.login)}" data-globka-pfriend="0" data-globka-preqin="${p.isReqIn ? 1 : 0}" data-globka-preqout="${p.isReqOut ? 1 : 0}">${p.isReqIn ? 'Принять заявку' : (p.isReqOut ? 'Заявка отправлена' : 'Добавить в друзья')}</button>
             </div>` : ''}
         </div>
@@ -1251,6 +1301,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
       </div>`;
       const pBackBtn = $('[data-globka-back]', main);
       if (pBackBtn) pBackBtn.addEventListener('click', () => { main.innerHTML = viewGloba(); bindSection('globa', main); });
+      $$('[data-globka-dm]', main).forEach(b => b.addEventListener('click', () => openDmChat(b.dataset.globkaDm)));
       $$('[data-globka-owned-cat]', main).forEach(t => t.addEventListener('click', () => {
         globkaOwnedCat = t.dataset.globkaOwnedCat;
         $$('[data-globka-owned-cat]', main).forEach(x => x.classList.toggle('active', x === t));
@@ -1363,6 +1414,63 @@ if (section === 'profile') main.innerHTML = viewProfile();
             ${cats.map(c => `<button type="button" class="subs-tab${c === activeCat ? ' active' : ''}" data-shop-cat="${esc(c)}">${esc(c)}</button>`).join('')}
           </div>
           <div id="shopItems">${shopCardsHTML(activeCat)}</div>`}
+    </div>`;
+  }
+
+  function viewMedia() {
+    const owner = isOwner();
+    return `
+    <div class="page-card" style="max-width:820px">
+      <div class="page-head"><div>
+        <div class="page-title">Медийка</div>
+        <div class="page-sub">Мини-магазин за баллы — покупка подписок и сброса HWID любому игроку по логину</div>
+      </div>
+      ${owner ? `<button class="btn btn-sm" data-media-grant style="font-size:12px">+ Баллы</button>` : ''}</div>
+      <div class="media-balance">
+        <span class="muted">Ваш баланс:</span> <b style="font-size:22px;color:var(--gold)" id="mediaPoints">—</b> <span class="muted">баллов</span>
+      </div>
+    </div>
+    ${owner ? `
+    <div class="page-card" style="max-width:820px" id="mediaGrantCard" hidden>
+      <div class="page-head"><div>
+        <div class="page-title">Выдача баллов</div>
+        <div class="page-sub">Только для владельца: начислить баллы по логину</div>
+      </div></div>
+      <div class="grant-target">
+        <input id="mediaGrantLogin" maxlength="20" placeholder="Логин игрока" autocomplete="off">
+        <input id="mediaGrantAmount" type="number" min="1" placeholder="Количество баллов" style="margin-top:8px">
+        <button class="btn btn-gold" id="mediaGrantBtn" style="margin-top:10px">Выдать</button>
+        <div id="mediaGrantResult"></div>
+      </div>
+    </div>` : ''}
+    <div class="page-card" style="max-width:820px">
+      <div class="page-head"><div>
+        <div class="page-title">Мини-магазин</div>
+        <div class="page-sub">Покупка для другого игрока · на купленный товар вешается кулдаун 3 дня</div>
+      </div></div>
+      <div id="mediaItems">Загрузка…</div>
+    </div>`;
+  }
+
+  function viewInv() {
+    return `
+    <div class="page-card" style="max-width:820px">
+      <div class="page-head"><div>
+        <div class="page-title">Инвентарь</div>
+        <div class="page-sub">Предметы в Инвентаре. Примените на себя или превратите в ключ — и передайте другому игроку.</div>
+      </div></div>
+      <div id="invItems">Загрузка…</div>
+    </div>
+    <div class="page-card" style="max-width:820px">
+      <div class="page-head"><div>
+        <div class="page-title">Активация ключа</div>
+        <div class="page-sub">Введите ключ, полученный от другого игрока, — предмет попадёт на ваш аккаунт, а ключ исчезнет из инвентаря владельца.</div>
+      </div></div>
+      <div class="grant-target" id="invKeyRow">
+        <input id="invKeyInput" maxlength="30" placeholder="HORUS-INV-XXXXXXXXXX" autocomplete="off">
+        <button class="btn btn-gold" id="invKeyBtn" style="margin-top:10px">Активировать</button>
+        <div id="invKeyResult"></div>
+      </div>
     </div>`;
   }
 
@@ -1521,6 +1629,93 @@ if (section === 'profile') main.innerHTML = viewProfile();
     });
     document.body.appendChild(overlay);
     requestAnimationFrame(() => overlay.classList.add('show'));
+  }
+
+  /* ---------- ЛС: чат с игроком ---------- */
+  function dmUsl(msg, meLogin) {
+    const isMine = msg.login.toLowerCase() === String(meLogin || '').toLowerCase();
+    const t = utcTime(msg.ts);
+    return `
+    <div class="dm-bubble ${isMine ? 'mine' : ''}">
+      <div class="dm-bubble-login">${isMine ? 'Вы' : esc(msg.login)}</div>
+      <div class="dm-bubble-text">${esc(msg.text)}</div>
+      <div class="dm-bubble-time">${t}</div>
+    </div>`;
+  }
+  function utcTime(iso) {
+    try {
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) + ' ' + d.toLocaleDateString('ru-RU', { day: 'numeric', month: '2-digit' });
+    } catch { return ''; }
+  }
+  function openDmChat(login) {
+    if (!login) return;
+    const meLogin = state.me && state.me.login;
+    const overlay = document.createElement('div');
+    overlay.className = 'buy-overlay';
+    overlay.innerHTML = `
+      <div class="buy-modal dm-modal">
+        <button class="buy-close" data-close aria-label="Закрыть">✕</button>
+        <div class="buy-co-head">${icon.support} Сообщения — @${esc(login)}</div>
+        <div class="dm-messages" id="dmMsgs"><div class="empty">Загрузка…</div></div>
+        <div class="dm-send-row">
+          <input type="text" id="dmInput" maxlength="500" placeholder="Напишите сообщение…" autocomplete="off" spellcheck="false">
+          <button type="button" class="btn btn-gold" id="dmSendBtn">${icon.arrow} Отправить</button>
+        </div>
+      </div>`;
+    document.body.style.overflow = 'hidden';
+    const msgsEl = $('#dmMsgs', overlay);
+    const input = $('#dmInput', overlay);
+    const sendBtn = $('#dmSendBtn', overlay);
+    const close = () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+      if (dmPoll) { clearInterval(dmPoll); dmPoll = null; }
+      overlay.classList.add('hide');
+      setTimeout(() => overlay.remove(), 220);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', onKey);
+    const load = async (silent) => {
+      try {
+        const r = await api('/api/dm?with=' + encodeURIComponent(login));
+        const msgs = (r && r.messages) || [];
+        const prev = msgsEl.scrollHeight - msgsEl.scrollTop;
+        msgsEl.innerHTML = msgs.length ? msgs.map(m => dmUsl(m, meLogin)).join('') : '<div class="empty" style="padding:22px 0">Напишите первым!</div>';
+        if (!silent || msgs.length) {
+          msgsEl.scrollTop = msgsEl.scrollHeight;
+        } else {
+          msgsEl.scrollTop = msgsEl.scrollHeight - prev;
+        }
+        if (r && r.user && r.user.online !== undefined) {
+          const chip = $('#dmOnline', overlay);
+          if (chip) chip.style.display = r.user.online ? '' : 'none';
+        }
+      } catch (err) { if (!silent) msgsEl.innerHTML = '<div class="empty err">' + esc(err.message) + '</div>'; }
+    };
+    const send = async () => {
+      const text = input.value.trim();
+      if (!text) return;
+      sendBtn.disabled = true;
+      try {
+        const r = await api('/api/dm/send', { method: 'POST', body: JSON.stringify({ to: login, text }) });
+        input.value = '';
+        toast(r.message, 'success');
+        await load(false);
+      } catch (err) { toast(err.message, 'error'); }
+      sendBtn.disabled = false;
+      input.focus();
+    };
+    sendBtn.addEventListener('click', send);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); send(); } });
+    overlay.addEventListener('click', (e) => { if (e.target.closest('[data-close]') || e.target === overlay) close(); });
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('show'));
+    if (dmPoll) clearInterval(dmPoll);
+    dmPoll = setInterval(() => load(true), 2000);
+    load(false);
+    setTimeout(() => input.focus(), 250);
   }
 
   function viewDevice() {
@@ -1947,6 +2142,9 @@ function viewRedeem() {
   let modDefaultHtmlCache = '';
 
   function bindSection(section, main, ap) {
+    if (mediaPoll) { clearInterval(mediaPoll); mediaPoll = null; }
+    if (mediaCdTick) { clearInterval(mediaCdTick); mediaCdTick = null; }
+    if (globaPoll) { clearInterval(globaPoll); globaPoll = null; }
     if (section === 'shop') {
       if (!state.shop) {
         (async () => {
@@ -1955,7 +2153,8 @@ function viewRedeem() {
             const meR = await api('/api/me');
             if (meR && meR.authed && meR.user) state.me = meR.user;
           } catch (_) { state.shop = { items: [], owned: {} }; }
-          renderCabContent('shop');
+          const active = document.querySelector('.sb-item[data-cab].active');
+          if (active && active.dataset.cab === 'shop') renderCabContent('shop');
         })();
         return;
       }
@@ -2019,6 +2218,7 @@ function viewRedeem() {
         box.innerHTML = inc + out;
       };
       const attachGlobkaActions = () => {
+        $$('[data-globka-dm]', main).forEach(b => b.addEventListener('click', () => openDmChat(b.dataset.globkaDm)));
         $$('[data-globka-friend]', main).forEach(b => b.addEventListener('click', async () => {
           const login = b.dataset.globkaFriend;
           const reqin = b.dataset.globkaReqIn === '1';
@@ -2071,6 +2271,13 @@ function viewRedeem() {
           loadAll.push(api('/api/globka/find?q=' + encodeURIComponent(globkaQuery)).then(r => renderInto('#globkaResults', r.users, 'Никого не найдено')));
         }
         loadAll.push(
+          api('/api/dm/notifs').then(r => {
+            const box = $('#globkaDm', main);
+            if (!box) return;
+            const list = (r && r.notifs) || [];
+            if (!list.length) { box.innerHTML = '<div class="empty" style="padding:14px 0">Новых сообщений нет</div>'; return; }
+            box.innerHTML = list.map(n => globkaDmRowHTML(n)).join('');
+          }).catch(() => { const box = $('#globkaDm', main); if (box) box.innerHTML = '<div class="empty" style="padding:14px 0">Не удалось загрузить сообщения</div>'; }),
           api('/api/friends/requests').then(r => renderReqs(r.users, r.outgoing, 'Заявок нет')).catch(() => renderReqs(null, null, 'Не удалось загрузить заявки')),
           api('/api/friends').then(r => renderInto('#globkaFriends', r.users, 'Пока пусто — добавьте друзей через поиск')).catch(() => renderInto('#globkaFriends', null, 'Не удалось загрузить друзей'))
         );
@@ -2105,6 +2312,162 @@ function viewRedeem() {
       if (backBtn) backBtn.addEventListener('click', () => { main.innerHTML = viewGloba(); bindSection('globa', main); });
       attachGlobkaActions();
       refreshGlobka(true);
+      const loadDmNotifs = async () => {
+        try {
+          const r = await api('/api/dm/notifs');
+          const box = $('#globkaDm', main);
+          if (!box) return;
+          const list = (r && r.notifs) || [];
+          if (!list.length) { return; }
+          box.innerHTML = list.map(n => globkaDmRowHTML(n)).join('');
+          attachGlobkaActions();
+        } catch (_) { /* тихо */ }
+      };
+      if (globaPoll) clearInterval(globaPoll);
+      globaPoll = setInterval(loadDmNotifs, 2500);
+    }
+    if (section === 'media' && isMedia()) {
+      const loadMedia = async () => {
+        try {
+          const r = await api('/api/media/state');
+          const pts = $('#mediaPoints', main);
+          if (pts) pts.textContent = esc(String(r.points));
+          const box = $('#mediaItems', main);
+          if (!box) return;
+          const logins = {};
+          $$('[data-login]', box).forEach(i => { logins[i.dataset.login] = i.value; });
+          box.innerHTML = r.items.map(it => {
+            const onCd = it.cdLeft > 0;
+            return `
+            <div class="media-row">
+              <div class="media-info">
+                <div class="media-name">${esc(it.name)}</div>
+                <div class="media-cost">${it.cost} ${it.cost === 1 ? 'балл' : (it.cost < 5 ? 'балла' : 'баллов')}</div>
+              </div>
+              ${onCd ? `
+              <div class="media-buy">
+                <span class="media-cd">${icon.cooldown} <b class="media-cd-live" data-cd-end="${Math.ceil(Date.now() / 1000) + it.cdLeft}">${fmtMediaCd(it.cdLeft)}</b></span>
+              </div>` : `
+              <div class="media-buy">
+                <input class="media-login" data-login="${esc(it.key)}" maxlength="20" placeholder="Логин игрока" autocomplete="off">
+                <button class="btn btn-gold btn-sm" data-media-buy="${esc(it.key)}">Купить</button>
+              </div>`}
+            </div>`;
+          }).join('');
+          $$('[data-login]', box).forEach(i => { if (logins[i.dataset.login]) i.value = logins[i.dataset.login]; });
+          $$('[data-media-buy]', main).forEach(b => b.addEventListener('click', async () => {
+            const key = b.dataset.mediaBuy;
+            const inp = $('[data-login="' + CSS.escape(key) + '"]', main);
+            const login = String((inp && inp.value) || '').trim();
+            if (!login) { toast('Введите логин игрока', 'error'); return; }
+            b.disabled = true;
+            try {
+              const r = await api('/api/media/buy', { method: 'POST', body: JSON.stringify({ login, itemKey: key }) });
+              toast(r.message, 'success');
+              if ($('#mediaPoints', main)) $('#mediaPoints', main).textContent = esc(String(r.points));
+              loadMedia();
+            } catch (err) { toast(err.message, 'error'); b.disabled = false; }
+          }));
+        } catch (err) { const box = $('#mediaItems', main); if (box) box.innerHTML = '<div class="empty err" style="padding:14px 0">' + esc(err.message) + '</div>'; }
+      };
+      // Живой отсчёт кулдауна по каждому товару
+      if (mediaCdTick) clearInterval(mediaCdTick);
+      mediaCdTick = setInterval(() => {
+        let expired = false;
+        $$('.media-cd-live', main).forEach(el => {
+          const end = Number(el.dataset.cdEnd || 0);
+          const left = end - Math.ceil(Date.now() / 1000);
+          if (left <= 0) { expired = true; return; }
+          el.textContent = fmtMediaCd(left);
+        });
+        if (expired) loadMedia();
+      }, 1000);
+      const grantBtn = $('[data-media-grant]', main);
+      if (grantBtn) grantBtn.addEventListener('click', () => {
+        const card = $('#mediaGrantCard', main);
+        if (card) card.hidden = !card.hidden;
+      });
+      const grantSubmit = $('#mediaGrantBtn', main);
+      if (grantSubmit) grantSubmit.addEventListener('click', async () => {
+        const login = String(($('#mediaGrantLogin', main) || {}).value || '').trim();
+        const amount = Number(($('#mediaGrantAmount', main) || {}).value || 0);
+        if (!login || !(amount > 0)) { toast('Введите логин и количество баллов', 'error'); return; }
+        grantSubmit.disabled = true;
+        try {
+          const r = await api('/api/media/grant', { method: 'POST', body: JSON.stringify({ login, amount }) });
+          const box = $('#mediaGrantResult', main);
+          if (box) { box.className = 'okbox'; box.textContent = r.message; }
+          toast(r.message, 'success');
+          $('#mediaGrantAmount', main).value = '';
+        } catch (err) { toast(err.message, 'error'); }
+        grantSubmit.disabled = false;
+      });
+      loadMedia();
+      mediaPoll = setInterval(loadMedia, 2000);
+    }
+    if (section === 'inv') {
+      const box = $('#invItems', main);
+      const loadInv = async () => {
+        if (!box) return;
+        try {
+          const r = await api('/api/inventory');
+          box.innerHTML = r.items && r.items.length
+            ? r.items.map(it => `
+              <div class="media-row">
+                <div class="media-info">
+                  <div class="media-name">${esc(it.name)}</div>
+                  <div class="media-cost">${it.status === 'key' ? '🔑 ' + esc(it.code) : 'Не активирован · ' + fmtDate(it.created_at)}</div>
+                </div>
+                <div class="media-buy" style="justify-content:flex-end">
+                  ${it.status === 'item' ? `
+                    <button class="btn btn-gold btn-sm" data-inv-apply="${esc(it.id)}">Применить</button>
+                    <button class="btn btn-sm" data-inv-key="${esc(it.id)}" style="font-size:12px">Сделать ключом</button>` : `
+                    <button class="btn btn-sm" data-inv-copy="${esc(it.code)}" style="font-size:12px">Копировать ключ</button>`}
+                </div>
+              </div>`).join('')
+            : '<div class="empty" style="padding:18px 0">Инвентарь пустой</div>';
+          $$('[data-inv-apply]', box).forEach(b => b.addEventListener('click', async () => {
+            b.disabled = true;
+            try {
+              const r = await api('/api/inventory/apply', { method: 'POST', body: JSON.stringify({ id: b.dataset.invApply }) });
+              state.me = r.user;
+              toast(r.message, 'success');
+              loadInv();
+            } catch (err) { toast(err.message, 'error'); b.disabled = false; }
+          }));
+          $$('[data-inv-key]', box).forEach(b => b.addEventListener('click', async () => {
+            b.disabled = true;
+            try {
+              const r = await api('/api/inventory/key', { method: 'POST', body: JSON.stringify({ id: b.dataset.invKey }) });
+              toast('Ключ создан: ' + r.code, 'success');
+              loadInv();
+              if (navigator.clipboard) navigator.clipboard.writeText(r.code).catch(() => {});
+            } catch (err) { toast(err.message, 'error'); b.disabled = false; }
+          }));
+          $$('[data-inv-copy]', box).forEach(b => b.addEventListener('click', () => {
+            if (navigator.clipboard) navigator.clipboard.writeText(b.dataset.invCopy).then(() => toast('Ключ скопирован', 'success')).catch(() => {});
+          }));
+        } catch (err) { box.innerHTML = '<div class="empty err" style="padding:14px 0">' + esc(err.message) + '</div>'; }
+      };
+      const keyBtn = $('#invKeyBtn', main);
+      if (keyBtn) keyBtn.addEventListener('click', async () => {
+        const input = $('#invKeyInput', main);
+        const code = String((input && input.value) || '').trim().toUpperCase();
+        if (!code) { toast('Введите код ключа', 'error'); return; }
+        keyBtn.disabled = true;
+        try {
+          const r = await api('/api/inventory/activate', { method: 'POST', body: JSON.stringify({ code }) });
+          state.me = r.user;
+          const result = $('#invKeyResult', main);
+          if (result) { result.className = 'okbox'; result.textContent = r.message; }
+          toast(r.message, 'success');
+          if (input) input.value = '';
+        } catch (err) { toast(err.message, 'error'); }
+        keyBtn.disabled = false;
+      });
+      const keyInput = $('#invKeyInput', main);
+      if (keyInput) keyInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (keyBtn) keyBtn.click(); } });
+      loadInv();
     }
     if (section === 'profile' && $('[data-upload]')) {
       $$('[data-upload]').forEach(btn => btn.addEventListener('click', () => uploadProfileImage(btn, btn.dataset.upload)));
