@@ -1101,15 +1101,21 @@ app.post('/api/friends/remove', requireAuth, ah(async (req, res) => {
 
 // Мои входящие заявки в друзья
 app.get('/api/friends/requests', requireAuth, ah(async (req, res) => {
-  const logins = await D.getFriendReqsIn(req.user.id);
-  const users = await Promise.all(logins.map(async (l) => {
+  const [inLogins, outLogins] = await Promise.all([
+    D.getFriendReqsIn(req.user.id), D.getFriendReqsOut(req.user.id)
+  ]);
+  const build = async (l) => {
     const t = await D.getUserByLogin(l);
     if (!t) return null;
     const b = await cachedBriefUser(t);
     b.isFriend = false;
     return b;
-  }));
-  send(res, 200, { ok: true, users: users.filter(Boolean) });
+  };
+  const [users, outgoing] = await Promise.all([
+    Promise.all(inLogins.map(build)),
+    Promise.all(outLogins.map(build))
+  ]);
+  send(res, 200, { ok: true, users: users.filter(Boolean), outgoing: outgoing.filter(Boolean) });
 }));
 
 // Отправить заявку в друзья

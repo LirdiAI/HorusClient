@@ -1086,7 +1086,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
     <div class="page-card" style="max-width:820px">
       <div class="page-head"><div>
         <div class="page-title">Уведомления</div>
-        <div class="page-sub">Заявки в друзья — примите или отклоните</div>
+        <div class="page-sub">Заявки в друзья — примите, отклоните или дождитесь подтверждения</div>
       </div></div>
       <div id="globkaReqs" class="globka-results"></div>
     </div>
@@ -1143,6 +1143,27 @@ if (section === 'profile') main.innerHTML = viewProfile();
       <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
         <button type="button" class="btn btn-sm btn-gold" data-globka-accept="${esc(u.login)}">${icon.check} Принять</button>
         <button type="button" class="btn btn-sm btn-ghost" data-globka-decline="${esc(u.login)}">Отклонить</button>
+        <button type="button" class="btn btn-sm btn-ghost" data-globka-profile="${esc(u.login)}">Профиль</button>
+      </div>
+    </div>`;
+  }
+
+  function globkaReqOutRowHTML(u) {
+    const avaCls = 'sb-ava' + (u.decoActive === 'ava_deco' ? ' royal' : '') + (u.decoActive === 'ava_ice' ? ' sapphire' : '') + (u.decoActive === 'ava_white' ? ' white' : '');
+    const avaSpan = u.decoActive === 'ava_deco' ? '<span class="c-gold">♛</span>'
+      : u.decoActive === 'ava_ice' ? '<span class="c-ice">❄</span>'
+      : u.decoActive === 'ava_white' ? '<span class="c-white">✦</span>' : '';
+    return `
+    <div class="globka-row">
+      <div class="${avaCls}">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}${avaSpan}</div>
+      <div style="min-width:0">
+        <div class="sb-name${u.loginColor ? ' login-grad login-grad-' + u.loginColor : ''}">${esc(u.login)}</div>
+        ${u.online ? '<div class="globka-online"><span class="gdot"></span>Онлайн</div>' : ''}
+        ${u.role ? `<div class="sb-role ${u.roleColor ? 'role-grad role-grad-' + u.roleColor : ''}">${roleLabel(u.role)}</div>` : ''}
+        <div class="sb-uid">UID: <b>${esc(u.uid)}</b> · <span style="color:var(--gold)">ждет подтверждения</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
+        <button type="button" class="btn btn-sm btn-ghost" data-globka-cancel="${esc(u.login)}">Отменить</button>
         <button type="button" class="btn btn-sm btn-ghost" data-globka-profile="${esc(u.login)}">Профиль</button>
       </div>
     </div>`;
@@ -1209,7 +1230,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
               <button type="button" class="btn btn-sm ${p.isReqOut ? 'btn-dark' : 'btn-gold'}" data-globka-profile-friend="${esc(p.login)}" data-globka-pfriend="0" data-globka-preqin="${p.isReqIn ? 1 : 0}" data-globka-preqout="${p.isReqOut ? 1 : 0}">${p.isReqIn ? 'Принять заявку' : (p.isReqOut ? 'Заявка отправлена' : 'Добавить в друзья')}</button>
             </div>` : ''}
         </div>
-        <div class="profile-grid">
+        <div class="profile-grid" style="margin-top:18px">
           <div class="pfield"><div class="pl">Подписка</div><div class="pv">${p.subscription ? esc(p.subscription.name) + (p.subscription.status === 'active' ? '' : ' · заморожена') : 'Нет подписки'}</div></div>
           <div class="pfield"><div class="pl">Статус</div><div class="pv">${p.subscription ? (p.subscription.status === 'active' ? '<span style="color:var(--green)">Активна</span>' : 'Заморожена') : '—'}</div></div>
           <div class="pfield"><div class="pl">Дата регистрации</div><div class="pv">${fmtDate(p.createdAt)}</div></div>
@@ -1989,11 +2010,13 @@ function viewRedeem() {
         if (!users || !users.length) { box.innerHTML = '<div class="empty" style="padding:14px 0">' + (emptyText || 'Никого не найдено') + '</div>'; return; }
         box.innerHTML = users.map(u => globkaRowHTML(u)).join('');
       };
-      const renderReqs = (users, emptyText) => {
+      const renderReqs = (users, outgoing, emptyText) => {
         const box = $('#globkaReqs', main);
         if (!box) return;
-        if (!users || !users.length) { box.innerHTML = '<div class="empty" style="padding:14px 0">' + (emptyText || 'Заявок нет') + '</div>'; return; }
-        box.innerHTML = users.map(u => globkaReqRowHTML(u)).join('');
+        const inc = users && users.length ? users.map(u => globkaReqRowHTML(u)).join('') : '';
+        const out = outgoing && outgoing.length ? outgoing.map(u => globkaReqOutRowHTML(u)).join('') : '';
+        if (!inc && !out) { box.innerHTML = '<div class="empty" style="padding:14px 0">' + (emptyText || 'Заявок нет') + '</div>'; return; }
+        box.innerHTML = inc + out;
       };
       const attachGlobkaActions = () => {
         $$('[data-globka-friend]', main).forEach(b => b.addEventListener('click', async () => {
@@ -2031,6 +2054,15 @@ function viewRedeem() {
             await refreshGlobka(false);
           } catch (err) { toast(err.message, 'error'); b.disabled = false; }
         }));
+        $$('[data-globka-cancel]', main).forEach(b => b.addEventListener('click', async () => {
+          const login = b.dataset.globkaCancel;
+          b.disabled = true;
+          try {
+            const r = await api('/api/friends/cancel', { method: 'POST', body: JSON.stringify({ login }) });
+            toast(r.message, 'success');
+            await refreshGlobka(false);
+          } catch (err) { toast(err.message, 'error'); b.disabled = false; }
+        }));
         $$('[data-globka-profile]', main).forEach(b => b.addEventListener('click', () => renderGlobaProfile(b.dataset.globkaProfile, main)));
       };
       const refreshGlobka = async (withSearch) => {
@@ -2039,7 +2071,7 @@ function viewRedeem() {
           loadAll.push(api('/api/globka/find?q=' + encodeURIComponent(globkaQuery)).then(r => renderInto('#globkaResults', r.users, 'Никого не найдено')));
         }
         loadAll.push(
-          api('/api/friends/requests').then(r => renderReqs(r.users, 'Заявок нет')).catch(() => renderReqs(null, 'Не удалось загрузить заявки')),
+          api('/api/friends/requests').then(r => renderReqs(r.users, r.outgoing, 'Заявок нет')).catch(() => renderReqs(null, null, 'Не удалось загрузить заявки')),
           api('/api/friends').then(r => renderInto('#globkaFriends', r.users, 'Пока пусто — добавьте друзей через поиск')).catch(() => renderInto('#globkaFriends', null, 'Не удалось загрузить друзей'))
         );
         await Promise.all(loadAll);
