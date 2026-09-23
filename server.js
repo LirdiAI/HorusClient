@@ -226,7 +226,12 @@ async function publicUser(u) {
     subscription: plan ? {
       plan: plan.key,
       name: plan.name,
-      tag: plan.tag,
+      tag: active.expires_at
+        ? (() => {
+            const days = Math.max(1, Math.ceil((Date.parse(active.expires_at) - Date.now()) / 86400000));
+            return days === 1 ? 'остался 1 день' : 'ещё ' + days + ' дн.';
+          })()
+        : 'Навсегда',
       status: active.status,
       forever: !!active.expires_at ? false : true,
       expiresAt: active.expires_at,
@@ -862,7 +867,12 @@ app.post('/api/shop/grant', requireAuth, ah(async (req, res) => {
   const { key, target } = req.body || {};
   const item = SHOP_ITEMS.find(i => i.key === key);
   if (!item) return send(res, 400, { ok: false, message: 'Товар не найден' });
-  const targetId = target || req.user.id;
+  let targetId = req.user.id;
+  if (target && String(target).trim()) {
+    const t = await D.getUserByLogin(String(target).trim());
+    if (!t) return send(res, 400, { ok: false, message: 'Пользователь с таким логином не найден' });
+    targetId = t.id;
+  }
   if (item.kind === 'login_color') {
     await D.setDeco(targetId, item.key);
     await D.setLoginColor(targetId, item.key);

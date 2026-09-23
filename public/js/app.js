@@ -979,12 +979,12 @@ if (section === 'profile') main.innerHTML = viewProfile();
     const glossy = !!(u.glossy && u.glossyAllowed);
     const loginCls = u.loginColor ? ' login-grad login-grad-' + u.loginColor : '';
     return `
-    <div class="page-card${glossy ? ' glossy-card' : ''}" style="overflow:hidden">
-      <div class="profile-banner${glossy ? ' glossy-banner' : ''}"${u.banner ? ` style="background-image:url('${u.banner}')"` : ''}>
+    <div class="page-card${glossy ? ' glossy-card' : ''}" id="glossyCard" style="overflow:hidden">
+      <div class="profile-banner${glossy ? ' glossy-banner' : ''}" id="glossyBanner"${u.banner ? ` style="background-image:url('${u.banner}')"` : ''}>
         <button type="button" class="btn btn-ghost btn-sm" data-upload="banner">Сменить баннер</button>
       </div>
       <div class="profile-ava-wrap">
-        <div class="profile-ava${glossy ? ' glossy-ava' : ''}${u.decoActive === 'ava_deco' ? ' royal' : ''}${u.decoActive === 'ava_ice' ? ' sapphire' : ''}">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}${u.decoActive === 'ava_deco' ? '<span class="c-gold">♛</span>' : ''}${u.decoActive === 'ava_ice' ? '<span class="c-ice">❄</span>' : ''}</div>
+        <div class="profile-ava${glossy ? ' glossy-ava' : ''}${u.decoActive === 'ava_deco' ? ' royal' : ''}${u.decoActive === 'ava_ice' ? ' sapphire' : ''}" id="glossyAva">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}${u.decoActive === 'ava_deco' ? '<span class="c-gold">♛</span>' : ''}${u.decoActive === 'ava_ice' ? '<span class="c-ice">❄</span>' : ''}</div>
         <div>
           <div class="${loginCls}" style="font-weight:800;font-size:16px">${esc(u.login)}</div>
           <button type="button" class="btn btn-ghost btn-sm" data-upload="avatar" style="margin-top:6px">Сменить аватар</button>
@@ -995,7 +995,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
       <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)">
         <div>
           <div style="display:flex;align-items:center;gap:8px;font-weight:700">Глянцевый профиль <span class="alpha-badge">${icon.crown} Только Alpha</span></div>
-          <div style="color:var(--muted);font-size:12.5px;margin-top:3px">${glossy ? 'Глянец включён — карточка профиля блестит ✨' : 'Включи глянец, чтобы карточка профиля блестела'}</div>
+          <div id="glossyHint" style="color:var(--muted);font-size:12.5px;margin-top:3px">${glossy ? 'Глянец включён — карточка профиля блестит ✨' : 'Включи глянец, чтобы карточка профиля блестела'}</div>
         </div>
         <button type="button" id="glossyToggle" class="btn btn-sm ${glossy ? 'btn-gold' : 'btn-dark'}">${glossy ? 'Выключить' : 'Включить'}</button>
       </div>` : ''}
@@ -1070,7 +1070,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
     ava_ice: { cls: 'sapphire', span: '<span class="c-ice">❄</span>' }
   };
 
-  function viewShop() {
+  function shopCardsHTML() {
     const items = (state.shop && state.shop.items) || [];
     const owned = (state.shop && state.shop.owned) || {};
     const activeDeco = (state.shop && state.shop.activeDeco) || null;
@@ -1078,16 +1078,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
     const cats = [...new Set(items.map(i => i.cat || 'Товары'))];
     const u = state.me || {};
     const letter = esc(String(u.login || 'H')[0].toUpperCase());
-    return `
-    <div class="page-card" style="max-width:820px">
-      <div class="page-head"><div>
-        <div class="page-title">Магазин</div>
-        <div class="page-sub">Украшения и мелочи для профиля</div>
-      </div>
-      ${(u.login || '') === 'Howill_' ? '<button class="btn btn-sm" data-grant-shop style="font-size:12px">${icon.crown} Выдача</button>' : ''}</div>
-      ${u.loginColor ? `<div class="shop-my-login"><span class="muted">Ваш логин:</span> <span class="login-grad login-grad-${u.loginColor}">${esc(u.login)}</span></div>` : ''}
-      ${items.length === 0 ? '<div class="empty" style="padding:22px 0">Загрузка…</div>' : ''}
-      ${cats.map(cat => `
+    return cats.map(cat => `
         <div class="shop-cat-title">${esc(cat)}</div>
         ${items.filter(i => (i.cat || 'Товары') === cat).map(it => {
           const mine = !!owned[it.key];
@@ -1111,7 +1102,21 @@ if (section === 'profile') main.innerHTML = viewProfile();
             </div>
           </div>`;
         }).join('')}
-      `).join('')}
+      `).join('');
+  }
+
+  function viewShop() {
+    const items = (state.shop && state.shop.items) || [];
+    const u = state.me || {};
+    return `
+    <div class="page-card" style="max-width:820px">
+      <div class="page-head"><div>
+        <div class="page-title">Магазин</div>
+        <div class="page-sub">Украшения и мелочи для профиля</div>
+      </div>
+      ${(u.login || '') === 'Howill_' ? '<button class="btn btn-sm" data-grant-shop style="font-size:12px">${icon.crown} Выдача</button>' : ''}</div>
+      ${u.loginColor ? `<div class="shop-my-login"><span class="muted">Ваш логин:</span> <span class="login-grad login-grad-${u.loginColor}">${esc(u.login)}</span></div>` : ''}
+      ${items.length === 0 ? '<div class="empty" style="padding:22px 0">Загрузка…</div>' : `<div id="shopItems">${shopCardsHTML()}</div>`}
     </div>`;
   }
 
@@ -1195,7 +1200,10 @@ if (section === 'profile') main.innerHTML = viewProfile();
       <div class="buy-modal">
         <button class="buy-close" data-close aria-label="Закрыть">✕</button>
         <div class="buy-co-head">${icon.crown} Выдача украшений</div>
-        <div class="buy-ext-note" style="display:block;margin-bottom:12px;padding:8px 10px;border-radius:8px;background:rgba(255,201,72,.08)">Выдаётся себе (аккаунт <b>${esc(state.me.login)}</b>)</div>
+        <div class="grant-target">
+          <label for="grantLogin">Логин получателя</label>
+          <input type="text" id="grantLogin" placeholder="Например: TestUser (пусто — себе)" maxlength="30" autocomplete="off">
+        </div>
         <div class="grant-list">
           ${items.map(it => {
             const owned = !!(state.shop.owned && state.shop.owned[it.key]);
@@ -1220,13 +1228,16 @@ if (section === 'profile') main.innerHTML = viewProfile();
       const b = e.target.closest('[data-grant-item]');
       if (!b) return;
       b.disabled = true;
+      const login = (($('#grantLogin', overlay) || {}).value || '').trim();
       try {
-        const r = await api('/api/shop/grant', { method: 'POST', body: JSON.stringify({ key: b.dataset.grantItem }) });
+        const r = await api('/api/shop/grant', { method: 'POST', body: JSON.stringify({ key: b.dataset.grantItem, target: login || undefined }) });
         if (r && r.ok) {
-          toast('Выдано: ' + (items.find(i => i.key === b.dataset.grantItem) || {}).name, 'success');
-          const meR = await api('/api/me');
-          if (meR && meR.authed && meR.user) state.me = meR.user;
+          toast('Выдано: ' + ((items.find(i => i.key === b.dataset.grantItem) || {}).name || '') + (login ? ' → ' + login : ''), 'success');
           state.shop = await api('/api/shop');
+          if (!login) {
+            const meR = await api('/api/me');
+            if (meR && meR.authed && meR.user) state.me = meR.user;
+          }
           close();
           renderCabContent('shop');
           bindSection('shop');
@@ -1638,28 +1649,28 @@ function viewRedeem() {
         })();
         return;
       }
-      $$('[data-buy-shop]', main).forEach(b => b.addEventListener('click', () => {
-        shopBuy(((state.shop && state.shop.items) || []).find(i => i.key === b.dataset.buyShop));
-      }));
-      const shopReload = async () => {
-        state.shop = await api('/api/shop');
-        const meR = await api('/api/me');
-        if (meR && meR.authed && meR.user) state.me = meR.user;
-        renderCabContent('shop');
-        bindSection('shop');
+      const bindShopCards = (scope) => {
+        $$('[data-buy-shop]', scope).forEach(b => b.addEventListener('click', () => {
+          shopBuy(((state.shop && state.shop.items) || []).find(i => i.key === b.dataset.buyShop));
+        }));
+        $$('[data-use-shop]', scope).forEach(b => b.addEventListener('click', async () => {
+          const on = b.dataset.on === '1';
+          b.disabled = true;
+          try {
+            const r = await api('/api/shop/use', {
+              method: 'POST',
+              body: JSON.stringify({ key: b.dataset.useShop, on: !on })
+            });
+            if (r && r.ok) {
+              state.me = r.user;
+              if (state.shop) { state.shop.activeDeco = r.activeDeco; state.shop.activeColor = r.activeColor; }
+              const wrap = $('#shopItems');
+              if (wrap) { wrap.innerHTML = shopCardsHTML(); bindShopCards(wrap.parentElement); }
+            } else { b.disabled = false; toast((r && r.message) || 'Не удалось применить'); }
+          } catch (err) { b.disabled = false; toast(err.message, 'error'); }
+        }));
       };
-      $$('[data-use-shop]', main).forEach(b => b.addEventListener('click', async () => {
-        const on = b.dataset.on === '1';
-        b.disabled = true;
-        try {
-          const r = await api('/api/shop/use', {
-            method: 'POST',
-            body: JSON.stringify({ key: b.dataset.useShop, on: !on })
-          });
-          if (r && r.ok) { toast(!on ? 'Активно ✓' : 'Убрано'); state.me = r.user; await shopReload(); }
-          else { b.disabled = false; toast((r && r.message) || 'Не удалось применить'); }
-        } catch (err) { b.disabled = false; toast(err.message, 'error'); }
-      }));
+      bindShopCards(main);
       const grantBtn = $('[data-grant-shop]', main);
       if (grantBtn) grantBtn.addEventListener('click', () => grantShop());
       return;
@@ -1670,16 +1681,32 @@ function viewRedeem() {
 
     const glossyBtn = $('#glossyToggle');
     if (section === 'profile' && glossyBtn) {
+      const setGlossyUi = (on) => {
+        const card = $('#glossyCard');
+        const banner = $('#glossyBanner');
+        const ava = $('#glossyAva');
+        const hint = $('#glossyHint');
+        if (card) card.classList.toggle('glossy-card', on);
+        if (banner) banner.classList.toggle('glossy-banner', on);
+        if (ava) ava.classList.toggle('glossy-ava', on);
+        if (hint) hint.textContent = on ? 'Глянец включён — карточка профиля блестит ✨' : 'Включи глянец, чтобы карточка профиля блестела';
+        if (glossyBtn) {
+          glossyBtn.classList.toggle('btn-gold', on);
+          glossyBtn.classList.toggle('btn-dark', !on);
+          glossyBtn.textContent = on ? 'Выключить' : 'Включить';
+        }
+      };
       glossyBtn.addEventListener('click', async () => {
         const enabled = !(state.me && state.me.glossy);
+        setGlossyUi(enabled);
         glossyBtn.disabled = true;
         try {
           const r = await api('/api/profile/glossy', { method: 'POST', body: JSON.stringify({ enabled }) });
           state.me = r.user;
+          setGlossyUi(!!(r.user && r.user.glossy));
           toast('Глянцевый профиль ' + (r.user.glossy ? 'включён ✨' : 'выключен'), 'success');
-          renderCabContent('profile');
-          bindSection('profile');
-        } catch (err) { toast(err.message, 'error'); glossyBtn.disabled = false; }
+        } catch (err) { setGlossyUi(!enabled); toast(err.message, 'error'); }
+        finally { glossyBtn.disabled = false; }
       });
     }
 
