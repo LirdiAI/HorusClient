@@ -301,6 +301,18 @@ async function setUserBanner(id, data) {
   if (error) throw error;
 }
 
+/* ---------------- глянцевый профиль (Alpha) ---------------- */
+
+// Флаг хранится в site_cfg: glossy:<userId> -> '1' | '0'
+async function getGlossy(userId) {
+  const raw = await getCfg(`glossy:${userId}`);
+  return raw === '1';
+}
+
+async function setGlossy(userId, enabled) {
+  await setCfg(`glossy:${userId}`, enabled ? '1' : '0');
+}
+
 async function setTg2fa(userId, enabled) {
   const raw = await getCfg(`tg_userid:${userId}`);
   if (!raw) return false;
@@ -585,7 +597,7 @@ module.exports = {
   getPromoByCode, promoCodeExists, insertPromo, listPromos, bumpPromoUsed, deletePromo,
   getDiscountPromoByCode, insertDiscountPromo, listDiscountPromos, deleteDiscountPromo, bumpDiscountPromoByCode,
   getCustomOfferById, insertCustomOffer, listCustomOffers, deleteCustomOffer, listCustomOrderStatuses, updateOrderStatus, getOrderByPaymentId,
-  listRecentOrders, getUsersByIds, setUserAvatar, setUserBanner, setTg2fa,
+  listRecentOrders, getUsersByIds, setUserAvatar, setUserBanner, setTg2fa, getGlossy, setGlossy,
   insertOrder, getOrderById, setOrderPaid, saveOrderPayment, insertTicket,
   getAllCfg, getCfg, setCfg, deleteCfg,
   getTgByUserId, getUserIdByTg, checkTgTaken, bindTg, unbindTg,

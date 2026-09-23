@@ -11,7 +11,7 @@ const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const HOST = process.env.HOST || 'localhost';
 const COOKIE_SECURE = process.env.COOKIE_SECURE === '1';
 
-app.use(express.json({ limit: '256kb' }));
+app.use(express.json({ limit: '15mb' }));
 app.use('/api', (req, res, next) => {
   res.set({ 'Cache-Control': 'no-store, no-cache, must-revalidate', 'Pragma': 'no-cache' });
   next();
@@ -164,7 +164,7 @@ const PLANS = [
     desc: ['Базовый доступ к клиенту', 'Все будущие обновления', 'Поддержка 24/7'] },
   { key: 'alpha', name: 'Alpha 1.21.4', tag: 'Докупка · Навсегда', price: 199, currency: '₽', forever: true,
     featured: true, requires: 'kamiki', requiresForever: true,
-    desc: ['Докупка к Kamiki 1.21.4', 'Ранние обновления', 'Сброс HWID раз в месяц', 'Приоритетная поддержка'] },
+    desc: ['Докупка к Kamiki 1.21.4', 'Ранние обновления', 'Сброс HWID раз в месяц', 'Приоритетная поддержка', 'Кастомизация профиля'] },
   { key: 'tester', name: 'Набор Тестера', tag: 'Набор · 30 дней', price: 129, currency: '₽', forever: false, days: 30, pack: true,
     badge: '10% выгоды',
     includes: ['kamiki30', 'hwid_reset'], discordRole: 'Пакет Тестер',
@@ -196,6 +196,9 @@ async function publicUser(u) {
     createdAt: u.created_at,
     lastHwidReset: lastReset ? lastReset.reset_at : null,
     canResetHwid: planKey === 'alpha' && active != null && active.status === 'active',
+    hasAlpha: subs.some(s => s.plan === 'alpha' && s.status === 'active'),
+    glossy: await D.getGlossy(u.id),
+    glossyAllowed: subs.some(s => s.plan === 'alpha' && s.status === 'active'),
     subscription: plan ? {
       plan: plan.key,
       name: plan.name,
@@ -658,6 +661,7 @@ app.get('/api/orders/list', requireAuth, ah(async (req, res) => {
     const amount = o.amount != null ? o.amount : (plan ? plan.price : null);
     return {
       id: o.id, status: o.status, what, amount,
+      provider: o.provider || null,
       currency: (plan && plan.currency) || '₽',
       created_at: o.created_at,
       login: (umap[o.user_id] && umap[o.user_id].login) || '—',
@@ -673,11 +677,30 @@ app.post('/api/profile/image', requireAuth, ah(async (req, res) => {
   const kind = String((req.body && req.body.kind) || '');
   const data = String((req.body && req.body.data) || '');
   if (kind !== 'avatar' && kind !== 'banner') return fail(res, 'Неизвестный тип изображения');
-  if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(data)) return fail(res, 'Нужна картинка PNG/JPEG/WebP');
-  if (data.length > 600000) return fail(res, 'Картинка слишком большая, попробуй другую');
+  const isGif = /^data:image\/gif;base64,[A-Za-z0-9+/=]+$/.test(data);
+  if (!isGif && !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(data)) return fail(res, 'Нужна картинка PNG/JPEG/WebP');
+  if (isGif) {
+    const subs = await D.getSubs(req.user.id);
+    const hasAlpha = subs.some(s => s.plan === 'alpha' && s.status === 'active');
+    if (!hasAlpha) return fail(res, 'GIF доступен только владельцам Alpha 1.21.4');
+    if (data.length > 11000000) return fail(res, 'GIF слишком большой, максимум ~8 МБ');
+  } else if (data.length > 600000) {
+    return fail(res, 'Картинка слишком большая, попробуй другую');
+  }
   if (kind === 'avatar') await D.setUserAvatar(req.user.id, data);
   else await D.setUserBanner(req.user.id, data);
   return send(res, 200, { ok: true, message: kind === 'avatar' ? 'Аватар обновлён' : 'Баннер обновлён' });
+}));
+
+// Глянцевый профиль — только с активной подпиской Alpha 1.21.4
+app.post('/api/profile/glossy', requireAuth, ah(async (req, res) => {
+  const enabled = !!(req.body && req.body.enabled);
+  const subs = await D.getSubs(req.user.id);
+  const hasAlpha = subs.some(s => s.plan === 'alpha' && s.status === 'active');
+  if (!hasAlpha) return fail(res, 'Глянцевый профиль доступен только с подпиской Alpha 1.21.4', 403);
+  await D.setGlossy(req.user.id, enabled);
+  const user = await D.getUserById(req.user.id);
+  send(res, 200, { ok: true, user: await publicUser(user) });
 }));
 
 app.post('/api/promo/redeem', requireAuth, ah(async (req, res) => {

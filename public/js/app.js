@@ -939,13 +939,26 @@ if (section === 'profile') main.innerHTML = viewProfile();
   async function uploadProfileImage(btn, kind) {
     const inp = document.createElement('input');
     inp.type = 'file';
-    inp.accept = 'image/png,image/jpeg,image/webp';
+    inp.accept = (state.me && state.me.hasAlpha) ? 'image/png,image/jpeg,image/webp,image/gif' : 'image/png,image/jpeg,image/webp';
     inp.addEventListener('change', async () => {
       const f = inp.files && inp.files[0];
       if (!f) return;
       btn.disabled = true;
       try {
-        const data = await fileToResizedDataUrl(f, kind === 'banner' ? 1200 : 256, 0.82);
+        const isGif = f.type === 'image/gif';
+        let data;
+        if (isGif) {
+          if (!(state.me && state.me.hasAlpha)) { toast('GIF доступен только владельцам Alpha 1.21.4', 'error'); btn.disabled = false; return; }
+          if (f.size > 8 * 1024 * 1024) { toast('GIF слишком большой (макс 8 МБ)', 'error'); btn.disabled = false; return; }
+          data = await new Promise((res, rej) => {
+            const r = new FileReader();
+            r.onload = () => res(r.result);
+            r.onerror = () => rej(new Error('Не удалось прочитать файл'));
+            r.readAsDataURL(f);
+          });
+        } else {
+          data = await fileToResizedDataUrl(f, kind === 'banner' ? 1200 : 256, 0.82);
+        }
         const r = await api('/api/profile/image', { method: 'POST', body: JSON.stringify({ kind, data }) });
         toast((r && r.message) || 'Обновлено', 'success');
         if (state.me) state.me[kind] = data;
@@ -959,22 +972,31 @@ if (section === 'profile') main.innerHTML = viewProfile();
 
   function viewProfile() {
     const u = state.me;
+    const glossy = !!(u.glossy && u.glossyAllowed);
     return `
-    <div class="page-card" style="overflow:hidden">
-      <div class="profile-banner"${u.banner ? ` style="background-image:url('${u.banner}')"` : ''}>
+    <div class="page-card${glossy ? ' glossy-card' : ''}" style="overflow:hidden">
+      <div class="profile-banner${glossy ? ' glossy-banner' : ''}"${u.banner ? ` style="background-image:url('${u.banner}')"` : ''}>
         <button type="button" class="btn btn-ghost btn-sm" data-upload="banner">Сменить баннер</button>
       </div>
       <div class="profile-ava-wrap">
-        <div class="profile-ava">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}</div>
+        <div class="profile-ava${glossy ? ' glossy-ava' : ''}">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}</div>
         <div>
           <div style="font-weight:800;font-size:16px">${esc(u.login)}</div>
           <button type="button" class="btn btn-ghost btn-sm" data-upload="avatar" style="margin-top:6px">Сменить аватар</button>
+          ${u.hasAlpha ? '<div style="color:var(--muted);font-size:11.5px;margin-top:4px">Доступен GIF — Alpha 1.21.4</div>' : ''}
         </div>
       </div>
       <div class="page-head" style="padding-top:16px"><div>
         <div class="page-title">Профиль</div>
         <div class="page-sub">Данные вашего аккаунта</div>
       </div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)">
+        <div>
+          <div style="font-weight:700">Глянцевый профиль</div>
+          <div style="color:var(--muted);font-size:12.5px;margin-top:3px">${glossy ? 'Глянец включён — карточка профиля блестит ✨' : (u.glossyAllowed ? 'Включи глянец, чтобы карточка профиля блестела' : 'Доступно только с подпиской Alpha 1.21.4' + (u.hasAlpha ? '' : ' — купи Alpha в разделе «Подписки»'))}</div>
+        </div>
+        <button type="button" id="glossyToggle" class="btn btn-sm ${glossy ? 'btn-gold' : 'btn-dark'}" ${u.glossyAllowed ? '' : 'disabled style="opacity:.5;cursor:not-allowed"'}>${glossy ? 'Выключить' : 'Включить'}</button>
+      </div>
       <div class="profile-grid">
         <div class="pfield"><div class="pl">Логин</div><div class="pv">${esc(u.login)}</div></div>
         <div class="pfield"><div class="pl">UID</div><div class="pv mono">${esc(u.uid)}</div></div>
@@ -1428,6 +1450,21 @@ function viewRedeem() {
       $$('[data-upload]').forEach(btn => btn.addEventListener('click', () => uploadProfileImage(btn, btn.dataset.upload)));
     }
 
+    const glossyBtn = $('#glossyToggle');
+    if (section === 'profile' && glossyBtn) {
+      glossyBtn.addEventListener('click', async () => {
+        const enabled = !(state.me && state.me.glossy);
+        glossyBtn.disabled = true;
+        try {
+          const r = await api('/api/profile/glossy', { method: 'POST', body: JSON.stringify({ enabled }) });
+          state.me = r.user;
+          toast('Глянцевый профиль ' + (r.user.glossy ? 'включён ✨' : 'выключен'), 'success');
+          renderCabContent('profile');
+          bindSection('profile');
+        } catch (err) { toast(err.message, 'error'); glossyBtn.disabled = false; }
+      });
+    }
+
     if (section === 'profile' || section === 'subs' || section === 'buy') {
       $$('[data-buy]', main).forEach(b => b.addEventListener('click', () => startPurchase(b.dataset.buy)));
     }
@@ -1831,11 +1868,12 @@ if (section === 'redeem' && $('#promoForm')) {
           ? '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffe08a;background:rgba(240,180,41,.15);border:1px solid rgba(240,180,41,.5)">возврат</span>'
           : '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffb3b9;background:rgba(255,95,109,.12);border:1px solid rgba(255,95,109,.4)">не оплачено</span>';
       const date = o.created_at ? new Date(o.created_at).toLocaleString('ru-RU') : '';
+      const payName = o.provider === 'yookassa' ? 'СБП (ЮKassa)' : (o.provider || '—');
       const sum = o.amount != null ? esc(String(o.amount)) + ' ' + esc(o.currency || '\u20bd') : '\u2014';
       return `<div class="promo-item">
         <div style="min-width:0">
           <b>${esc(o.login)}</b> \u00b7 <span style="color:var(--muted)">${esc(o.email)}</span>
-          <div class="promo-item-sub">\u0427\u0442\u043e: ${esc(o.what)} \u00b7 \u0421\u0443\u043c\u043c\u0430: <b>${sum}</b></div>
+          <div class="promo-item-sub">\u0427\u0442\u043e: ${esc(o.what)} \u00b7 \u0421\u0443\u043c\u043c\u0430: <b>${sum}</b>${o.provider ? ' · Оплата: ' + esc(payName) : ''}</div>
           <div class="promo-item-sub">\u0417\u0430\u043a\u0430\u0437 #${o.id}${date ? ' \u00b7 ' + esc(date) : ''}</div>
         </div>
         <div style="flex-shrink:0">${badge}</div>
