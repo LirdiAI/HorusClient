@@ -291,6 +291,13 @@ async function listRecentOrders(limit) {
   return data || [];
 }
 
+// Заказы конкретного пользователя (для страницы «Мои покупки»)
+async function getOrdersByUser(userId) {
+  const { data, error } = await sb.from('orders').select('*').eq('user_id', userId).order('id', { ascending: false }).limit(100);
+  if (error) throw error;
+  return data || [];
+}
+
 async function setUserAvatar(id, data) {
   const { error } = await users().update({ avatar: data }).eq('id', id);
   if (error) throw error;
@@ -659,6 +666,68 @@ async function deleteCfg(key) {
   await sb.from('site_cfg').delete().eq('key', key);
 }
 
+/* ---------------- рефералка: 5% от покупок ---------------- */
+// Хранится в site_cfg:
+//   ref_by:<userId>        -> String(referrerUserId)
+//   ref_bal:<userId>       -> строка с числом (баланс в рублях)
+//   ref_invited:<userId>   -> JSON-массив [{id, login, created_at}]
+
+async function setRefBy(userId, referrerId) {
+  await setCfg(`ref_by:${userId}`, String(referrerId));
+}
+
+async function getRefBy(userId) {
+  const raw = await getCfg(`ref_by:${userId}`);
+  const n = Number(raw);
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+async function getRefBalance(userId) {
+  const raw = await getCfg(`ref_bal:${userId}`);
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : 0;
+}
+
+async function addRefBalance(userId, delta) {
+  const cur = await getRefBalance(userId);
+  const next = Math.round((cur + delta) * 100) / 100;
+  await setCfg(`ref_bal:${userId}`, String(next));
+  return next;
+}
+
+async function addRefInvited(userId, invited) {
+  const raw = await getCfg(`ref_invited:${userId}`);
+  let arr = [];
+  try { arr = raw ? JSON.parse(raw) : []; } catch { arr = []; }
+  if (!Array.isArray(arr)) arr = [];
+  arr.unshift(invited);
+  if (arr.length > 100) arr = arr.slice(0, 100);
+  await setCfg(`ref_invited:${userId}`, JSON.stringify(arr));
+}
+
+async function getRefInvited(userId) {
+  const raw = await getCfg(`ref_invited:${userId}`);
+  try { return raw ? JSON.parse(raw) : []; } catch { return []; }
+}
+
+/* ---------------- журнал действий модераторов ---------------- */
+// Хранится в site_cfg: mod_log -> JSON-массив [{ts, actor, action, target, detail}]
+
+async function logModAction(entry) {
+  const raw = await getCfg('mod_log');
+  let arr = [];
+  try { arr = raw ? JSON.parse(raw) : []; } catch { arr = []; }
+  if (!Array.isArray(arr)) arr = [];
+  arr.unshift(Object.assign({ ts: new Date().toISOString() }, entry));
+  if (arr.length > 200) arr = arr.slice(0, 200);
+  await setCfg('mod_log', JSON.stringify(arr));
+}
+
+async function getModLog() {
+  const raw = await getCfg('mod_log');
+  try { return raw ? JSON.parse(raw) : []; } catch { return []; }
+}
+
 /* ---------------- telegram ---------------- */
 
 // Привязка Telegram хранится в site_cfg:
@@ -834,12 +903,14 @@ module.exports = {
   getPromoByCode, promoCodeExists, insertPromo, listPromos, bumpPromoUsed, deletePromo,
   getDiscountPromoByCode, insertDiscountPromo, listDiscountPromos, deleteDiscountPromo, bumpDiscountPromoByCode,
   getCustomOfferById, insertCustomOffer, listCustomOffers, deleteCustomOffer, listCustomOrderStatuses, updateOrderStatus, getOrderByPaymentId,
-  listRecentOrders, getUsersByIds, setUserAvatar, setUserBanner, setTg2fa, getGlossy, setGlossy, getAvaDeco, setAvaDeco, getDeco, setDeco, getLoginColor, setLoginColor, getActiveDeco, setActiveDeco, getRoleColor, setRoleColor, getUserRole, setUserRole, getFriends, setFriends, getFriendReqsIn, setFriendReqsIn, getFriendReqsOut, setFriendReqsOut, getTheme, setTheme,
+  listRecentOrders, getOrdersByUser, getUsersByIds, setUserAvatar, setUserBanner, setTg2fa, getGlossy, setGlossy, getAvaDeco, setAvaDeco, getDeco, setDeco, getLoginColor, setLoginColor, getActiveDeco, setActiveDeco, getRoleColor, setRoleColor, getUserRole, setUserRole, getFriends, setFriends, getFriendReqsIn, setFriendReqsIn, getFriendReqsOut, setFriendReqsOut, getTheme, setTheme,
   getDm, appendDm, markDmRead, getDmNotifs, setDmNotifs, pushDmNotif, clearDmNotifsFrom,
   getMediaPoints, setMediaPoints, getMediaLastBuy, setMediaLastBuy, getMediaItemCd, setMediaItemCd, revokeMediaSubs,
   getInventory, setInventory, addInvItem, removeInvItem, getInvKey, setInvKey, deleteInvKey,
   insertOrder, getOrderById, setOrderPaid, saveOrderPayment, insertTicket,
   getAllCfg, getCfg, setCfg, deleteCfg,
+  setRefBy, getRefBy, getRefBalance, addRefBalance, addRefInvited, getRefInvited,
+  logModAction, getModLog,
   getTgByUserId, getUserIdByTg, checkTgTaken, bindTg, unbindTg,
   setTgPending, getTgPending, findTgPendingByCode, clearTgPending,
   setTgReset, getTgReset, getTgResetByUid, findTgResetByCode, clearTgReset,

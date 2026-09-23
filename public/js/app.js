@@ -13,6 +13,13 @@
   let mediaCdTick = null;
   let dmPoll = null;
   let globaPoll = null;
+  let invTab = 'items';
+  let dmBadgeCount = 0;
+  let dmSSE = null;
+  let dmSSEAlive = false;
+  let dmSSERetry = null;
+  let dmOpenLoad = null;
+  let hmDmHandler = null;
 
   const state = {
     me: null,
@@ -134,7 +141,11 @@ shieldFx: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="c
       const m = await api('/api/me');
       if (m.authed) state.me = m.user;
     } catch { state.me = null; }
-renderNav();
+    if (state.me) {
+      refreshDmBadge(true);
+      connectDmSSE();
+    }
+    renderNav();
     route();
     window.addEventListener('hashchange', route);
     document.addEventListener('click', (e) => {
@@ -152,13 +163,113 @@ renderNav();
         <a href="#/cabinet" data-route="/cabinet" class="btn btn-ghost">
           ${icon.user} ${esc(state.me.login)}
         </a>
+        <a href="#/cabinet/globa" data-route="/cabinet/globa" class="btn btn-ghost msg-btn" title="Мои сообщения">
+          ${icon.support}<span class="nav-badge" id="dmBadge" hidden>0</span>
+        </a>
         <a href="#/cabinet" data-route="/cabinet" class="btn btn-gold">Кабинет</a>`;
     } else {
       el.innerHTML = `
         <a href="#/login" data-route="/login" class="btn btn-ghost">Войти</a>
         <a href="#/register" data-route="/register" class="btn btn-gold">Регистрация</a>`;
     }
+    updateDmBadgeUI(dmBadgeCount);
   }
+
+  /* ---------- ЛС: бейдж в шапке + SSE + оповещения ---------- */
+
+  function updateDmBadgeUI(total) {
+    dmBadgeCount = total;
+    const b = $('#dmBadge');
+    if (!b) return;
+    if (total > 0) { b.hidden = false; b.textContent = total > 99 ? '99+' : String(total); }
+    else b.hidden = true;
+  }
+
+  async function refreshDmBadge(force) {
+    if (!state.me) { updateDmBadgeUI(0); return; }
+    if (!force && dmSSEAlive) return;
+    try {
+      const r = await api('/api/dm/notifs');
+      const list = (r && r.notifs) || [];
+      const total = list.reduce((s, n) => s + (Number(n.count) || 0), 0);
+      updateDmBadgeUI(total);
+    } catch (_) {}
+  }
+
+  function connectDmSSE() {
+    if (dmSSE || !state.me) return;
+    let es;
+    try { es = new EventSource('/api/dm/events'); } catch (_) { es = null; }
+    if (!es) return;
+    dmSSE = es;
+    es.onopen = () => { dmSSEAlive = true; };
+    es.onmessage = (e) => {
+      let d = null;
+      try { d = JSON.parse(e.data || '{}'); } catch (_) { d = null; }
+      if (!d || !d.type) return;
+      if (d.type === 'notif') {
+        window.dispatchEvent(new CustomEvent('hm-dm-notif'));
+        refreshDmBadge(true);
+        if (dmOpenLoad) dmOpenLoad(true);
+      } else if (d.type === 'dm') {
+        if (dmOpenLoad) dmOpenLoad(true);
+      }
+    };
+    es.onerror = () => {
+      dmSSEAlive = false;
+      try { es.close(); } catch (_) {}
+      if (dmSSE === es) dmSSE = null;
+      if (state.me) {
+        clearTimeout(dmSSERetry);
+        dmSSERetry = setTimeout(connectDmSSE, 3000);
+      }
+    };
+  }
+
+  function closeDmSSE() {
+    if (dmSSERetry) { clearTimeout(dmSSERetry); dmSSERetry = null; }
+    try { if (dmSSE) dmSSE.close(); } catch (_) {}
+    dmSSE = null;
+    dmSSEAlive = false;
+    dmBadgeCount = 0;
+  }
+
+  function playDmBeep() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      const ctx = window.__dmCtx || (window.__dmCtx = new AC());
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.16, ctx.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.22);
+      o.connect(g).connect(ctx.destination);
+      o.start();
+      o.stop(ctx.currentTime + 0.25);
+    } catch (_) {}
+  }
+
+  const titleOrig = document.title;
+  let titleFlashTimer = null;
+  function flashTitle(msg) {
+    if (!document.hidden) return;
+    if (titleFlashTimer) clearInterval(titleFlashTimer);
+    let n = 0;
+    titleFlashTimer = setInterval(() => {
+      n++;
+      document.title = n % 2 ? (msg + ' — HorusClient') : titleOrig;
+      if (n >= 14) stopFlashTitle();
+    }, 700);
+  }
+  function stopFlashTitle() {
+    if (titleFlashTimer) { clearInterval(titleFlashTimer); titleFlashTimer = null; }
+    document.title = titleOrig;
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) stopFlashTitle(); });
 
   /* ---------- routing ---------- */
   function route() {
@@ -598,6 +709,8 @@ function bindLanding(app) {
   /* ================= AUTH ================= */
   function routeAuth(path) {
     const isLogin = path === '/login';
+    const qp = new URLSearchParams(String(path).split('?')[1] || '');
+    const refParam = qp.get('ref') || '';
     const app = $('#app');
     document.title = isLogin ? 'Вход — HorusClient' : 'Регистрация — HorusClient';
 
@@ -623,6 +736,10 @@ function bindLanding(app) {
           ${isLogin ? '' : `
             <div class="field"><label>Повторите пароль</label>
               <input name="password2" type="password" autocomplete="new-password" placeholder="••••••••" minlength="8" required></div>`}
+          ${(!isLogin && refParam) ? `
+            <div class="field"><label>Реферальный код</label>
+              <input name="ref" value="${esc(refParam)}" readonly>
+              <div class="hint">Вы регистрируетесь по приглашению @${esc(refParam)} — он получит 5% от ваших покупок</div></div>` : ''}
           <button type="submit" class="btn btn-gold btn-block btn-lg">${isLogin ? 'Войти' : 'Зарегистрироваться'}</button>
         </form>
         <div class="form-switch">${isLogin
@@ -636,7 +753,10 @@ function bindLanding(app) {
       e.preventDefault();
       const f = e.target;
       const body = { login: f.login.value.trim(), password: f.password.value };
-      if (!isLogin) body.email = f.email.value.trim();
+      if (!isLogin) {
+        body.email = f.email.value.trim();
+        if (refParam && f.ref) body.ref = refParam;
+      }
       const btn = f.querySelector('button');
       btn.disabled = true; btn.textContent = 'Подождите...';
       try {
@@ -654,6 +774,8 @@ function bindLanding(app) {
           state.me = r.user;
         }
         renderNav();
+        refreshDmBadge(true);
+        connectDmSSE();
         toast('Добро пожаловать, ' + state.me.login + '!', 'success');
         const buf = sessionStorage.getItem('pendingBuy');
         sessionStorage.removeItem('pendingBuy');
@@ -824,6 +946,7 @@ function bindLanding(app) {
     mod: { icon: 'shield', title: 'Модификация' },
     media: { icon: 'spark', title: 'Медийка' },
     inv: { icon: 'layers', title: 'Инвентарь' },
+    partner: { icon: 'spark', title: 'Партнёрка' },
     support: { icon: 'support', title: 'Поддержка' },
     idea: { icon: 'idea', title: 'Предложить идею' },
     bug: { icon: 'bug', title: 'Сообщить о баге' }
@@ -892,6 +1015,7 @@ ${sbGroup('Мой кабинет', [
           ...(isMedia() ? [['media', 'spark', 'Медийка']] : []),
           ['inv', 'layers', 'Инвентарь'],
           ['redeem', 'key', 'Активация ключа'],
+          ['partner', 'spark', 'Партнёрка'],
           ['subs', 'crown', 'Подписки'],
           ['device', 'monitor', 'Привязка устройства'],
           ['buy', 'cart', 'Купить доступ'],
@@ -927,7 +1051,7 @@ ${sbGroup('Мой кабинет', [
     const lb = $('#logoutBtn');
     if (lb) lb.addEventListener('click', async () => {
       try { await api('/api/logout', { method: 'POST' }); } catch {}
-      state.me = null; renderNav(); location.hash = '#/';
+      state.me = null; closeDmSSE(); renderNav(); location.hash = '#/';
       toast('Вы вышли из аккаунта');
     });
   }
@@ -940,6 +1064,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
     else if (section === 'shop') main.innerHTML = viewShop();
     else if (section === 'media' && isMedia()) main.innerHTML = viewMedia();
     else if (section === 'inv') main.innerHTML = viewInv();
+    else if (section === 'partner') main.innerHTML = viewRef();
     else if (section === 'subs') main.innerHTML = viewSubs();
     else if (section === 'device') main.innerHTML = viewDevice();
     else if (section === 'buy') main.innerHTML = viewBuy();
@@ -1455,15 +1580,26 @@ if (section === 'profile') main.innerHTML = viewProfile();
   }
 
   function viewInv() {
+    const purchasesView = invTab === 'purchases';
     return `
     <div class="page-card" style="max-width:820px">
+      <div class="inv-tabs">
+        <button type="button" class="inv-tab${!purchasesView ? ' active' : ''}" data-inv-tab="items">Предметы</button>
+        <button type="button" class="inv-tab${purchasesView ? ' active' : ''}" data-inv-tab="purchases">Мои покупки</button>
+      </div>
+      ${!purchasesView ? `
       <div class="page-head"><div>
         <div class="page-title">Инвентарь</div>
         <div class="page-sub">Предметы в Инвентаре. Примените на себя или превратите в ключ — и передайте другому игроку.</div>
       </div></div>
-      <div id="invItems">Загрузка…</div>
+      <div id="invItems">Загрузка…</div>` : `
+      <div class="page-head"><div>
+        <div class="page-title">Мои покупки</div>
+        <div class="page-sub">История заказов: тарифы, магазин и индивидуальные позиции.</div>
+      </div></div>
+      <div id="invPurchases">Загрузка…</div>`}
     </div>
-    <div class="page-card" style="max-width:820px">
+    ${!purchasesView ? `<div class="page-card" style="max-width:820px">
       <div class="page-head"><div>
         <div class="page-title">Активация ключа</div>
         <div class="page-sub">Введите ключ, полученный от другого игрока, — предмет попадёт на ваш аккаунт, а ключ исчезнет из инвентаря владельца.</div>
@@ -1473,7 +1609,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
         <button class="btn btn-gold" id="invKeyBtn" style="margin-top:10px">Активировать</button>
         <div id="invKeyResult"></div>
       </div>
-    </div>`;
+    </div>` : ''}`;
   }
 
   async function shopBuy(item) {
@@ -1683,22 +1819,36 @@ if (section === 'profile') main.innerHTML = viewProfile();
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
       if (dmPoll) { clearInterval(dmPoll); dmPoll = null; }
+      if (dmOpenLoad === load) dmOpenLoad = null;
+      refreshDmBadge(true);
       overlay.classList.add('hide');
       setTimeout(() => overlay.remove(), 220);
     };
     const onKey = (e) => { if (e.key === 'Escape') close(); };
     document.addEventListener('keydown', onKey);
     let lastSig = '';
+    let lastInTs = 0;
     const load = async (silent) => {
       try {
         const r = await api('/api/dm?with=' + encodeURIComponent(login));
         const msgs = (r && r.messages) || [];
+        // Новые входящие (не от меня) — звук + заголовок + подсветка
+        const meLoginLc = String(meLogin || '').toLowerCase();
+        const incoming = msgs.filter(m => String(m.login || '').toLowerCase() !== meLoginLc);
+        const maxInTs = incoming.length ? Math.max(...incoming.map(m => new Date(m.ts).getTime())) : 0;
+        const hasNew = lastSig !== '' && lastInTs > 0 && maxInTs > lastInTs;
+        if (maxInTs > lastInTs) lastInTs = maxInTs;
         // Инкрементальный рендер: пересобираем DOM только когда набор сообщений изменился
         const sig = msgs.length + '|' + msgs.map(m => m.ts + ':' + m.from + (m.read ? 'r' : '')).join('|');
         if (sig !== lastSig) {
           const wasAtBottom = msgsEl.scrollHeight - msgsEl.scrollTop - msgsEl.clientHeight < 40;
           const prev = msgsEl.scrollHeight - msgsEl.scrollTop;
           msgsEl.innerHTML = msgs.length ? msgs.map(m => dmUsl(m, meLogin)).join('') : '<div class="empty" style="padding:22px 0">Напишите первым!</div>';
+          if (hasNew) {
+            const els = msgsEl.querySelectorAll('.dm-bubble:not(.mine)');
+            const lastB = els[els.length - 1];
+            if (lastB) lastB.classList.add('dm-new');
+          }
           if (!lastSig || wasAtBottom || !silent) {
             msgsEl.scrollTop = msgsEl.scrollHeight;
           } else {
@@ -1706,6 +1856,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
           }
           lastSig = sig;
         }
+        if (hasNew) { playDmBeep(); flashTitle('✉ ' + login); }
         if (r && r.user) {
           const hrole = $('[data-h-role]', overlay);
           if (hrole) hrole.textContent = roleLabel(r.user.role || 'User');
@@ -1714,8 +1865,11 @@ if (section === 'profile') main.innerHTML = viewProfile();
           const chip = $('#dmOnline', overlay);
           if (chip) chip.style.display = r.user.online ? '' : 'none';
         }
+        // Бейдж обновляется из notifTotal ответа /api/dm — без лишних запросов
+        if (r && typeof r.notifTotal === 'number') updateDmBadgeUI(r.notifTotal);
       } catch (err) { if (!silent) msgsEl.innerHTML = '<div class="empty err">' + esc(err.message) + '</div>'; }
     };
+    dmOpenLoad = load;
     const send = async () => {
       const text = input.value.trim();
       if (!text) return;
@@ -1743,8 +1897,11 @@ if (section === 'profile') main.innerHTML = viewProfile();
     overlay.addEventListener('click', (e) => { if (e.target.closest('[data-close]') || e.target === overlay) close(); });
     document.body.appendChild(overlay);
     requestAnimationFrame(() => overlay.classList.add('show'));
-    if (dmPoll) clearInterval(dmPoll);
-    dmPoll = setInterval(() => load(true), 1000);
+    // Когда работает SSE — поллинг не нужен, события тянут чат сами.
+    if (!dmSSEAlive) {
+      if (dmPoll) clearInterval(dmPoll);
+      dmPoll = setInterval(() => load(true), 1000);
+    }
     load(false);
     setTimeout(() => input.focus(), 250);
   }
@@ -1825,6 +1982,17 @@ function viewRedeem() {
         <button type="submit" class="btn btn-gold">Активировать</button>
       </form>
       <div id="promoResult"></div>
+    </div>`;
+  }
+
+  function viewRef() {
+    return `
+    <div class="page-card" style="max-width:820px">
+      <div class="page-head"><div>
+        <div class="page-title">Партнёрка</div>
+        <div class="page-sub">Приводите игроков по своей ссылке — получайте <b>5% от их покупок</b> на баланс партнёра.</div>
+      </div></div>
+      <div id="refBody">Загрузка…</div>
     </div>`;
   }
 
@@ -1976,6 +2144,11 @@ function viewRedeem() {
         <div class="mod-card-title">Выдача КПС</div>
         <div class="mod-card-sub">Выдача ролей Модератор, Медиа и Администратор</div>
       </button>
+      <button type="button" class="mod-card" data-modsec="log">
+        <div class="mod-card-ic">${icon.lock}</div>
+        <div class="mod-card-title">Журнал действий</div>
+        <div class="mod-card-sub">Лог модераторов: выдачи ролей, предметов, баллов, заморозки</div>
+      </button>
     </div>
     <div id="modContent">
     <div class="page-card" style="max-width:820px">
@@ -2036,6 +2209,17 @@ function viewRedeem() {
         <button type="submit" class="btn btn-gold">Назначить</button>
         <div id="modRoleResult"></div>
       </form>
+    </div>`;
+  }
+
+  function viewModLog() {
+    return `
+    <div class="page-card" style="max-width:820px">
+      <div class="page-head"><div>
+        <div class="page-title">Журнал действий</div>
+        <div class="page-sub">Действия владельца и модераторов: выдача ролей, предметов, баллов, заморозка подписок</div>
+      </div></div>
+      <div id="modLogList">Загрузка…</div>
     </div>`;
   }
 
@@ -2176,6 +2360,7 @@ function viewRedeem() {
     if (mediaPoll) { clearInterval(mediaPoll); mediaPoll = null; }
     if (mediaCdTick) { clearInterval(mediaCdTick); mediaCdTick = null; }
     if (globaPoll) { clearInterval(globaPoll); globaPoll = null; }
+    if (hmDmHandler) { window.removeEventListener('hm-dm-notif', hmDmHandler); hmDmHandler = null; }
     if (section === 'shop') {
       if (!state.shop) {
         (async () => {
@@ -2355,7 +2540,11 @@ function viewRedeem() {
         } catch (_) { /* тихо */ }
       };
       if (globaPoll) clearInterval(globaPoll);
-      globaPoll = setInterval(loadDmNotifs, 2500);
+      // Живое обновление: при активном SSE тянет событие, иначе редкий fallback-поллинг
+      if (!dmSSEAlive) globaPoll = setInterval(loadDmNotifs, 2500);
+      const onHmDm = () => { if (dmSSEAlive) loadDmNotifs(); };
+      window.addEventListener('hm-dm-notif', onHmDm);
+      hmDmHandler = onHmDm;
     }
     if (section === 'media' && isMedia()) {
       const loadMedia = async () => {
@@ -2498,7 +2687,64 @@ function viewRedeem() {
       });
       const keyInput = $('#invKeyInput', main);
       if (keyInput) keyInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (keyBtn) keyBtn.click(); } });
-      loadInv();
+      $$('[data-inv-tab]', main).forEach(t => t.addEventListener('click', () => {
+        invTab = t.dataset.invTab;
+        renderCabContent('inv', ap);
+      }));
+      if (invTab === 'items') {
+        loadInv();
+      } else {
+        const pbox = $('#invPurchases', main);
+        const statusNames = { pending: 'Ожидает оплаты', paid: 'Оплачен', canceled: 'Отменён', refunded: 'Возврат средств', failed: 'Ошибка' };
+        (async () => {
+          if (!pbox) return;
+          try {
+            const r = await api('/api/orders/my');
+            const list = r.orders || [];
+            pbox.innerHTML = list.length ? list.map(o => `
+              <div class="media-row">
+                <div class="media-info">
+                  <div class="media-name">${esc(o.planName || o.plan)}</div>
+                  <div class="media-cost">${fmtDate(o.createdAt)}${o.amount ? ' · ' + esc(String(o.amount)) + ' ₽' : ''}${o.promo ? ' · промо «' + esc(o.promo) + '»' : ''}</div>
+                </div>
+                <div class="media-buy"><span class="order-status st-${esc(o.status)}">${esc(statusNames[o.status] || o.status)}</span></div>
+              </div>`).join('')
+              : '<div class="empty" style="padding:18px 0">Покупок пока нет — тарифы и товары в «Купить доступ» и «Магазин»</div>';
+          } catch (err) { pbox.innerHTML = '<div class="empty err" style="padding:14px 0">' + esc(err.message) + '</div>'; }
+        })();
+      }
+    }
+    if (section === 'partner') {
+      const box = $('#refBody', main);
+      if (!box) return;
+      (async () => {
+        try {
+          const r = await api('/api/ref');
+          const list = (r && r.invited) || [];
+          box.innerHTML = `
+            <div class="grant-row">
+              <div class="grant-name">Ваш реф-код (логин)</div>
+              <b>@${esc(r.code)}</b>
+            </div>
+            <div class="grant-row">
+              <div class="grant-name">Ссылка для приглашения</div>
+              <button type="button" class="btn btn-sm" data-ref-copy>${icon.copy} Копировать</button>
+            </div>
+            <div class="grant-row">
+              <div class="grant-name">Баланс партнёра <span class="muted">(5% от покупок приглашённых)</span></div>
+              <b style="color:var(--gold);font-size:16px">${fmtNum(r.balance)} ₽</b>
+            </div>
+            <div class="page-sub" style="margin:18px 2px 4px">Приглашено игроков: <b>${list.length}</b></div>
+            ${list.length
+              ? list.map(i => `<div class="grant-row"><div class="grant-name">@${esc(i.login)}</div><div class="muted">${fmtDate(i.created_at)}</div></div>`).join('')
+              : '<div class="empty" style="padding:16px 0">Пока никто не зарегистрировался по вашей ссылке</div>'}
+            <div class="hint" style="margin-top:14px">Комиссия начисляется автоматически после оплаты приглашённым игроком. Вывести баланс можно у владельца.</div>`;
+          const copyBtn = $('[data-ref-copy]', main);
+          if (copyBtn) copyBtn.addEventListener('click', () => {
+            if (navigator.clipboard) navigator.clipboard.writeText(r.refUrl).then(() => toast('Ссылка скопирована', 'success')).catch(() => {});
+          });
+        } catch (err) { box.innerHTML = '<div class="empty err">' + esc(err.message) + '</div>'; }
+      })();
     }
     if (section === 'profile' && $('[data-upload]')) {
       $$('[data-upload]').forEach(btn => btn.addEventListener('click', () => uploadProfileImage(btn, btn.dataset.upload)));
@@ -2727,10 +2973,31 @@ if (section === 'redeem' && $('#promoForm')) {
         btn.disabled = false;
       });
     }
+    if (section === 'log' && isOwner()) {
+      const box = $('#modLogList', main);
+      if (!box) return;
+      (async () => {
+        try {
+          const r = await api('/api/mod/log');
+          const list = r.log || [];
+          box.innerHTML = list.length
+            ? list.map(e => {
+                const targetL = e.target ? '· @' + esc(e.target) : '';
+                const detail = e.detail ? '<div class="muted" style="margin-top:2px">' + esc(e.detail) + '</div>' : '';
+                return `
+                <div class="grant-row" style="margin-bottom:8px">
+                  <div class="grant-name">${fmtDate(e.ts)}<br><span class="muted">@${esc(e.actor)}</span></div>
+                  <div style="text-align:right;font-size:13px">${esc(e.action)} ${targetL}${detail}</div>
+                </div>`;
+              }).join('')
+            : '<div class="empty" style="padding:16px 0">Журнал пуст</div>';
+        } catch (err) { box.innerHTML = '<div class="empty err">' + esc(err.message) + '</div>'; }
+      })();
+    }
     if (section === 'mod' && isOwner()) {
       const modBox = $('#modContent', main);
       if (modBox && !modDefaultHtmlCache) modDefaultHtmlCache = modBox.innerHTML;
-      const modViews = { promo: viewPromo, discounts: viewDiscounts, testing: viewTesting, ops: viewOps, moderation: viewModeration };
+      const modViews = { promo: viewPromo, discounts: viewDiscounts, testing: viewTesting, ops: viewOps, moderation: viewModeration, log: viewModLog };
       $$('.mod-card', main).forEach(card => {
         card.onclick = () => {
           const key = card.dataset.modsec || '';
@@ -2802,14 +3069,14 @@ if (section === 'redeem' && $('#promoForm')) {
           await api('/api/change-password', {
             method: 'POST', body: JSON.stringify({ current: e.target.current.value, next: e.target.next.value })
           });
-          state.me = null;
+          state.me = null; closeDmSSE();
           toast('Пароль изменён. Войдите заново.', 'success');
           setTimeout(() => { renderNav(); location.hash = '#/login'; }, 800);
         } catch (err) { toast(err.message, 'error'); btn.disabled = false; }
       });
       $('#logoutAllBtn').addEventListener('click', async () => {
         await api('/api/logout-all', { method: 'POST' });
-        state.me = null; renderNav(); location.hash = '#/';
+        state.me = null; closeDmSSE(); renderNav(); location.hash = '#/';
         toast('Все сессии завершены');
       });
       const bindBtn = $('#tgBindBtn');

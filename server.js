@@ -268,10 +268,27 @@ app.post('/api/register', ah(async (req, res) => {
   if (await D.loginExists(login)) return fail(res, 'Логин уже занят');
   if (await D.emailExists(email)) return fail(res, 'Почта уже зарегистрирована');
 
+  // Реферальный код: логин пригласившего (5% от его будущих покупок — приглашающему)
+  let referrerId = null;
+  let referrerLogin = String((req.body || {}).ref || '').trim();
+  if (referrerLogin) {
+    if (String(referrerLogin).toLowerCase() === String(login).toLowerCase()) return fail(res, 'Нельзя приглашать самого себя');
+    const refUser = await D.getUserByLogin(referrerLogin);
+    if (!refUser) return fail(res, 'Реферальный код не найден');
+    referrerId = refUser.id;
+  }
+
   const hash = await hashPassword(password);
   const uid = await makeUidUnique();
   try {
     const user = await D.insertUser({ login, email, pass_hash: hash, uid, created_at: now() });
+    if (referrerId) {
+      await D.setRefBy(user.id, referrerId);
+      await D.addRefInvited(referrerId, { id: user.id, login: user.login, created_at: now() });
+      if (TGBot.isEnabled()) {
+        TGBot.sendTgToOwner('🎁 Новый игрок по рефералке: @' + referrerLogin + ' → @' + user.login).catch(() => {});
+      }
+    }
     await setSession(req, res, user.id);
     invalidateGlobkaCaches();
     send(res, 200, { ok: true, user: await publicUser(user) });
@@ -833,6 +850,7 @@ app.post('/api/admin/freeze', requireAuth, ah(async (req, res) => {
   if (!target) return fail(res, 'Пользователь не найден');
   if (action === 'freeze') {
     await D.freezeSub(userId);
+    await logAction(req, 'freeze', '@' + target.login);
     if (TGBot.isEnabled()) {
       await TGBot.sendTgToUser(userId, '⛔️ Ваша подписка была <b>заморожена</b> администратором. Доступ временно приостановлен.');
     }
@@ -840,6 +858,7 @@ app.post('/api/admin/freeze', requireAuth, ah(async (req, res) => {
   } else if (action === 'unfreeze') {
     const ok = await D.unfreezeSub(userId);
     if (!ok) return fail(res, 'У пользователя нет замороженной подписки');
+    await logAction(req, 'unfreeze', '@' + target.login);
     if (TGBot.isEnabled()) {
       await TGBot.sendTgToUser(userId, '✅ Ваша подписка <b>разморожена</b>. Доступ восстановлен!');
     }
@@ -912,10 +931,12 @@ app.post('/api/shop/grant', requireAuth, ah(async (req, res) => {
   const item = SHOP_ITEMS.find(i => i.key === key);
   if (!item) return send(res, 400, { ok: false, message: 'Товар не найден' });
   let targetId = req.user.id;
+  let targetLogin = null;
   if (target && String(target).trim()) {
     const t = await D.getUserByLogin(String(target).trim());
     if (!t) return send(res, 400, { ok: false, message: 'Пользователь с таким логином не найден' });
     targetId = t.id;
+    targetLogin = t.login;
   }
   if (item.kind === 'login_color') {
     await D.setDeco(targetId, item.key);
@@ -927,6 +948,7 @@ app.post('/api/shop/grant', requireAuth, ah(async (req, res) => {
     await D.setDeco(targetId, item.key);
   }
   invalidateGlobkaCaches();
+  await logAction(req, 'shop_grant', targetLogin ? '@' + targetLogin : '@' + req.user.login, item.name + ' (' + item.key + ')');
   send(res, 200, { ok: true, item: item.key });
 }));
 
@@ -940,8 +962,16 @@ app.post('/api/admin/role', requireAuth, ah(async (req, res) => {
   const val = allowed.includes(String(role)) ? String(role) : '';
   await D.setUserRole(target.id, val);
   invalidateGlobkaCaches();
+  await logAction(req, 'role', '@' + target.login, val === '' ? 'Снятие роли' : 'Роль: ' + (val === 'admin' ? 'Администратор' : val === 'mod' ? 'Модератор' : 'Медиа'));
   const label = val === 'admin' ? 'Администратор' : val === 'mod' ? 'Модератор' : val === 'media' ? 'Медиа' : 'снята';
   send(res, 200, { ok: true, login: target.login, role: val, message: `Роль ${label} — @${target.login}` });
+}));
+
+// Журнал действий модераторов (только для владельца)
+app.get('/api/mod/log', requireAuth, ah(async (req, res) => {
+  if (!requireOwner(req, res)) return;
+  const log = await D.getModLog();
+  send(res, 200, { ok: true, log });
 }));
 
 /* ============ МЕДИЙКА: баллы и мини-магазин ============ */
@@ -974,6 +1004,13 @@ async function requireMedia(req, res) {
     return false;
   }
   return true;
+}
+
+// Журнал действий модераторов (выдачи, роли, заморозки). Ошибки не роняем запрос.
+async function logAction(req, action, target, detail) {
+  try {
+    await D.logModAction({ actor: req.user.login, action, target: target || null, detail: detail || null });
+  } catch (e) { console.error('[audit]', e && e.message); }
 }
 
 // Состояние Медийки: баллы и список товаров с персональным кулдауном
@@ -1009,6 +1046,7 @@ app.post('/api/media/grant', requireAuth, ah(async (req, res) => {
   if (!Number.isFinite(amt) || amt < 1 || amt > 1000000) return fail(res, 'Некорректное количество баллов');
   const cur = await D.getMediaPoints(target.id);
   await D.setMediaPoints(target.id, cur + amt);
+  await logAction(req, 'media_grant', '@' + target.login, 'Выдано ' + amt + ' баллов');
   send(res, 200, { ok: true, message: `@${target.login}: выдано ${amt} баллов (баланс ${cur + amt})` });
 }));
 
@@ -1051,6 +1089,7 @@ app.post('/api/media/buy', requireAuth, ah(async (req, res) => {
   });
 
   invalidateGlobkaCaches();
+  await logAction(req, 'media_buy', '@' + target.login, item.name);
   if (TGBot.isEnabled()) {
     TGBot.sendTgToOwner(
       '🎁 Медийка: ' + item.name +
@@ -1429,7 +1468,7 @@ app.get('/api/dm', requireAuth, ah(async (req, res) => {
     messages.forEach(m => { if (Number(m.from) === Number(t.id)) m.read = true; });
   }
   const brief = await cachedBriefUser(t);
-  send(res, 200, { ok: true, user: brief, messages });
+  send(res, 200, { ok: true, user: brief, messages, notifTotal: rest.length });
 }));
 
 // Отправить сообщение игроку ({ to: login, text })
@@ -1448,6 +1487,7 @@ app.post('/api/dm/send', requireAuth, ah(async (req, res) => {
   const msg = { from: req.user.id, login: req.user.login, text, ts: now() };
   await D.appendDm(req.user.id, t.id, msg);
   await D.pushDmNotif(t.id, msg);
+  emitDmEvent(t.id, 'notif', { from: req.user.id });
   invalidateGlobkaCaches();
   send(res, 200, { ok: true, message: 'Сообщение отправлено ' + '@' + t.login });
 }));
@@ -1474,6 +1514,40 @@ app.get('/api/dm/notifs', requireAuth, ah(async (req, res) => {
   send(res, 200, { ok: true, notifs: enriched });
 }));
 
+/* ---------------- SSE: мгновенные события ЛС (вместо поллинга) ---------------- */
+
+const dmListeners = new Map(); // userId -> Set<res>
+
+function emitDmEvent(userId, type, payload) {
+  const set = dmListeners.get(Number(userId));
+  if (!set || !set.size) return;
+  const data = JSON.stringify(Object.assign({ type }, payload || {}));
+  for (const res of [...set]) {
+    try { res.write('data: ' + data + '\n\n'); } catch (_) { set.delete(res); }
+  }
+}
+
+// Открытое событие SSE. Клиент держит подключение; сервер шлёт события и heartbeat.
+app.get('/api/dm/events', requireAuth, (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no'
+  });
+  res.write('retry: 3000\n\n');
+  const uid = req.user.id;
+  let set = dmListeners.get(uid);
+  if (!set) { set = new Set(); dmListeners.set(uid, set); }
+  set.add(res);
+  const hb = setInterval(() => { try { res.write(': hb\n\n'); } catch (_) {} }, 25000);
+  req.on('close', () => {
+    clearInterval(hb);
+    set.delete(res);
+    if (!set.size) dmListeners.delete(uid);
+  });
+});
+
 app.post('/api/purchase', requireAuth, ah(async (req, res) => {
   const plan = String(req.body?.plan || '');
   const p = PLANS.find(x => x.key === plan);
@@ -1495,6 +1569,67 @@ app.post('/api/purchase', requireAuth, ah(async (req, res) => {
 
 const YK = require('./yookassa');
 const YK_RETURN_URL = (process.env.SITE_ORIGIN || '') + '/cabinet?paid=1';
+
+// Реферальная комиссия: пригласившему начисляется 5% от суммы оплаченного заказа.
+// Вызываем строго после setOrderPaid (идемпотентность гарантирует одно начисление на заказ).
+async function creditReferral(order) {
+  try {
+    if (!order || !order.user_id) return;
+    const refId = await D.getRefBy(order.user_id);
+    if (!refId) return;
+    let base = Number(order.amount) || 0;
+    if (!(base > 0)) {
+      const p = PLANS.find(x => x.key === order.plan);
+      if (p && Number(p.price) > 0) base = Number(p.price);
+    }
+    if (!(base > 0)) return;
+    const bonus = Math.round(base * 0.05 * 100) / 100;
+    if (!(bonus > 0)) return;
+    const bal = await D.addRefBalance(refId, bonus);
+    const refUser = await D.getUserById(refId);
+    const buyer = await D.getUserById(order.user_id);
+    if (TGBot.isEnabled()) {
+      TGBot.sendTgToOwner(
+        '💰 Реферальная комиссия: +' + bonus + ' ₽ @' + (refUser ? refUser.login : refId) +
+        '\n5% от ' + base + ' ₽ — покупка @' + (buyer ? buyer.login : String(order.user_id)) +
+        ' (' + order.plan + '). Баланс партнёра: ' + bal + ' ₽'
+      ).catch(() => {});
+    }
+  } catch (e) { console.error('[ref] комиссия:', e && e.message); }
+}
+
+// Партнёрка: код, баланс и список приглашённых
+app.get('/api/ref', requireAuth, ah(async (req, res) => {
+  const invited = await D.getRefInvited(req.user.id);
+  const balance = await D.getRefBalance(req.user.id);
+  const origin = process.env.SITE_ORIGIN || (req.protocol + '://' + req.get('host'));
+  send(res, 200, {
+    ok: true,
+    code: req.user.login,
+    refUrl: origin + '/#/register?ref=' + encodeURIComponent(req.user.login),
+    balance,
+    invited
+  });
+}));
+
+// Мои заказы (страница «Мои покупки» в Инвентаре)
+app.get('/api/orders/my', requireAuth, ah(async (req, res) => {
+  const orders = await D.getOrdersByUser(req.user.id);
+  const planName = (o) => {
+    const p = PLANS.find(x => x.key === o.plan);
+    if (p) return p.name;
+    if (String(o.plan).startsWith('shop:')) {
+      const s = SHOP_ITEMS.find(i => i.key === String(o.plan).slice(5));
+      if (s) return s.name;
+    }
+    if (String(o.plan).startsWith('custom:')) return 'Индивидуальный заказ';
+    return o.plan;
+  };
+  send(res, 200, { ok: true, orders: orders.map(o => ({
+    id: o.id, plan: o.plan, planName: planName(o), amount: o.amount, status: o.status,
+    promo: o.promo_code || null, createdAt: o.created_at, paidAt: o.paid_at || null
+  })) });
+}));
 
 // Создать платёж в ЮKassa и вернуть confirmation_url для редиректа
 app.post('/api/purchase/yookassa', requireAuth, ah(async (req, res) => {
@@ -1610,6 +1745,7 @@ app.post('/api/yookassa/webhook', async (req, res) => {
         const customOrder = await D.getOrderById(orderId);
         if (customOrder && customOrder.status === 'pending') {
           await D.setOrderPaid(orderId, now(), 'yookassa');
+          creditReferral(customOrder);
         }
         return send(res, 200, { ok: true, custom: true });
       }
@@ -1622,6 +1758,7 @@ app.post('/api/yookassa/webhook', async (req, res) => {
         if (got !== want) return send(res, 200, { ok: false, code: 'amount_mismatch' });
         if (order.status === 'pending') {
           await D.setOrderPaid(orderId, now(), 'yookassa');
+          creditReferral(order);
           if (shopItem) {
             await D.setDeco(order.user_id, shopItem.key);
             if (shopItem.kind === 'login_color') await D.setLoginColor(order.user_id, shopItem.key);
@@ -1657,6 +1794,7 @@ app.post('/api/yookassa/webhook', async (req, res) => {
     });
     if (order.promo_code) { try { await D.bumpDiscountPromoByCode(order.promo_code); } catch (_) {} }
       await D.setOrderPaid(orderId, nowIso, 'yookassa');
+    creditReferral(order);
 
     console.log(`[YK] подписка выдана: user=${userId} plan=${planKey} order=${orderId}`);
     send(res, 200, { ok: true, activated: true });
