@@ -180,6 +180,8 @@ const SHOP_ITEMS = [
     desc: ['Золотой переливающийся ободок с короной ♛', 'Видно в профиле, кабинете и сайдбаре', 'Навсегда, один раз на аккаунт'] },
   { key: 'ava_ice', kind: 'deco', cat: 'Украшение аватарки', name: 'Сапфировый Ореол', price: 149, currency: '₽', forever: true,
     desc: ['Ледяной сияющий ободок с искрой ❄', 'Видно в профиле, кабинете и сайдбаре', 'Навсегда, один раз на аккаунт'] },
+  { key: 'ava_white', kind: 'deco', cat: 'Украшение аватарки', name: 'Белый Ореол', price: 129, currency: '₽', forever: true,
+    desc: ['Белоснежный сияющий ободок ✦', 'Видно в профиле, кабинете и сайдбаре', 'Навсегда, один раз на аккаунт'] },
   { key: 'lc_magma', kind: 'login_color', cat: 'Цвет логина', name: 'Магма', price: 49, currency: '₽', forever: true,
     desc: ['Огненно-оранжевое свечение логина', 'Переливающийся градиент', 'Навсегда'] },
   { key: 'lc_volt', kind: 'login_color', cat: 'Цвет логина', name: 'Электро', price: 49, currency: '₽', forever: true,
@@ -189,7 +191,9 @@ const SHOP_ITEMS = [
   { key: 'lc_kings', kind: 'login_color', cat: 'Цвет логина', name: 'Королевский', price: 49, currency: '₽', forever: true,
     desc: ['Золотисто-розовый дворцовый градиент', 'Переливающийся градиент', 'Навсегда'] },
   { key: 'lc_aurora', kind: 'login_color', cat: 'Цвет логина', name: 'Аврора', price: 49, currency: '₽', forever: true,
-    desc: ['Радужный перелив всех цветов', 'Переливающийся градиент', 'Навсегда'] }
+    desc: ['Радужный перелив всех цветов', 'Переливающийся градиент', 'Навсегда'] },
+  { key: 'lc_white', kind: 'login_color', cat: 'Цвет логина', name: 'Белый', price: 49, currency: '₽', forever: true,
+    desc: ['Белоснежный серебристый перелив', 'Переливающийся градиент', 'Навсегда'] }
 ];
 
 async function publicUser(u) {

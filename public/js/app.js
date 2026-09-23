@@ -853,7 +853,7 @@ function bindLanding(app) {
     <div class="cab-wrap">
       <aside class="sidebar">
         <div class="sb-user">
-          <div class="sb-ava${u.decoActive === 'ava_deco' ? ' royal' : ''}${u.decoActive === 'ava_ice' ? ' sapphire' : ''}">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || 'H')[0].toUpperCase())}${u.decoActive === 'ava_deco' ? '<span class="c-gold">♛</span>' : ''}${u.decoActive === 'ava_ice' ? '<span class="c-ice">❄</span>' : ''}</div>
+          <div class="sb-ava${u.decoActive === 'ava_deco' ? ' royal' : ''}${u.decoActive === 'ava_ice' ? ' sapphire' : ''}${u.decoActive === 'ava_white' ? ' white' : ''}">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || 'H')[0].toUpperCase())}${u.decoActive === 'ava_deco' ? '<span class="c-gold">♛</span>' : ''}${u.decoActive === 'ava_ice' ? '<span class="c-ice">❄</span>' : ''}${u.decoActive === 'ava_white' ? '<span class="c-white">✦</span>' : ''}</div>
           <div style="min-width:0"><div class="sb-name${u.loginColor ? ' login-grad login-grad-' + u.loginColor : ''}">${esc(u.login)}</div>
           <div class="sb-uid">UID: <b>${esc(u.uid)}</b></div></div>
         </div>
@@ -984,7 +984,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
         <button type="button" class="btn btn-ghost btn-sm" data-upload="banner">Сменить баннер</button>
       </div>
       <div class="profile-ava-wrap">
-        <div class="profile-ava${glossy ? ' glossy-ava' : ''}${u.decoActive === 'ava_deco' ? ' royal' : ''}${u.decoActive === 'ava_ice' ? ' sapphire' : ''}" id="glossyAva">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}${u.decoActive === 'ava_deco' ? '<span class="c-gold">♛</span>' : ''}${u.decoActive === 'ava_ice' ? '<span class="c-ice">❄</span>' : ''}</div>
+        <div class="profile-ava${glossy ? ' glossy-ava' : ''}${u.decoActive === 'ava_deco' ? ' royal' : ''}${u.decoActive === 'ava_ice' ? ' sapphire' : ''}${u.decoActive === 'ava_white' ? ' white' : ''}" id="glossyAva">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}${u.decoActive === 'ava_deco' ? '<span class="c-gold">♛</span>' : ''}${u.decoActive === 'ava_ice' ? '<span class="c-ice">❄</span>' : ''}${u.decoActive === 'ava_white' ? '<span class="c-white">✦</span>' : ''}</div>
         <div>
           <div class="${loginCls}" style="font-weight:800;font-size:16px">${esc(u.login)}</div>
           <button type="button" class="btn btn-ghost btn-sm" data-upload="avatar" style="margin-top:6px">Сменить аватар</button>
@@ -1067,7 +1067,8 @@ if (section === 'profile') main.innerHTML = viewProfile();
   /* ---------- Магазин: украшения аватара ---------- */
   const DECO_STYLE = {
     ava_deco: { cls: 'royal', span: '<span class="c-gold">♛</span>' },
-    ava_ice: { cls: 'sapphire', span: '<span class="c-ice">❄</span>' }
+    ava_ice: { cls: 'sapphire', span: '<span class="c-ice">❄</span>' },
+    ava_white: { cls: 'white', span: '<span class="c-white">✦</span>' }
   };
 
   function shopCardsHTML() {

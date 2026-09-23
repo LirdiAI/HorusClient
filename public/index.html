@@ -326,14 +326,18 @@ button { font-family: inherit; cursor: pointer; }
 }
 .sb-user { display: flex; gap: 12px; align-items: center; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
 .sb-ava { width: 42px; height: 42px; border-radius: 12px; background: var(--gold-dim); color: var(--gold); display: grid; place-items: center; flex-shrink: 0; font-family: var(--font-h); font-weight: 700; position: relative; }
-.sb-ava.royal, .sb-ava.sapphire { background: rgba(255,255,255,.05); }
-.sb-ava.royal::before, .sb-ava.sapphire::before {
+.sb-ava.royal, .sb-ava.sapphire, .sb-ava.white { background: rgba(255,255,255,.05); }
+.sb-ava.royal::before, .sb-ava.sapphire::before, .sb-ava.white::before {
   content: ''; position: absolute; inset: -2px; border-radius: 14px;
   padding: 2px;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
+}
+.sb-ava.white::before {
+  background: linear-gradient(135deg, #ffffff, #cbd6ea, #ffffff);
+  box-shadow: 0 0 0 2px rgba(255,255,255,.6), 0 0 16px -2px rgba(255,255,255,.7);
 }
 .sb-ava.royal::before {
   background: linear-gradient(135deg, #ffc948, #a855f7, #ffc948);
@@ -345,6 +349,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .sb-ava .c-gold, .profile-ava .c-gold, .shop-ava .c-gold { position: absolute; top: -9px; right: -7px; font-size: 16px; line-height: 1; color: #ffd977; filter: drop-shadow(0 0 5px rgba(255,201,72,.9)); }
 .sb-ava .c-ice, .profile-ava .c-ice, .shop-ava .c-ice { position: absolute; top: -9px; left: -7px; font-size: 16px; line-height: 1; color: #9fe6ff; filter: drop-shadow(0 0 6px rgba(62,195,244,.95)); }
+.sb-ava .c-white, .profile-ava .c-white, .shop-ava .c-white { position: absolute; top: -9px; right: -7px; font-size: 16px; line-height: 1; color: #fff; filter: drop-shadow(0 0 6px rgba(255,255,255,.95)); }
 .sb-ava img { width: 100%; height: 100%; border-radius: 12px; object-fit: cover; }
 .sb-name { font-weight: 700; font-size: 14.5px; line-height: 1.2; }
 .sb-uid { font-size: 12px; color: var(--muted-2); }
@@ -518,14 +523,19 @@ button { font-family: inherit; cursor: pointer; }
 .profile-ava.glossy-ava img { border-radius: 50%; }
 
 /* ---------- королевское украшение аватарки (магазин) ---------- */
-.profile-ava.royal, .profile-ava.sapphire { border-color: transparent; }
-.profile-ava.royal::before, .profile-ava.sapphire::before {
+.profile-ava.royal, .profile-ava.sapphire, .profile-ava.white { border-color: transparent; }
+.profile-ava.royal::before, .profile-ava.sapphire::before, .profile-ava.white::before {
   content: ''; position: absolute; inset: -2px; border-radius: 50%;
   padding: 3px;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none; z-index: 2;
+}
+.profile-ava.white::before {
+  background: linear-gradient(135deg, #ffffff, #cbd6ea, #ffffff);
+  animation: royalSpin 4s linear infinite;
+  box-shadow: 0 0 0 3px rgba(255,255,255,.55), 0 0 20px -3px rgba(255,255,255,.8), 0 8px 24px -10px rgba(0,0,0,.7);
 }
 .profile-ava.royal::before {
   background: linear-gradient(135deg, #ffc948, #a855f7, #ffc948);
@@ -567,6 +577,7 @@ button { font-family: inherit; cursor: pointer; }
 .login-grad-lc_emerald { background-image: linear-gradient(90deg, #00c98a, #b8f25a, #00d5c4, #00c98a); }
 .login-grad-lc_kings   { background-image: linear-gradient(90deg, #ffd977, #ff8ac2, #ff5d8f, #ffd977); }
 .login-grad-lc_aurora  { background-image: linear-gradient(90deg, #ff5d8f, #b44dff, #38d5ff, #3affa0, #ffd000, #ff5d8f); }
+.login-grad-lc_white   { background-image: linear-gradient(90deg, #ffffff, #d7e1f0, #9fb2cc, #ffffff); }
 .login-prev {
   min-width: 118px; height: 72px; border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
@@ -610,14 +621,19 @@ button { font-family: inherit; cursor: pointer; }
   background: rgba(168,85,247,.22); color: #d8b4fe;
   display: grid; place-items: center; font-size: 28px; font-weight: 800;
 }
-.shop-ava.royal, .shop-ava.sapphire { border-color: transparent; }
-.shop-ava.royal::before, .shop-ava.sapphire::before {
+.shop-ava.royal, .shop-ava.sapphire, .shop-ava.white { border-color: transparent; }
+.shop-ava.royal::before, .shop-ava.sapphire::before, .shop-ava.white::before {
   content: ''; position: absolute; inset: -2px; border-radius: 50%;
   padding: 3px;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
+}
+.shop-ava.white::before {
+  background: linear-gradient(135deg, #ffffff, #cbd6ea, #ffffff);
+  animation: royalSpin 4s linear infinite;
+  box-shadow: 0 0 0 3px rgba(255,255,255,.55), 0 0 20px -3px rgba(255,255,255,.75);
 }
 .shop-ava.royal::before {
   background: linear-gradient(135deg, #ffc948, #a855f7, #ffc948);
