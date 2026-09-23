@@ -1,4 +1,4 @@
-п»ї/* HorusClient вЂ” РІРµР±-РїСЂРёР»РѕР¶РµРЅРёРµ */
+/* HorusClient — веб-приложение */
 (() => {
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -14,35 +14,35 @@
     me: null,
     plans: [
       {
-        key: 'kamiki30', name: 'Kamiki 1.21.4', tag: 'Р‘Р°Р·РѕРІС‹Р№ В· 30 РґРЅРµР№', price: 67, currency: 'в‚Ѕ', forever: false, days: 30,
-        desc: ['Р‘Р°Р·РѕРІС‹Р№ РґРѕСЃС‚СѓРї РЅР° 30 РґРЅРµР№', 'РџРѕРґРґРµСЂР¶РєР° 24/7', 'РџСЂРѕРґР»РµРЅРёРµ РёР· РєР°Р±РёРЅРµС‚Р°']
+        key: 'kamiki30', name: 'Kamiki 1.21.4', tag: 'Базовый · 30 дней', price: 67, currency: '?', forever: false, days: 30,
+        desc: ['Базовый доступ на 30 дней', 'Поддержка 24/7', 'Продление из кабинета']
       },
       {
-        key: 'kamiki365', name: 'Kamiki 1.21.4', tag: 'Р‘Р°Р·РѕРІС‹Р№ В· 365 РґРЅРµР№', price: 199, currency: 'в‚Ѕ', forever: false, days: 365,
-        desc: ['Р‘Р°Р·РѕРІС‹Р№ РґРѕСЃС‚СѓРї РЅР° 365 РґРЅРµР№', 'Р’С‹Р±РѕСЂ РёРіСЂРѕРєРѕРІ', 'Р’С‹РіРѕРґР°: ~0.55 в‚Ѕ РІ РґРµРЅСЊ', 'РџСЂРѕРґР»РµРЅРёРµ РёР· РєР°Р±РёРЅРµС‚Р°']
+        key: 'kamiki365', name: 'Kamiki 1.21.4', tag: 'Базовый · 365 дней', price: 199, currency: '?', forever: false, days: 365,
+        desc: ['Базовый доступ на 365 дней', 'Выбор игроков', 'Выгода: ~0.55 ? в день', 'Продление из кабинета']
       },
       {
-        key: 'kamiki', name: 'Kamiki 1.21.4', tag: 'Р‘Р°Р·РѕРІС‹Р№ В· РќР°РІСЃРµРіРґР°', price: 300, currency: 'в‚Ѕ', forever: true,
-        desc: ['Р‘Р°Р·РѕРІС‹Р№ РґРѕСЃС‚СѓРї Рє РєР»РёРµРЅС‚Сѓ', 'Р’СЃРµ Р±СѓРґСѓС‰РёРµ РѕР±РЅРѕРІР»РµРЅРёСЏ', 'РџРѕРґРґРµСЂР¶РєР° 24/7']
+        key: 'kamiki', name: 'Kamiki 1.21.4', tag: 'Базовый · Навсегда', price: 300, currency: '?', forever: true,
+        desc: ['Базовый доступ к клиенту', 'Все будущие обновления', 'Поддержка 24/7']
       },
       {
-        key: 'alpha', name: 'Alpha 1.21.4', tag: 'Р”РѕРєСѓРїРєР° В· РќР°РІСЃРµРіРґР°', price: 199, currency: 'в‚Ѕ', forever: true,
+        key: 'alpha', name: 'Alpha 1.21.4', tag: 'Докупка · Навсегда', price: 199, currency: '?', forever: true,
         featured: true, requires: 'kamiki', requiresForever: true,
-        desc: ['Р”РѕРєСѓРїРєР° Рє Kamiki 1.21.4', 'Р Р°РЅРЅРёРµ РѕР±РЅРѕРІР»РµРЅРёСЏ', 'РЎР±СЂРѕСЃ HWID СЂР°Р· РІ РјРµСЃСЏС†', 'РџСЂРёРѕСЂРёС‚РµС‚РЅР°СЏ РїРѕРґРґРµСЂР¶РєР°']
+        desc: ['Докупка к Kamiki 1.21.4', 'Ранние обновления', 'Сброс HWID раз в месяц', 'Приоритетная поддержка']
       },
       {
-        key: 'tester', name: 'РќР°Р±РѕСЂ РўРµСЃС‚РµСЂР°', tag: 'РќР°Р±РѕСЂ В· 30 РґРЅРµР№', price: 129, currency: 'в‚Ѕ', forever: false, days: 30,
-        pack: true, badge: '10% РІС‹РіРѕРґС‹',
-        includes: ['kamiki30', 'hwid_reset'], discordRole: 'РџР°РєРµС‚ РўРµСЃС‚РµСЂ',
-        desc: ['Kamiki 1.21.4 РЅР° 30 РґРЅРµР№', 'Р‘РµСЃРїР»Р°С‚РЅС‹Р№ СЃР±СЂРѕСЃ HWID x1', 'Р РѕР»СЊ РІ Discord В«РџР°РєРµС‚ РўРµСЃС‚РµСЂВ»']
+        key: 'tester', name: 'Набор Тестера', tag: 'Набор · 30 дней', price: 129, currency: '?', forever: false, days: 30,
+        pack: true, badge: '10% выгоды',
+        includes: ['kamiki30', 'hwid_reset'], discordRole: 'Пакет Тестер',
+        desc: ['Kamiki 1.21.4 на 30 дней', 'Бесплатный сброс HWID x1', 'Роль в Discord «Пакет Тестер»']
       },
       {
-        key: 'hwid_reset', name: 'РЎР±СЂРѕСЃ HWID', tag: 'РЈСЃР»СѓРіР°', price: 100, currency: 'в‚Ѕ', forever: false,
-        cta: 'РљСѓРїРёС‚СЊ СЃР±СЂРѕСЃ',
-        desc: ['Р Р°Р·РѕРІРѕРµ СЃРЅСЏС‚РёРµ РїСЂРёРІСЏР·РєРё Рє СѓСЃС‚СЂРѕР№СЃС‚РІСѓ', 'РќРѕРІС‹Р№ HWID РјРѕР¶РЅРѕ РїСЂРёРІСЏР·Р°С‚СЊ СЃСЂР°Р·Сѓ']
+        key: 'hwid_reset', name: 'Сброс HWID', tag: 'Услуга', price: 100, currency: '?', forever: false,
+        cta: 'Купить сброс',
+        desc: ['Разовое снятие привязки к устройству', 'Новый HWID можно привязать сразу']
       }
     ],
-    purchaseNote: 'РџРѕРєСѓРїРєР° С‡РµСЂРµР· FunPay. Р’С‹Р±РµСЂРёС‚Рµ С‚Р°СЂРёС„ Рё РїРµСЂРµС…РѕРґРёС‚Рµ Рє РѕРїР»Р°С‚Рµ.',
+    purchaseNote: 'Покупка через FunPay. Выберите тариф и переходите к оплате.',
     community: { discord: { members: 1421, url: 'https://discord.gg/sGjbnrdBfw' } }
   };
 
@@ -50,7 +50,7 @@
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'" :'&#39;'}[c]));
 
   const fmtDate = (iso) => {
-    if (!iso) return 'вЂ”';
+    if (!iso) return '—';
     const d = new Date(iso);
     return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
       + ' ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
@@ -97,9 +97,9 @@ shieldFx: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="c
       ...opts
     });
     let data = null;
-    try { data = await res.json(); } catch { /* РїСѓСЃС‚Рѕ */ }
-    if (!res.ok) throw new Error((data && data.error) || `РћС€РёР±РєР° ${res.status}`);
-    if (!data || data.ok === false) throw new Error((data && data.error) || 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°');
+    try { data = await res.json(); } catch { /* пусто */ }
+    if (!res.ok) throw new Error((data && data.error) || `Ошибка ${res.status}`);
+    if (!data || data.ok === false) throw new Error((data && data.error) || 'Ошибка сервера');
     return data;
   }
 
@@ -140,11 +140,11 @@ renderNav();
         <a href="#/cabinet" data-route="/cabinet" class="btn btn-ghost">
           ${icon.user} ${esc(state.me.login)}
         </a>
-        <a href="#/cabinet" data-route="/cabinet" class="btn btn-gold">РљР°Р±РёРЅРµС‚</a>`;
+        <a href="#/cabinet" data-route="/cabinet" class="btn btn-gold">Кабинет</a>`;
     } else {
       el.innerHTML = `
-        <a href="#/login" data-route="/login" class="btn btn-ghost">Р’РѕР№С‚Рё</a>
-        <a href="#/register" data-route="/register" class="btn btn-gold">Р РµРіРёСЃС‚СЂР°С†РёСЏ</a>`;
+        <a href="#/login" data-route="/login" class="btn btn-ghost">Войти</a>
+        <a href="#/register" data-route="/register" class="btn btn-gold">Регистрация</a>`;
     }
   }
 
@@ -166,33 +166,33 @@ renderNav();
     routeLanding(path);
   }
 
-  /* ================= РћРџР›РђРўРђ РљРђРЎРўРћРњРќРћР™ РџРћР—РР¦РР ================= */
+  /* ================= ОПЛАТА КАСТОМНОЙ ПОЗИЦИИ ================= */
   async function routePayOffer(path) {
     const id = Number(String(path).split('/')[2] || 0);
     const appEl = $('#app');
-    document.title = 'РћРїР»Р°С‚Р° вЂ” HorusClient';
-    appEl.innerHTML = '<div style="max-width:900px;margin:0 auto;padding:60px 20px">Р—Р°РіСЂСѓР·РєР°вЂ¦</div>';
+    document.title = 'Оплата — HorusClient';
+    appEl.innerHTML = '<div style="max-width:900px;margin:0 auto;padding:60px 20px">Загрузка…</div>';
     let offer = null;
     try {
       const r = await api('/api/custom/get?id=' + id);
       offer = r.offer;
     } catch (e) { offer = null; }
     if (!offer) {
-      appEl.innerHTML = '<div style="max-width:900px;margin:0 auto;padding:60px 20px"><div class="page-card">РџРѕР·РёС†РёСЏ РЅРµ РЅР°Р№РґРµРЅР°</div></div>';
+      appEl.innerHTML = '<div style="max-width:900px;margin:0 auto;padding:60px 20px"><div class="page-card">Позиция не найдена</div></div>';
       return;
     }
     let givesTxt = '';
     try {
       const arr = JSON.parse(offer.description || '[]');
-      if (arr.length) givesTxt = 'Р’РєР»СЋС‡Р°РµС‚: ' + arr.map(k => { const p = (state.plans || []).find(x => x.key === k); return p ? p.name : k; }).join(', ');
+      if (arr.length) givesTxt = 'Включает: ' + arr.map(k => { const p = (state.plans || []).find(x => x.key === k); return p ? p.name : k; }).join(', ');
     } catch (e) { givesTxt = offer.description || ''; }
     appEl.innerHTML = `
     <div style="max-width:900px;margin:0 auto;padding:60px 20px">
       <div class="page-card" style="max-width:520px;margin:0 auto">
         <div class="page-title">${esc(offer.title)}</div>
-        <div class="page-sub" style="margin:10px 0 16px">РЎСѓРјРјР°: <b>${esc(String(offer.amount))} в‚Ѕ</b></div>
+        <div class="page-sub" style="margin:10px 0 16px">Сумма: <b>${esc(String(offer.amount))} ?</b></div>
         ${givesTxt ? `<div class="page-sub" style="margin-bottom:18px;line-height:1.6">${esc(givesTxt)}</div>` : ''}
-        <button class="btn btn-gold" id="payOfferBtn" style="width:100%">РћРїР»Р°С‚РёС‚СЊ С‡РµСЂРµР· РЎР‘Рџ В· ${esc(String(offer.amount))} в‚Ѕ</button>
+        <button class="btn btn-gold" id="payOfferBtn" style="width:100%">Оплатить через СБП · ${esc(String(offer.amount))} ?</button>
       </div>
     </div>`;
     $('#payOfferBtn').addEventListener('click', async () => {
@@ -201,9 +201,9 @@ renderNav();
       try {
         const r = await api('/api/custom/pay', { method: 'POST', body: JSON.stringify({ id }) });
         if (r && r.ok && r.confirmationUrl) { window.location.href = r.confirmationUrl; return; }
-        toast((r && (r.message || r.error)) || 'РЎСЃС‹Р»РєР° РЅР° РѕРїР»Р°С‚Сѓ РЅРµ РїРѕР»СѓС‡РµРЅР°');
+        toast((r && (r.message || r.error)) || 'Ссылка на оплату не получена');
       } catch (err) {
-        toast((err && err.message) || 'РћС€РёР±РєР° РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє РѕРїР»Р°С‚Рµ');
+        toast((err && err.message) || 'Ошибка подключения к оплате');
       }
       btn.disabled = false;
     });
@@ -221,7 +221,7 @@ renderNav();
       target.classList.add('fade-in');
     }
 
-    document.title = 'HorusClient вЂ” Minecraft РєР»РёРµРЅС‚';
+    document.title = 'HorusClient — Minecraft клиент';
     bindLanding(app, store);
   }
 
@@ -230,18 +230,18 @@ renderNav();
     return `
     <section class="hero" id="top">
       <div>
-        <div class="hero-badge"><span class="dot"></span> Minecraft 1.21.4 В· FPS Boost В· Р—Р°С‰РёС‚Р° РѕС‚ Р±Р°РЅРѕРІ</div>
-        <h1>РњРёСЂ РїРѕРґ РєРѕРЅС‚СЂРѕР»РµРј<br>СЃ <span class="grad grad-anim">HorusClient</span></h1>
-        <p class="lead">РЎРѕРІСЂРµРјРµРЅРЅС‹Р№ РєР»РёРµРЅС‚ СЃ СЂР°СЃС€РёСЂРµРЅРЅС‹Рј С„СѓРЅРєС†РёРѕРЅР°Р»РѕРј: Р·Р°С‰РёС‚Р°, РєРѕРјР±Р°С‚-РјРѕРґСѓР»Рё, СЂРµРЅРґРµСЂ,
-          РґРёСЃРєРѕСЂРґ-СЃС‚Р°С‚СѓСЃ Рё СЃРІРѕР№ Р»Р°СѓРЅС‡РµСЂ. РћРґРЅР° РїРѕРґРїРёСЃРєР° вЂ” РІСЃРµ РѕР±РЅРѕРІР»РµРЅРёСЏ.</p>
+        <div class="hero-badge"><span class="dot"></span> Minecraft 1.21.4 · FPS Boost · Защита от банов</div>
+        <h1>Мир под контролем<br>с <span class="grad grad-anim">HorusClient</span></h1>
+        <p class="lead">Современный клиент с расширенным функционалом: защита, комбат-модули, рендер,
+          дискорд-статус и свой лаунчер. Одна подписка — все обновления.</p>
         <div class="hero-cta">
-          <a href="${state.me ? ((hasSub() || state.me.subscription) ? '#launcher' : '#/cabinet/buy') : '#/register'}" class="btn btn-gold btn-lg">${!state.me ? 'РЎРєР°С‡Р°С‚СЊ Р»Р°СѓРЅС‡РµСЂ' : (hasSub() ? 'РЎРєР°С‡Р°С‚СЊ РєР»РёРµРЅС‚' : (state.me.subscription ? 'РЎРєР°С‡Р°С‚СЊ РЅРµРІРѕР·РјРѕР¶РЅРѕ' : 'РљСѓРїРёС‚СЊ РґРѕСЃС‚СѓРї'))}</a>
-          <a href="#/pricing" class="btn btn-ghost btn-lg">РљСѓРїРёС‚СЊ РґРѕСЃС‚СѓРї</a>
+          <a href="${state.me ? ((hasSub() || state.me.subscription) ? '#launcher' : '#/cabinet/buy') : '#/register'}" class="btn btn-gold btn-lg">${!state.me ? 'Скачать лаунчер' : (hasSub() ? 'Скачать клиент' : (state.me.subscription ? 'Скачать невозможно' : 'Купить доступ'))}</a>
+          <a href="#/pricing" class="btn btn-ghost btn-lg">Купить доступ</a>
         </div>
         <div class="hero-stats">
-          <div class="hstat"><div class="num">${fmtNum(c.discord.members)}</div><div class="lbl">Р’ СЃРѕРѕР±С‰РµСЃС‚РІР°С…</div></div>
-          <div class="hstat"><div class="num">24/7</div><div class="lbl">РџРѕРґРґРµСЂР¶РєР°</div></div>
-          <div class="hstat"><div class="num" id="statUsers">вЂ”</div><div class="lbl">РџРѕР»СЊР·РѕРІР°С‚РµР»РµР№</div></div>
+          <div class="hstat"><div class="num">${fmtNum(c.discord.members)}</div><div class="lbl">В сообществах</div></div>
+          <div class="hstat"><div class="num">24/7</div><div class="lbl">Поддержка</div></div>
+          <div class="hstat"><div class="num" id="statUsers">—</div><div class="lbl">Пользователей</div></div>
         </div>
       </div>
       <div class="hero-preview">
@@ -260,94 +260,94 @@ renderNav();
           </div>
           <div class="preview-fade"></div>
         </div>
-        <div class="float-card fc-1"><div class="fc-icon">${icon.shieldFx}</div><div><div style="font-weight:700;font-size:13.5px">Р—Р°С‰РёС‚Р° РІРєР»СЋС‡РµРЅР°</div><div class="muted" style="font-size:11.5px">BanBypass В· HWID</div></div></div>
-        <div class="float-card fc-2"><div class="fc-icon">${icon.zap}</div><div><div style="font-weight:700;font-size:13.5px">+120 FPS</div><div class="muted" style="font-size:11.5px">РћРїС‚РёРјРёР·Р°С†РёСЏ</div></div></div>
+        <div class="float-card fc-1"><div class="fc-icon">${icon.shieldFx}</div><div><div style="font-weight:700;font-size:13.5px">Защита включена</div><div class="muted" style="font-size:11.5px">BanBypass · HWID</div></div></div>
+        <div class="float-card fc-2"><div class="fc-icon">${icon.zap}</div><div><div style="font-weight:700;font-size:13.5px">+120 FPS</div><div class="muted" style="font-size:11.5px">Оптимизация</div></div></div>
       </div>
     </section>
 
     <section class="section" id="features">
-      <span class="eyebrow">${icon.spark} Р’РѕР·РјРѕР¶РЅРѕСЃС‚Рё</span>
-      <h2 class="section-title">Р’СЃС‘ РґР»СЏ РїРѕР±РµРґ Рё <span class="grad grad-anim">РєРѕРјС„РѕСЂС‚РЅРѕР№ РёРіСЂС‹</span></h2>
-      <p class="section-sub">Р”РµСЃСЏС‚РєРё РјРѕРґСѓР»РµР№ РІРѕ РІСЃРµС… РєР°С‚РµРіРѕСЂРёСЏС…. Р’РєР»СЋС‡Р°СЋС‚СЃСЏ РІ РїР°СЂСѓ РєР»РёРєРѕРІ С‡РµСЂРµР· СѓРґРѕР±РЅС‹Р№ ClickGUI.</p>
+      <span class="eyebrow">${icon.spark} Возможности</span>
+      <h2 class="section-title">Всё для побед и <span class="grad grad-anim">комфортной игры</span></h2>
+      <p class="section-sub">Десятки модулей во всех категориях. Включаются в пару кликов через удобный ClickGUI.</p>
       <div class="features-grid">
-        <div class="feature"><div class="fic">${icon.shieldFx}</div><h3>Р—Р°С‰РёС‚Р°</h3><p>Streamer Mode, СЃРєСЂС‹С‚РёРµ РЅРёРєР°, Р·Р°С‰РёС‚Р° РѕС‚ РѕС‚СЃР»РµР¶РёРІР°РЅРёСЏ Рё Р±Р°РЅРѕРІ.</p></div>
-        <div class="feature"><div class="fic">${icon.zap}</div><h3>РљРѕРјР±Р°С‚</h3><p>AttackAura, Velocity, AutoFarm, AutoMace Рё РїСЂРѕРґРІРёРЅСѓС‚Р°СЏ СЃРёСЃС‚РµРјР° СЂРѕС‚Р°С†РёР№.</p></div>
-        <div class="feature"><div class="fic">${icon.speed}</div><h3>РћРїС‚РёРјРёР·Р°С†РёСЏ</h3><p>Р‘СѓСЃС‚ FPS, РЅР°СЃС‚СЂРѕР№РєР° СЂРµРЅРґРµСЂР°, РѕС‚РєР»СЋС‡РµРЅРёРµ Р»РёС€РЅРёС… СЌС„С„РµРєС‚РѕРІ Рё С‡Р°СЃС‚РёС†.</p></div>
-        <div class="feature"><div class="fic">${icon.cooldown}</div><h3>РЎРєРёРЅС‹ Рё СЌС„С„РµРєС‚С‹</h3><p>РђРЅРёРјР°С†РёРё СѓРґР°СЂРѕРІ, РєР°СЃС‚РѕРјРЅС‹Рµ С‡Р°СЃС‚РёС†С‹, С‚СЂРµР№Р»С‹, РјРѕРґРµР»СЊРєРё Рё РєР°РїС‹.</p></div>
-        <div class="feature"><div class="fic">${icon.monitor2}</div><h3>РРЅС‚РµСЂС„РµР№СЃ</h3><p>РљР°СЃС‚РѕРјРЅС‹Р№ HUD, С‚Р°СЂРіРµС‚-С…СѓРґ, РЅР°Р±РѕСЂ СЃС‚Р°С‚РёСЃС‚РёРєРё Рё РјР°СЂРєРµСЂС‹.</p></div>
-        <div class="feature"><div class="fic">${icon.layers}</div><h3>РЎРІРѕР№ Р»Р°СѓРЅС‡РµСЂ</h3><p>РђРІС‚РѕРѕР±РЅРѕРІР»РµРЅРёРµ, СѓРїСЂР°РІР»РµРЅРёРµ Р°РєРєР°СѓРЅС‚РѕРј Рё РїСЂРёРІСЏР·РєР° СѓСЃС‚СЂРѕР№СЃС‚РІР° (HWID).</p></div>
+        <div class="feature"><div class="fic">${icon.shieldFx}</div><h3>Защита</h3><p>Streamer Mode, скрытие ника, защита от отслеживания и банов.</p></div>
+        <div class="feature"><div class="fic">${icon.zap}</div><h3>Комбат</h3><p>AttackAura, Velocity, AutoFarm, AutoMace и продвинутая система ротаций.</p></div>
+        <div class="feature"><div class="fic">${icon.speed}</div><h3>Оптимизация</h3><p>Буст FPS, настройка рендера, отключение лишних эффектов и частиц.</p></div>
+        <div class="feature"><div class="fic">${icon.cooldown}</div><h3>Скины и эффекты</h3><p>Анимации ударов, кастомные частицы, трейлы, модельки и капы.</p></div>
+        <div class="feature"><div class="fic">${icon.monitor2}</div><h3>Интерфейс</h3><p>Кастомный HUD, таргет-худ, набор статистики и маркеры.</p></div>
+        <div class="feature"><div class="fic">${icon.layers}</div><h3>Свой лаунчер</h3><p>Автообновление, управление аккаунтом и привязка устройства (HWID).</p></div>
       </div>
     </section>
 
     <section class="section" id="pricing">
-      <span class="eyebrow">${icon.crown} РџРѕРґРїРёСЃРєРё Рё РќР°Р±РѕСЂС‹</span>
-      <h2 class="section-title">РЎС‚Р°РЅСЊ С‡Р°СЃС‚СЊСЋ <span class="grad grad-anim">HorusClient</span></h2>
-      <p class="section-sub">РђРєС‚РёРІРёСЂСѓР№ РїРѕРґРїРёСЃРєСѓ РЅР° СЃРІРѕС‘Рј Р°РєРєР°СѓРЅС‚Рµ Рё РїСЂРёРІСЏР¶Рё Рє СѓСЃС‚СЂРѕР№СЃС‚РІСѓ С‡РµСЂРµР· Р»Р°СѓРЅС‡РµСЂ.
-        Р’С‹Р±РёСЂР°Р№ С‚Р°СЂРёС„ РїРѕРґ СЃРІРѕР№ СЃС‚РёР»СЊ РёРіСЂС‹ РёР»Рё СЃРѕР±РёСЂР°Р№ РІС‹РіРѕРґРЅС‹Р№ РЅР°Р±РѕСЂ.</p>
+      <span class="eyebrow">${icon.crown} Подписки и Наборы</span>
+      <h2 class="section-title">Стань частью <span class="grad grad-anim">HorusClient</span></h2>
+      <p class="section-sub">Активируй подписку на своём аккаунте и привяжи к устройству через лаунчер.
+        Выбирай тариф под свой стиль игры или собирай выгодный набор.</p>
 
       <div class="subs-tabs" id="pricingTabs">
-        <button type="button" class="subs-tab active" data-cat="subs">${icon.crown} РџРѕРґРїРёСЃРєРё</button>
-        <button type="button" class="subs-tab" data-cat="packs">${icon.layers} РќР°Р±РѕСЂС‹</button>
+        <button type="button" class="subs-tab active" data-cat="subs">${icon.crown} Подписки</button>
+        <button type="button" class="subs-tab" data-cat="packs">${icon.layers} Наборы</button>
       </div>
 
       <div class="pricing-grid" id="pricingGrid" data-grid="subs"></div>
     </section>
 
     <section class="section" id="launcher">
-      <span class="eyebrow">${icon.layers} Р›Р°СѓРЅС‡РµСЂ</span>
-      <h2 class="section-title">РЎРєР°С‡Р°Р№ <span class="grad grad-anim">HorusLauncher</span></h2>
-      <p class="section-sub">Р’С…РѕРґ РїРѕ Р»РѕРіРёРЅСѓ Рё РїР°СЂРѕР»СЋ РѕС‚ СЃР°Р№С‚Р°, Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєР°СЏ СѓСЃС‚Р°РЅРѕРІРєР° Рё РѕР±РЅРѕРІР»РµРЅРёРµ РєР»РёРµРЅС‚Р°,
-        РїСЂРёРІСЏР·РєР° HWID Рё СѓРїСЂР°РІР»РµРЅРёРµ РїРѕРґРїРёСЃРєРѕР№ РїСЂСЏРјРѕ РІ Р»Р°СѓРЅС‡РµСЂРµ.</p>
+      <span class="eyebrow">${icon.layers} Лаунчер</span>
+      <h2 class="section-title">Скачай <span class="grad grad-anim">HorusLauncher</span></h2>
+      <p class="section-sub">Вход по логину и паролю от сайта, автоматическая установка и обновление клиента,
+        привязка HWID и управление подпиской прямо в лаунчере.</p>
       <div class="launch-wrap mt-24">
         <div>
           <div class="launch-window">
             <div class="lw-top">
               <div class="lw-ava">${icon.eye}</div>
-              <div><div class="lw-user">HorusLauncher</div><div class="lw-sub">Р’РµСЂСЃРёСЏ <span id="lwVersion">1.0.0</span> В· stable</div></div>
+              <div><div class="lw-user">HorusLauncher</div><div class="lw-sub">Версия <span id="lwVersion">1.0.0</span> · stable</div></div>
             </div>
             <div class="lw-bar"><i></i></div>
-            <div class="lw-row"><span>РЎРєР°С‡РёРІР°РЅРёРµ</span><b>82% В· 1.21.4</b></div>
+            <div class="lw-row"><span>Скачивание</span><b>82% · 1.21.4</b></div>
           </div>
           <div class="dl-card">
             <span style="display:flex;align-items:center"><span>${icon.zap}</span></span>
-            <div><div style="font-weight:700">Р›Р°СѓРЅС‡РµСЂ РґР»СЏ Windows</div><div class="muted" style="font-size:12.5px">exe В· ~12 РњР‘</div></div>
+            <div><div style="font-weight:700">Лаунчер для Windows</div><div class="muted" style="font-size:12.5px">exe · ~12 МБ</div></div>
             ${(state.me && state.me.subscription && !hasSub())
-              ? `<span class="btn btn-gold" style="margin-left:auto;opacity:.55;cursor:not-allowed" title="РџРѕРґРїРёСЃРєР° Р·Р°РјРѕСЂРѕР¶РµРЅР°">РЎРєР°С‡Р°С‚СЊ РЅРµРІРѕР·РјРѕР¶РЅРѕ</span>`
-              : `<a href="#download" class="btn btn-gold" style="margin-left:auto" data-scroll-dl>РЎРєР°С‡Р°С‚СЊ</a>`}
+              ? `<span class="btn btn-gold" style="margin-left:auto;opacity:.55;cursor:not-allowed" title="Подписка заморожена">Скачать невозможно</span>`
+              : `<a href="#download" class="btn btn-gold" style="margin-left:auto" data-scroll-dl>Скачать</a>`}
           </div>
-          <div class="com-count" style="margin-top:12px">РЎРµР№С‡Р°СЃ РѕРЅР»Р°Р№РЅ: <b id="lwOnline">вЂ”</b></div>
+          <div class="com-count" style="margin-top:12px">Сейчас онлайн: <b id="lwOnline">—</b></div>
         </div>
         <div>
-          <span class="eyebrow" style="margin-bottom:14px">${icon.layers} РЎРёСЃС‚РµРјРЅС‹Рµ С‚СЂРµР±РѕРІР°РЅРёСЏ</span>
-          <div class="feature"><h3>РњРёРЅРёРјР°Р»СЊРЅС‹Рµ</h3><p>Windows 10 В· Intel Core i3 / AMD Ryzen 3 В· 4 Р“Р‘ РћР—РЈ В· 1 Р“Р‘ РЅР° РґРёСЃРєРµ В· Minecraft Java 1.21.4</p></div>
-          <div class="feature mt-16"><h3>Р РµРєРѕРјРµРЅРґСѓРµРјС‹Рµ</h3><p>Windows 10/11 В· Intel Core i5 / AMD Ryzen 5 В· 8 Р“Р‘ РћР—РЈ В· SSD В· РІРёРґРµРѕРєР°СЂС‚Р° СЃ 4 Р“Р‘ VRAM</p></div>
+          <span class="eyebrow" style="margin-bottom:14px">${icon.layers} Системные требования</span>
+          <div class="feature"><h3>Минимальные</h3><p>Windows 10 · Intel Core i3 / AMD Ryzen 3 · 4 ГБ ОЗУ · 1 ГБ на диске · Minecraft Java 1.21.4</p></div>
+          <div class="feature mt-16"><h3>Рекомендуемые</h3><p>Windows 10/11 · Intel Core i5 / AMD Ryzen 5 · 8 ГБ ОЗУ · SSD · видеокарта с 4 ГБ VRAM</p></div>
         </div>
       </div>
       <div id="download" style="margin-top:6px">
         ${(state.me && state.me.subscription && !hasSub())
           ? `<div class="dl-card" style="max-width:640px;opacity:.6">
               <span style="display:flex;align-items:center"><span>${icon.zap}</span></span>
-              <div><div style="font-weight:700">HorusLauncher РґР»СЏ Windows</div>
-              <div class="muted" style="font-size:12.5px">РЎРєР°С‡РёРІР°РЅРёРµ РЅРµРґРѕСЃС‚СѓРїРЅРѕ вЂ” РїРѕРґРїРёСЃРєР° Р·Р°РјРѕСЂРѕР¶РµРЅР°</div></div>
-              <span class="btn btn-gold" style="margin-left:auto;opacity:.55;cursor:not-allowed">РЎРєР°С‡Р°С‚СЊ РЅРµРІРѕР·РјРѕР¶РЅРѕ</span>
+              <div><div style="font-weight:700">HorusLauncher для Windows</div>
+              <div class="muted" style="font-size:12.5px">Скачивание недоступно — подписка заморожена</div></div>
+              <span class="btn btn-gold" style="margin-left:auto;opacity:.55;cursor:not-allowed">Скачать невозможно</span>
             </div>`
           : `<div class="dl-card" style="max-width:640px">
               <span style="display:flex;align-items:center"><span>${icon.zap}</span></span>
-              <div><div style="font-weight:700">HorusLauncher РґР»СЏ Windows</div>
-              <div class="muted" style="font-size:12.5px">РїРѕСЂС‚Р°С‚РёРІРЅС‹Р№ zip В· ~45 РњР‘ В· РІРµСЂСЃРёСЏ <span id="dlVersion">1.0.0</span></div></div>
-              <a id="dlExeLink" href="/files/HorusLauncher.zip" class="btn btn-gold" style="margin-left:auto" download>РЎРєР°С‡Р°С‚СЊ</a>
+              <div><div style="font-weight:700">HorusLauncher для Windows</div>
+              <div class="muted" style="font-size:12.5px">портативный zip · ~45 МБ · версия <span id="dlVersion">1.0.0</span></div></div>
+              <a id="dlExeLink" href="/files/HorusLauncher.zip" class="btn btn-gold" style="margin-left:auto" download>Скачать</a>
             </div>`}
       </div>
     </section>
 
     <section class="section" id="community">
-      <span class="eyebrow">${icon.heart} РЎРѕРѕР±С‰РµСЃС‚РІРѕ</span>
-      <h2 class="section-title">РџСЂРёСЃРѕРµРґРёРЅСЏР№СЃСЏ Рє <span class="grad grad-anim">HorusClient</span></h2>
-      <p class="section-sub">РќРѕРІРѕСЃС‚Рё, РіРѕР»РѕСЃРѕРІР°РЅРёСЏ Р·Р° РѕР±РЅРѕРІР»РµРЅРёСЏ, СЂРѕР·С‹РіСЂС‹С€Рё РїРѕРґРїРёСЃРѕРє Рё РѕРїРµСЂР°С‚РёРІРЅР°СЏ РїРѕРґРґРµСЂР¶РєР°.</p>
+      <span class="eyebrow">${icon.heart} Сообщество</span>
+      <h2 class="section-title">Присоединяйся к <span class="grad grad-anim">HorusClient</span></h2>
+      <p class="section-sub">Новости, голосования за обновления, розыгрыши подписок и оперативная поддержка.</p>
       <div class="com-grid">
         <a class="com-card" href="${esc(c.discord.url)}" target="_blank" rel="noopener">
           <div class="com-ico ds">${icon.discord}</div>
-          <div><h3>Discord</h3><div class="com-count">СѓС‡Р°СЃС‚РЅРёРєРѕРІ: <b>${fmtNum(c.discord.members)}</b></div></div>
+          <div><h3>Discord</h3><div class="com-count">участников: <b>${fmtNum(c.discord.members)}</b></div></div>
           <div class="com-arrow">${icon.arrow}</div>
         </a>
       </div>
@@ -359,15 +359,15 @@ renderNav();
       .filter(p => cat === 'all' ? true : (cat === 'packs' ? !!p.pack : !p.pack))
       .map((p) => `
       <div class="plan ${p.featured ? 'featured' : ''} ${p.forever ? 'forever-badge' : ''}">
-        ${p.key === 'kamiki365' ? '<div class="plan-tag">Р’С‹Р±РѕСЂ РёРіСЂРѕРєРѕРІ</div>' : ''}
+        ${p.key === 'kamiki365' ? '<div class="plan-tag">Выбор игроков</div>' : ''}
         <div class="plan-name">${esc(p.name)}</div>
         <div class="plan-sub">${esc(p.tag)}</div>
         <div class="plan-price">
           <span class="amount">${p.price}</span><span class="cur">${esc(p.currency)}</span>
-          <span class="forever">${p.forever ? 'Р”РµР№СЃС‚РІСѓРµС‚: РќР°РІСЃРµРіРґР°' : p.days ? 'Р”РµР№СЃС‚РІСѓРµС‚: ' + p.days + ' РґРЅРµР№' : ''}</span>
+          <span class="forever">${p.forever ? 'Действует: Навсегда' : p.days ? 'Действует: ' + p.days + ' дней' : ''}</span>
         </div>
         <ul class="plan-feats">${p.desc.map(d => `<li>${icon.check}<span>${esc(d)}</span></li>`).join('')}</ul>
-        <button class="btn btn-block ${p.featured ? 'btn-gold' : 'btn-dark'}" data-buy="${p.key}">${esc(p.cta || 'РљСѓРїРёС‚СЊ РґРѕСЃС‚СѓРї')}</button>
+        <button class="btn btn-block ${p.featured ? 'btn-gold' : 'btn-dark'}" data-buy="${p.key}">${esc(p.cta || 'Купить доступ')}</button>
       </div>`).join('');
   }
 
@@ -396,7 +396,7 @@ function bindLanding(app) {
     btn.addEventListener('click', () => {
       $('#navLinks').classList.toggle('open');
     });
-    // РћРЅР»Р°Р№РЅ-СЃС‚Р°С‚СѓСЃ Р»Р°СѓРЅС‡РµСЂР° Рё РїРѕСЃР»РµРґРЅСЏСЏ РІРµСЂСЃРёСЏ
+    // Онлайн-статус лаунчера и последняя версия
     api('/api/launcher/status').then(s => {
       const el = $('#lwOnline');
       if (el && s && typeof s.online === 'number') el.textContent = fmtNum(s.online);
@@ -413,22 +413,22 @@ function bindLanding(app) {
     }).catch(() => {});
   }
 
-  /* ---------- РѕРєРЅРѕ РїРѕРєСѓРїРєРё ---------- */
+  /* ---------- окно покупки ---------- */
   const PAY_METHODS = [
-    { id: 'sbp',    img: 'img/sbp.jpg',    name: 'РЎР‘Рџ',    kind: 'yookassa' },
+    { id: 'sbp',    img: 'img/sbp.jpg',    name: 'СБП',    kind: 'yookassa' },
     { id: 'funpay', img: 'img/funpay.jpg', name: 'FunPay', kind: 'external', url: 'https://funpay.com/lots/offer?id=77228605' },
   ];
 
   async function startPurchase(planKey) {
     const plan = (state.plans || []).find(p => p.key === planKey)
-      || { key: planKey, name: planKey, tag: 'Р”РѕСЃС‚СѓРї HorusClient', price: null, currency: 'в‚Ѕ' };
-    const duration = plan.forever ? 'РќР°РІСЃРµРіРґР°' : (plan.days ? plan.days + ' РґРЅРµР№' : 'Р Р°Р·РѕРІР°СЏ СѓСЃР»СѓРіР°');
-    const shortDur = plan.key === 'alpha' ? 'Р”РѕРєСѓРїРєР°'
-      : plan.forever ? 'РќР°РІСЃРµРіРґР°'
-      : (plan.days ? plan.days + ' РґРЅ' : 'Р Р°Р·РѕРІР°СЏ СѓСЃР»СѓРіР°');
-    const priceTxt = plan.price != null ? (plan.price + ' ' + (plan.currency || 'в‚Ѕ')) : '';
+      || { key: planKey, name: planKey, tag: 'Доступ HorusClient', price: null, currency: '?' };
+    const duration = plan.forever ? 'Навсегда' : (plan.days ? plan.days + ' дней' : 'Разовая услуга');
+    const shortDur = plan.key === 'alpha' ? 'Докупка'
+      : plan.forever ? 'Навсегда'
+      : (plan.days ? plan.days + ' дн' : 'Разовая услуга');
+    const priceTxt = plan.price != null ? (plan.price + ' ' + (plan.currency || '?')) : '';
     const reqPlan = plan.requires ? (state.plans || []).find(r => r.key === plan.requires) : null;
-    const reqTxt = reqPlan ? (reqPlan.name + (reqPlan.forever ? ' РќР°РІСЃРµРіРґР°' : '')) : 'Kamiki 1.21.4 РќР°РІСЃРµРіРґР°';
+    const reqTxt = reqPlan ? (reqPlan.name + (reqPlan.forever ? ' Навсегда' : '')) : 'Kamiki 1.21.4 Навсегда';
 
     let selected = 'sbp';
     let promo = null;
@@ -436,9 +436,9 @@ function bindLanding(app) {
     overlay.className = 'buy-overlay';
     overlay.innerHTML = `
       <div class="buy-modal" role="dialog" aria-modal="true">
-        <button class="buy-close" data-close aria-label="Р—Р°РєСЂС‹С‚СЊ">вњ•</button>
-        <div class="buy-co-head">РћС„РѕСЂРјР»РµРЅРёРµ</div>
-        ${plan.requires ? `<div class="buy-warn">вљ пёЏ Р­С‚РѕС‚ С‚РѕРІР°СЂ РґРѕРєСѓРїР°РµС‚СЃСЏ Рє РїРѕРґРїРёСЃРєРµ ${esc(reqTxt)} (Р‘РµР· РЅРµРµ РЅРµ РїРѕРєСѓРїР°Р№С‚Рµ)</div>` : ''}
+        <button class="buy-close" data-close aria-label="Закрыть">?</button>
+        <div class="buy-co-head">Оформление</div>
+        ${plan.requires ? `<div class="buy-warn">?? Этот товар докупается к подписке ${esc(reqTxt)} (Без нее не покупайте)</div>` : ''}
         <div class="buy-order-row">
           ${plan.pack ? '' : '<span class="buy-order-ic"><img src="img/order_icon.png" alt=""></span>'}
           <span class="buy-order-info">
@@ -448,7 +448,7 @@ function bindLanding(app) {
           <span class="buy-order-disc" data-disc style="display:none"></span>
         </div>
         <div class="buy-divider"></div>
-        <div class="buy-sec-label"><img class="buy-sec-img" src="img/pay_icon.png" alt=""> РЎРїРѕСЃРѕР± РѕРїР»Р°С‚С‹</div>
+        <div class="buy-sec-label"><img class="buy-sec-img" src="img/pay_icon.png" alt=""> Способ оплаты</div>
         <div class="buy-chips">
           ${PAY_METHODS.map(m => `
             <button type="button" class="buy-chip" data-method="${m.id}">
@@ -458,13 +458,13 @@ function bindLanding(app) {
         </div>
         <div class="buy-ext-note" data-ext-note style="display:none"></div>
         <div data-promo-box>
-        <div class="buy-sec-label"><img class="buy-sec-img" src="img/promo_icon.png" alt=""> РџСЂРѕРјРѕРєРѕРґ</div>
+        <div class="buy-sec-label"><img class="buy-sec-img" src="img/promo_icon.png" alt=""> Промокод</div>
         <div class="buy-promo-row">
-          <input type="text" data-promo-input placeholder="Р’РІРµРґРёС‚Рµ РїСЂРѕРјРѕРєРѕРґ" autocomplete="off">
-          <button type="button" class="buy-promo-apply" data-promo-apply>вњ“ РџСЂРёРјРµРЅРёС‚СЊ</button>
+          <input type="text" data-promo-input placeholder="Введите промокод" autocomplete="off">
+          <button type="button" class="buy-promo-apply" data-promo-apply>? Применить</button>
         </div>
         </div>
-        <button type="button" class="buy-pay" data-go>РћРїР»Р°С‚РёС‚СЊ</button>
+        <button type="button" class="buy-pay" data-go>Оплатить</button>
       </div>`;
 
     const goBtn = overlay.querySelector('[data-go]');
@@ -472,15 +472,15 @@ function bindLanding(app) {
     const promoBox = overlay.querySelector('[data-promo-box]');
     const syncGo = () => {
       const m = PAY_METHODS.find(x => x.id === selected);
-      const eff = promo ? (promo.finalPrice + ' ' + (plan.currency || 'в‚Ѕ')) : priceTxt;
+      const eff = promo ? (promo.finalPrice + ' ' + (plan.currency || '?')) : priceTxt;
       if (m.kind === 'external') {
-        goBtn.innerHTML = 'РџРµСЂРµР№С‚Рё РЅР° ' + esc(m.name) + ' в†—';
+        goBtn.innerHTML = 'Перейти на ' + esc(m.name) + ' ?';
         if (extNote) {
           extNote.style.display = 'block';
-          extNote.textContent = 'Р’С‹ Р±СѓРґРµС‚Рµ РїРµСЂРµРЅР°РїСЂР°РІР»РµРЅС‹ РЅР° ' + m.name + ' РґР»СЏ Р±РµР·РѕРїР°СЃРЅРѕР№ РѕРїР»Р°С‚С‹.';
+          extNote.textContent = 'Вы будете перенаправлены на ' + m.name + ' для безопасной оплаты.';
         }
       } else {
-        goBtn.innerHTML = '<img class="buy-pay-ic" src="img/pay_btn_icon.png" alt=""> ' + esc(!eff ? 'РћРїР»Р°С‚РёС‚СЊ' : (m.id === 'sbp' ? 'РћРїР»Р°С‚РёС‚СЊ С‡РµСЂРµР· РЎР‘Рџ В· ' + eff : 'РћРїР»Р°С‚РёС‚СЊ В· ' + eff));
+        goBtn.innerHTML = '<img class="buy-pay-ic" src="img/pay_btn_icon.png" alt=""> ' + esc(!eff ? 'Оплатить' : (m.id === 'sbp' ? 'Оплатить через СБП · ' + eff : 'Оплатить · ' + eff));
         if (extNote) extNote.style.display = 'none';
       }
       overlay.querySelectorAll('.buy-chip').forEach(b =>
@@ -504,27 +504,27 @@ function bindLanding(app) {
       const input = overlay.querySelector('[data-promo-input]');
       const btn = overlay.querySelector('[data-promo-apply]');
       const code = ((input && input.value) || '').trim().toUpperCase();
-      if (!code) return toast('Р’РІРµРґРёС‚Рµ РїСЂРѕРјРѕРєРѕРґ');
-      btn.disabled = true; btn.textContent = 'РџСЂРѕРІРµСЂРєР°вЂ¦';
+      if (!code) return toast('Введите промокод');
+      btn.disabled = true; btn.textContent = 'Проверка…';
       try {
         const r = await api('/api/discount/validate', { method: 'POST', body: JSON.stringify({ code, plan: plan.key }) });
         if (r && r.ok) {
           promo = { code, discount: r.discount, finalPrice: r.finalPrice };
           const priceEl = overlay.querySelector('[data-price]');
           if (priceEl) priceEl.innerHTML = priceTxt
-            ? '<s>' + esc(priceTxt) + '</s>' + esc(r.finalPrice + ' ' + (plan.currency || 'в‚Ѕ'))
-            : esc(r.finalPrice + ' ' + (plan.currency || 'в‚Ѕ'));
+            ? '<s>' + esc(priceTxt) + '</s>' + esc(r.finalPrice + ' ' + (plan.currency || '?'))
+            : esc(r.finalPrice + ' ' + (plan.currency || '?'));
           const discEl = overlay.querySelector('[data-disc]');
           if (discEl) { discEl.textContent = '\u2212' + r.discount + '%'; discEl.style.display = 'inline-block'; }
-          toast('РџСЂРѕРјРѕРєРѕРґ РїСЂРёРјРµРЅС‘РЅ: СЃРєРёРґРєР° ' + r.discount + '%', 'success');
+          toast('Промокод применён: скидка ' + r.discount + '%', 'success');
           syncGo();
         } else {
-          toast((r && (r.message || r.error)) || 'РџСЂРѕРјРѕРєРѕРґ РЅРµ РїРѕРґС…РѕРґРёС‚');
+          toast((r && (r.message || r.error)) || 'Промокод не подходит');
         }
       } catch (err) {
-        toast((err && err.message) || 'РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРёРјРµРЅРёС‚СЊ РїСЂРѕРјРѕРєРѕРґ');
+        toast((err && err.message) || 'Не удалось применить промокод');
       }
-      btn.disabled = false; btn.textContent = 'вњ“ РџСЂРёРјРµРЅРёС‚СЊ';
+      btn.disabled = false; btn.textContent = '? Применить';
     };
 
     overlay.addEventListener('click', async (e) => {
@@ -540,7 +540,7 @@ function bindLanding(app) {
         return close();
       }
       goBtn.disabled = true;
-      goBtn.textContent = 'РЎРѕР·РґР°С‘Рј РїР»Р°С‚С‘Р¶вЂ¦';
+      goBtn.textContent = 'Создаём платёж…';
       try {
         const r = await api('/api/purchase/yookassa', {
           method: 'POST',
@@ -550,9 +550,9 @@ function bindLanding(app) {
           window.location.href = r.confirmationUrl;
           return;
         }
-        toast((r && (r.message || r.error)) || 'РЎСЃС‹Р»РєР° РЅР° РѕРїР»Р°С‚Сѓ РЅРµ РїРѕР»СѓС‡РµРЅР°');
+        toast((r && (r.message || r.error)) || 'Ссылка на оплату не получена');
       } catch (err) {
-        toast((err && err.message) || 'РћС€РёР±РєР° РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє РѕРїР»Р°С‚Рµ');
+        toast((err && err.message) || 'Ошибка подключения к оплате');
       }
       goBtn.disabled = false;
       syncGo();
@@ -567,17 +567,17 @@ function bindLanding(app) {
     return !!(state.me && state.me.subscription && state.me.subscription.status === 'active');
   }
 
-  /* РџСЂРѕРІРµСЂРєР° РґРѕСЃС‚СѓРїР° Рє СЃРєР°С‡РёРІР°РЅРёСЋ: С‚РѕР»СЊРєРѕ СЃ Р°РєС‚РёРІРЅРѕР№ РїРѕРґРїРёСЃРєРѕР№ */
+  /* Проверка доступа к скачиванию: только с активной подпиской */
   function requireSub() {
     if (hasSub()) return true;
     if (!state.me) {
-      toast('Р’РѕР№РґРёС‚Рµ РІ Р°РєРєР°СѓРЅС‚, С‡С‚РѕР±С‹ СЃРєР°С‡Р°С‚СЊ Р»Р°СѓРЅС‡РµСЂ');
+      toast('Войдите в аккаунт, чтобы скачать лаунчер');
       location.hash = '#/login';
     } else if (state.me.subscription) {
-      toast('РџРѕРґРїРёСЃРєР° Р·Р°РјРѕСЂРѕР¶РµРЅР° вЂ” СЃРєР°С‡РёРІР°РЅРёРµ РЅРµРґРѕСЃС‚СѓРїРЅРѕ', 'error');
+      toast('Подписка заморожена — скачивание недоступно', 'error');
       location.hash = '#/cabinet/buy';
     } else {
-      toast('РЎРєР°С‡РёРІР°РЅРёРµ РґРѕСЃС‚СѓРїРЅРѕ С‚РѕР»СЊРєРѕ СЃ РїРѕРґРїРёСЃРєРѕР№', 'error');
+      toast('Скачивание доступно только с подпиской', 'error');
       location.hash = '#/cabinet/buy';
     }
     return false;
@@ -587,36 +587,36 @@ function bindLanding(app) {
   function routeAuth(path) {
     const isLogin = path === '/login';
     const app = $('#app');
-    document.title = isLogin ? 'Р’С…РѕРґ вЂ” HorusClient' : 'Р РµРіРёСЃС‚СЂР°С†РёСЏ вЂ” HorusClient';
+    document.title = isLogin ? 'Вход — HorusClient' : 'Регистрация — HorusClient';
 
     const pending = sessionStorage.getItem('pendingBuy');
     app.innerHTML = `
     <div class="auth-wrap">
       <div class="form-card">
-        <div class="form-title">${isLogin ? 'РЎ РІРѕР·РІСЂР°С‰РµРЅРёРµРј!' : 'РЎРѕР·РґР°С‚СЊ Р°РєРєР°СѓРЅС‚'}</div>
+        <div class="form-title">${isLogin ? 'С возвращением!' : 'Создать аккаунт'}</div>
         <div class="form-sub">${isLogin
-          ? 'Р’РѕР№РґРёС‚Рµ РІ Р»РёС‡РЅС‹Р№ РєР°Р±РёРЅРµС‚, С‡С‚РѕР±С‹ СѓРїСЂР°РІР»СЏС‚СЊ РїРѕРґРїРёСЃРєР°РјРё.'
-          : 'Р РµРіРёСЃС‚СЂР°С†РёСЏ Р·Р°Р№РјС‘С‚ РїРѕР»РјРёРЅСѓС‚С‹. РџРѕРЅР°РґРѕР±РёС‚СЃСЏ С‚РѕР»СЊРєРѕ Р»РѕРіРёРЅ Рё РїРѕС‡С‚Р°.'}</div>
+          ? 'Войдите в личный кабинет, чтобы управлять подписками.'
+          : 'Регистрация займёт полминуты. Понадобится только логин и почта.'}</div>
         <form id="authForm">
           ${isLogin ? '' : `
-            <div class="field"><label>Р›РѕРіРёРЅ</label>
+            <div class="field"><label>Логин</label>
               <input name="login" autocomplete="username" placeholder="0_0_Krolik" maxlength="20" required>
-              <div class="hint">3-20 СЃРёРјРІРѕР»РѕРІ: Р»Р°С‚РёРЅРёС†Р°, С†РёС„СЂС‹, РїРѕРґС‡С‘СЂРєРёРІР°РЅРёРµ</div></div>`}
-          <div class="field"><label>${isLogin ? 'Р›РѕРіРёРЅ РёР»Рё РїРѕС‡С‚Р°' : 'РџРѕС‡С‚Р°'}</label>
+              <div class="hint">3-20 символов: латиница, цифры, подчёркивание</div></div>`}
+          <div class="field"><label>${isLogin ? 'Логин или почта' : 'Почта'}</label>
             <input name="${isLogin ? 'login' : 'email'}" type="${isLogin ? 'text' : 'email'}" autocomplete="${isLogin ? 'username' : 'email'}"
-              placeholder="${isLogin ? '0_0_Krolik РёР»Рё mail@example.com' : 'mail@example.com'}" required></div>
-          <div class="field"><label>РџР°СЂРѕР»СЊ</label>
-            <input name="password" type="password" autocomplete="current-password" placeholder="вЂўвЂўвЂўвЂўвЂўвЂўвЂўвЂў" minlength="8" required>
-            <div class="hint">РњРёРЅРёРјСѓРј 8 СЃРёРјРІРѕР»РѕРІ</div></div>
+              placeholder="${isLogin ? '0_0_Krolik или mail@example.com' : 'mail@example.com'}" required></div>
+          <div class="field"><label>Пароль</label>
+            <input name="password" type="password" autocomplete="current-password" placeholder="••••••••" minlength="8" required>
+            <div class="hint">Минимум 8 символов</div></div>
           ${isLogin ? '' : `
-            <div class="field"><label>РџРѕРІС‚РѕСЂРёС‚Рµ РїР°СЂРѕР»СЊ</label>
-              <input name="password2" type="password" autocomplete="new-password" placeholder="вЂўвЂўвЂўвЂўвЂўвЂўвЂўвЂў" minlength="8" required></div>`}
-          <button type="submit" class="btn btn-gold btn-block btn-lg">${isLogin ? 'Р’РѕР№С‚Рё' : 'Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ'}</button>
+            <div class="field"><label>Повторите пароль</label>
+              <input name="password2" type="password" autocomplete="new-password" placeholder="••••••••" minlength="8" required></div>`}
+          <button type="submit" class="btn btn-gold btn-block btn-lg">${isLogin ? 'Войти' : 'Зарегистрироваться'}</button>
         </form>
         <div class="form-switch">${isLogin
-          ? 'РќРµС‚ Р°РєРєР°СѓРЅС‚Р°? <a href="#/register">Р—Р°СЂРµРіРёСЃС‚СЂРёСЂСѓР№С‚РµСЃСЊ</a>'
-          : 'РЈР¶Рµ РµСЃС‚СЊ Р°РєРєР°СѓРЅС‚? <a href="#/login">Р’РѕР№С‚Рё</a>'}</div>
-        ${isLogin ? `<div class="form-switch" style="margin-top:6px"><a href="#/forgot" style="font-size:13px">Р—Р°Р±С‹Р»Рё РїР°СЂРѕР»СЊ?</a></div>` : ''}
+          ? 'Нет аккаунта? <a href="#/register">Зарегистрируйтесь</a>'
+          : 'Уже есть аккаунт? <a href="#/login">Войти</a>'}</div>
+        ${isLogin ? `<div class="form-switch" style="margin-top:6px"><a href="#/forgot" style="font-size:13px">Забыли пароль?</a></div>` : ''}
       </div>
     </div>`;
 
@@ -626,10 +626,10 @@ function bindLanding(app) {
       const body = { login: f.login.value.trim(), password: f.password.value };
       if (!isLogin) body.email = f.email.value.trim();
       const btn = f.querySelector('button');
-      btn.disabled = true; btn.textContent = 'РџРѕРґРѕР¶РґРёС‚Рµ...';
+      btn.disabled = true; btn.textContent = 'Подождите...';
       try {
         if (!isLogin) {
-          if (f.password.value !== f.password2.value) throw new Error('РџР°СЂРѕР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚');
+          if (f.password.value !== f.password2.value) throw new Error('Пароли не совпадают');
           const r = await api('/api/register', { method: 'POST', body: JSON.stringify(body) });
           state.me = r.user;
         } else {
@@ -642,32 +642,32 @@ function bindLanding(app) {
           state.me = r.user;
         }
         renderNav();
-        toast('Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ, ' + state.me.login + '!', 'success');
+        toast('Добро пожаловать, ' + state.me.login + '!', 'success');
         const buf = sessionStorage.getItem('pendingBuy');
         sessionStorage.removeItem('pendingBuy');
         location.hash = buf ? '#/cabinet/buy' : '#/cabinet';
       } catch (err) {
         toast(err.message, 'error');
-        btn.disabled = false; btn.textContent = isLogin ? 'Р’РѕР№С‚Рё' : 'Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ';
+        btn.disabled = false; btn.textContent = isLogin ? 'Войти' : 'Зарегистрироваться';
       }
     });
   }
 
   function routeForgot() {
     const app = $('#app');
-    document.title = 'Р’РѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ РїР°СЂРѕР»СЏ вЂ” HorusClient';
+    document.title = 'Восстановление пароля — HorusClient';
     app.innerHTML = `
     <div class="auth-wrap">
       <div class="form-card">
-        <div class="form-title">Р’РѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ РїР°СЂРѕР»СЏ</div>
-        <div class="form-sub">Р’РІРµРґРёС‚Рµ Р»РѕРіРёРЅ вЂ” РєРѕРґ РїСЂРёРґС‘С‚ РІ РїСЂРёРІСЏР·Р°РЅРЅС‹Р№ Telegram.</div>
+        <div class="form-title">Восстановление пароля</div>
+        <div class="form-sub">Введите логин — код придёт в привязанный Telegram.</div>
         <form id="forgotForm">
-          <div class="field"><label>Р›РѕРіРёРЅ</label>
+          <div class="field"><label>Логин</label>
             <input name="login" autocomplete="username" placeholder="0_0_Krolik" maxlength="20" required></div>
-          <button type="submit" class="btn btn-gold btn-block btn-lg">РџРѕР»СѓС‡РёС‚СЊ РєРѕРґ</button>
+          <button type="submit" class="btn btn-gold btn-block btn-lg">Получить код</button>
         </form>
         <div id="forgotResult"></div>
-        <div class="form-switch"><a href="#/login">в†ђ Р’РµСЂРЅСѓС‚СЊСЃСЏ РєРѕ РІС…РѕРґСѓ</a></div>
+        <div class="form-switch"><a href="#/login">< Вернуться ко входу</a></div>
       </div>
     </div>`;
 
@@ -675,53 +675,53 @@ function bindLanding(app) {
       e.preventDefault();
       const btn = e.target.querySelector('button');
       const box = $('#forgotResult');
-      btn.disabled = true; btn.textContent = 'РџРѕРґРѕР¶РґРёС‚Рµ...';
+      btn.disabled = true; btn.textContent = 'Подождите...';
       try {
         const r = await api('/api/forgot/request', {
           method: 'POST', body: JSON.stringify({ login: e.target.login.value.trim() })
         });
         if (r.sent) {
-          if (box) { box.className = 'okbox'; box.textContent = r.message || 'РљРѕРґ РѕС‚РїСЂР°РІР»РµРЅ.'; }
+          if (box) { box.className = 'okbox'; box.textContent = r.message || 'Код отправлен.'; }
           e.target.reset();
           showForgotConfirm();
         } else if (box) {
           box.className = 'okbox';
-          box.textContent = r.message || 'Р•СЃР»Рё Рє Р°РєРєР°СѓРЅС‚Сѓ РїСЂРёРІСЏР·Р°РЅ Telegram вЂ” РєРѕРґ Р±СѓРґРµС‚ РѕС‚РїСЂР°РІР»РµРЅ С‚СѓРґР°.';
+          box.textContent = r.message || 'Если к аккаунту привязан Telegram — код будет отправлен туда.';
         }
       } catch (err) {
         if (box) { box.className = 'okbox err'; box.textContent = err.message; }
       } finally {
-        btn.disabled = false; btn.textContent = 'РџРѕР»СѓС‡РёС‚СЊ РєРѕРґ';
+        btn.disabled = false; btn.textContent = 'Получить код';
       }
     });
 
     function showForgotConfirm() {
       const app = $('#app');
-      document.title = 'Р’РѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ РїР°СЂРѕР»СЏ вЂ” HorusClient';
+      document.title = 'Восстановление пароля — HorusClient';
       app.innerHTML = `
     <div class="auth-wrap">
       <div class="form-card">
-        <div class="form-title">Р’РІРµРґРёС‚Рµ РєРѕРґ</div>
-        <div class="form-sub">РљРѕРґ РёР· Telegram + РЅРѕРІС‹Р№ РїР°СЂРѕР»СЊ.</div>
+        <div class="form-title">Введите код</div>
+        <div class="form-sub">Код из Telegram + новый пароль.</div>
         <form id="forgotConfirmForm">
-          <div class="field"><label>Р›РѕРіРёРЅ</label>
+          <div class="field"><label>Логин</label>
             <input name="login" autocomplete="username" placeholder="0_0_Krolik" maxlength="20" required></div>
-          <div class="field"><label>РљРѕРґ РёР· Telegram</label>
+          <div class="field"><label>Код из Telegram</label>
             <input name="code" placeholder="XXXXXX" maxlength="6" autocapitalize="characters" autocomplete="one-time-code" required></div>
-          <div class="field"><label>РќРѕРІС‹Р№ РїР°СЂРѕР»СЊ</label>
-            <input name="password" type="password" autocomplete="new-password" placeholder="вЂўвЂўвЂўвЂўвЂўвЂўвЂўвЂў" minlength="8" required>
-            <div class="hint">РњРёРЅРёРјСѓРј 8 СЃРёРјРІРѕР»РѕРІ</div></div>
-          <button type="submit" class="btn btn-gold btn-block btn-lg">РЎРјРµРЅРёС‚СЊ РїР°СЂРѕР»СЊ</button>
+          <div class="field"><label>Новый пароль</label>
+            <input name="password" type="password" autocomplete="new-password" placeholder="••••••••" minlength="8" required>
+            <div class="hint">Минимум 8 символов</div></div>
+          <button type="submit" class="btn btn-gold btn-block btn-lg">Сменить пароль</button>
         </form>
         <div id="forgotConfirmResult"></div>
-        <div class="form-switch"><a href="#/login">в†ђ Р’РµСЂРЅСѓС‚СЊСЃСЏ РєРѕ РІС…РѕРґСѓ</a></div>
+        <div class="form-switch"><a href="#/login">< Вернуться ко входу</a></div>
       </div>
     </div>`;
       $('#forgotConfirmForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('button');
         const box = $('#forgotConfirmResult');
-        btn.disabled = true; btn.textContent = 'РџРѕРґРѕР¶РґРёС‚Рµ...';
+        btn.disabled = true; btn.textContent = 'Подождите...';
         try {
           const r = await api('/api/forgot/confirm', {
             method: 'POST', body: JSON.stringify({
@@ -730,12 +730,12 @@ function bindLanding(app) {
               password: e.target.password.value
             })
           });
-          if (box) { box.className = 'okbox'; box.textContent = 'РџР°СЂРѕР»СЊ РёР·РјРµРЅС‘РЅ!'; }
-          toast(r.message || 'РџР°СЂРѕР»СЊ РёР·РјРµРЅС‘РЅ', 'success');
+          if (box) { box.className = 'okbox'; box.textContent = 'Пароль изменён!'; }
+          toast(r.message || 'Пароль изменён', 'success');
           setTimeout(() => { location.hash = '#/login'; }, 1200);
         } catch (err) {
           if (box) { box.className = 'okbox err'; box.textContent = err.message; }
-          btn.disabled = false; btn.textContent = 'РЎРјРµРЅРёС‚СЊ РїР°СЂРѕР»СЊ';
+          btn.disabled = false; btn.textContent = 'Сменить пароль';
         }
       });
     }
@@ -743,17 +743,17 @@ function bindLanding(app) {
 
   function routeReset() {
     const app = $('#app');
-    document.title = 'РЈСЃС‚Р°РЅРѕРІРєР° РїР°СЂРѕР»СЏ вЂ” HorusClient';
+    document.title = 'Установка пароля — HorusClient';
     const params = new URLSearchParams(location.hash.split('?')[1] || '');
     const u = params.get('u') || '';
     const c = params.get('c') || '';
     app.innerHTML = `
     <div class="auth-wrap">
       <div class="form-card">
-        <div class="form-title">РЈСЃС‚Р°РЅРѕРІРєР° РїР°СЂРѕР»СЏ</div>
-        <div class="form-sub" id="resetSub">РџСЂРѕРІРµСЂСЏРµРј СЃСЃС‹Р»РєСѓ...</div>
-        <div id="resetBody"><div class="empty" style="padding:18px 0">Р—Р°РіСЂСѓР·РєР°...</div></div>
-        <div class="form-switch"><a href="#/login">в†ђ Р’РµСЂРЅСѓС‚СЊСЃСЏ РєРѕ РІС…РѕРґСѓ</a></div>
+        <div class="form-title">Установка пароля</div>
+        <div class="form-sub" id="resetSub">Проверяем ссылку...</div>
+        <div id="resetBody"><div class="empty" style="padding:18px 0">Загрузка...</div></div>
+        <div class="form-switch"><a href="#/login">< Вернуться ко входу</a></div>
       </div>
     </div>`;
     (async () => {
@@ -761,36 +761,36 @@ function bindLanding(app) {
       const body = $('#resetBody');
       try {
         const r = await api('/api/forgot/status?u=' + encodeURIComponent(u) + '&c=' + encodeURIComponent(c));
-        if (!r.valid) throw new Error('РљРѕРґ РЅРµ РїРѕРґС‚РІРµСЂР¶РґС‘РЅ РІ Telegram. РћС‚РєСЂРѕР№С‚Рµ СЃСЃС‹Р»РєСѓ РёР· СЃРѕРѕР±С‰РµРЅРёСЏ Р±РѕС‚Р°.');
-        if (sub) sub.textContent = 'Р’РІРµРґРёС‚Рµ РЅРѕРІС‹Р№ РїР°СЂРѕР»СЊ РґР»СЏ Р°РєРєР°СѓРЅС‚Р° <b>' + esc(r.login) + '</b>.';
+        if (!r.valid) throw new Error('Код не подтверждён в Telegram. Откройте ссылку из сообщения бота.');
+        if (sub) sub.textContent = 'Введите новый пароль для аккаунта <b>' + esc(r.login) + '</b>.';
         body.innerHTML = `
           <form id="resetForm">
-            <div class="field"><label>РќРѕРІС‹Р№ РїР°СЂРѕР»СЊ</label>
-              <input name="password" type="password" autocomplete="new-password" placeholder="вЂўвЂўвЂўвЂўвЂўвЂўвЂўвЂў" minlength="8" required>
-              <div class="hint">РњРёРЅРёРјСѓРј 8 СЃРёРјРІРѕР»РѕРІ</div></div>
-            <button type="submit" class="btn btn-gold btn-block btn-lg">РЎРјРµРЅРёС‚СЊ РїР°СЂРѕР»СЊ</button>
+            <div class="field"><label>Новый пароль</label>
+              <input name="password" type="password" autocomplete="new-password" placeholder="••••••••" minlength="8" required>
+              <div class="hint">Минимум 8 символов</div></div>
+            <button type="submit" class="btn btn-gold btn-block btn-lg">Сменить пароль</button>
           </form>
           <div id="resetResult"></div>`;
         $('#resetForm').addEventListener('submit', async (e) => {
           e.preventDefault();
           const btn = e.target.querySelector('button');
           const box = $('#resetResult');
-          btn.disabled = true; btn.textContent = 'РџРѕРґРѕР¶РґРёС‚Рµ...';
+          btn.disabled = true; btn.textContent = 'Подождите...';
           try {
             await api('/api/forgot/confirm', {
               method: 'POST', body: JSON.stringify({
                 login: r.login, code: c, password: e.target.password.value
               })
             });
-            toast('РџР°СЂРѕР»СЊ РёР·РјРµРЅС‘РЅ. Р’РѕР№РґРёС‚Рµ СЃ РЅРѕРІС‹Рј РїР°СЂРѕР»РµРј.', 'success');
+            toast('Пароль изменён. Войдите с новым паролем.', 'success');
             setTimeout(() => { location.hash = '#/login'; }, 1200);
           } catch (err) {
             if (box) { box.className = 'okbox err'; box.textContent = err.message; }
-            btn.disabled = false; btn.textContent = 'РЎРјРµРЅРёС‚СЊ РїР°СЂРѕР»СЊ';
+            btn.disabled = false; btn.textContent = 'Сменить пароль';
           }
         });
       } catch (err) {
-        if (sub) sub.textContent = 'РћС€РёР±РєР°';
+        if (sub) sub.textContent = 'Ошибка';
         body.innerHTML = `<div class="empty" style="padding:18px 0">${esc(err.message)}</div>`;
       }
     })();
@@ -798,35 +798,35 @@ function bindLanding(app) {
 
 /* ================= CABINET ================= */
   const CAB_SECTIONS = {
-    globa: { icon: 'globe', title: 'Р“Р»РѕР±Р°Р»РєР°' },
-    shop: { icon: 'cart', title: 'РњР°РіР°Р·РёРЅ' },
-    profile: { icon: 'user', title: 'РџСЂРѕС„РёР»СЊ' },
-    subs: { icon: 'crown', title: 'РџРѕРґРїРёСЃРєРё' },
-    device: { icon: 'monitor', title: 'РџСЂРёРІСЏР·РєР° СѓСЃС‚СЂРѕР№СЃС‚РІР°' },
-    buy: { icon: 'cart', title: 'РљСѓРїРёС‚СЊ РґРѕСЃС‚СѓРї' },
-    security: { icon: 'shield', title: 'Р‘РµР·РѕРїР°СЃРЅРѕСЃС‚СЊ' },
-    promo: { icon: 'spark', title: 'Р Р°Р·РґР°С‡Р°' },
-    discounts: { icon: 'zap', title: 'РЎРѕР·РґР°РЅРёРµ СЃРєРёРґРѕРє' },
-    testing: { icon: 'bug', title: 'РўРµСЃС‚РёСЂРѕРІР°РЅРёРµ' },
-    ops: { icon: 'cart', title: 'РћРїРµСЂР°С†РёРё' },
-    mod: { icon: 'shield', title: 'РњРѕРґРёС„РёРєР°С†РёСЏ' },
-    support: { icon: 'support', title: 'РџРѕРґРґРµСЂР¶РєР°' },
-    idea: { icon: 'idea', title: 'РџСЂРµРґР»РѕР¶РёС‚СЊ РёРґРµСЋ' },
-    bug: { icon: 'bug', title: 'РЎРѕРѕР±С‰РёС‚СЊ Рѕ Р±Р°РіРµ' }
+    globa: { icon: 'globe', title: 'Глобалка' },
+    shop: { icon: 'cart', title: 'Магазин' },
+    profile: { icon: 'user', title: 'Профиль' },
+    subs: { icon: 'crown', title: 'Подписки' },
+    device: { icon: 'monitor', title: 'Привязка устройства' },
+    buy: { icon: 'cart', title: 'Купить доступ' },
+    security: { icon: 'shield', title: 'Безопасность' },
+    promo: { icon: 'spark', title: 'Раздача' },
+    discounts: { icon: 'zap', title: 'Создание скидок' },
+    testing: { icon: 'bug', title: 'Тестирование' },
+    ops: { icon: 'cart', title: 'Операции' },
+    mod: { icon: 'shield', title: 'Модификация' },
+    support: { icon: 'support', title: 'Поддержка' },
+    idea: { icon: 'idea', title: 'Предложить идею' },
+    bug: { icon: 'bug', title: 'Сообщить о баге' }
   };
 
   const isOwner = () => state.me && state.me.login === 'Howill_';
-  const roleLabel = (r) => r === 'admin' ? 'РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ' : r === 'mod' ? 'РњРѕРґРµСЂР°С‚РѕСЂ' : r === 'media' ? 'РњРµРґРёР°' : 'User';
+  const roleLabel = (r) => r === 'admin' ? 'Администратор' : r === 'mod' ? 'Модератор' : r === 'media' ? 'Медиа' : 'User';
 
-  /* ---------- С‚РµРјС‹ СЃР°Р№С‚Р° (Alpha) ---------- */
+  /* ---------- темы сайта (Alpha) ---------- */
   const THEMES = {
-    violet:  { label: 'Р¤РёРѕР»РµС‚РѕРІС‹Р№', gold: '#a855f7', gold2: '#d8b4fe', dim: 'rgba(168,85,247,0.12)' },
-    red:     { label: 'РљСЂР°СЃРЅС‹Р№',    gold: '#ef4444', gold2: '#fca5a5', dim: 'rgba(239,68,68,0.12)' },
-    blue:    { label: 'РЎРёРЅРёР№',      gold: '#3b82f6', gold2: '#93c5fd', dim: 'rgba(59,130,246,0.12)' },
-    emerald: { label: 'РР·СѓРјСЂСѓРґРЅС‹Р№', gold: '#10b981', gold2: '#6ee7b7', dim: 'rgba(16,185,129,0.12)' },
-    gold:    { label: 'Р—РѕР»РѕС‚РѕР№',    gold: '#f59e0b', gold2: '#fcd34d', dim: 'rgba(245,158,11,0.12)' },
-    cyan:    { label: 'Р‘РёСЂСЋР·РѕРІС‹Р№',  gold: '#06b6d4', gold2: '#67e8f9', dim: 'rgba(6,182,212,0.12)' },
-    pink:    { label: 'Р РѕР·РѕРІС‹Р№',    gold: '#ec4899', gold2: '#f9a8d4', dim: 'rgba(236,72,153,0.12)' }
+    violet:  { label: 'Фиолетовый', gold: '#a855f7', gold2: '#d8b4fe', dim: 'rgba(168,85,247,0.12)' },
+    red:     { label: 'Красный',    gold: '#ef4444', gold2: '#fca5a5', dim: 'rgba(239,68,68,0.12)' },
+    blue:    { label: 'Синий',      gold: '#3b82f6', gold2: '#93c5fd', dim: 'rgba(59,130,246,0.12)' },
+    emerald: { label: 'Изумрудный', gold: '#10b981', gold2: '#6ee7b7', dim: 'rgba(16,185,129,0.12)' },
+    gold:    { label: 'Золотой',    gold: '#f59e0b', gold2: '#fcd34d', dim: 'rgba(245,158,11,0.12)' },
+    cyan:    { label: 'Бирюзовый',  gold: '#06b6d4', gold2: '#67e8f9', dim: 'rgba(6,182,212,0.12)' },
+    pink:    { label: 'Розовый',    gold: '#ec4899', gold2: '#f9a8d4', dim: 'rgba(236,72,153,0.12)' }
   };
 
   function applyTheme(key) {
@@ -846,7 +846,7 @@ function bindLanding(app) {
     let section = parts[1] || 'profile';
     const ap = $('#app');
 
-    document.title = (CAB_SECTIONS[section] ? CAB_SECTIONS[section].title + ' вЂ” ' : '') + 'HorusClient В· РљР°Р±РёРЅРµС‚';
+    document.title = (CAB_SECTIONS[section] ? CAB_SECTIONS[section].title + ' — ' : '') + 'HorusClient · Кабинет';
     ap.innerHTML = cabinetHTML();
     renderCabSidebar(section);
     renderCabContent(section, ap);
@@ -864,36 +864,36 @@ function bindLanding(app) {
     <div class="cab-wrap">
       <aside class="sidebar">
         <div class="sb-user">
-          <div class="sb-ava${u.decoActive === 'ava_deco' ? ' royal' : ''}${u.decoActive === 'ava_ice' ? ' sapphire' : ''}${u.decoActive === 'ava_white' ? ' white' : ''}">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || 'H')[0].toUpperCase())}${u.decoActive === 'ava_deco' ? '<span class="c-gold">в™›</span>' : ''}${u.decoActive === 'ava_ice' ? '<span class="c-ice">вќ„</span>' : ''}${u.decoActive === 'ava_white' ? '<span class="c-white">вњ¦</span>' : ''}</div>
+          <div class="sb-ava${u.decoActive === 'ava_deco' ? ' royal' : ''}${u.decoActive === 'ava_ice' ? ' sapphire' : ''}${u.decoActive === 'ava_white' ? ' white' : ''}">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || 'H')[0].toUpperCase())}${u.decoActive === 'ava_deco' ? '<span class="c-gold">?</span>' : ''}${u.decoActive === 'ava_ice' ? '<span class="c-ice">?</span>' : ''}${u.decoActive === 'ava_white' ? '<span class="c-white">?</span>' : ''}</div>
           <div style="min-width:0"><div class="sb-name${u.loginColor ? ' login-grad login-grad-' + u.loginColor : ''}">${esc(u.login)}</div>
           ${u.role ? `<div class="sb-role ${u.roleColor ? 'role-grad role-grad-' + u.roleColor : ''}">${roleLabel(u.role)}</div>` : ''}
           <div class="sb-uid">UID: <b>${esc(u.uid)}</b></div></div>
         </div>
-${sbGroup('РњРѕР№ РєР°Р±РёРЅРµС‚', [
-          ['profile', 'user', 'РџСЂРѕС„РёР»СЊ'],
-          ['globa', 'globe', 'Р“Р»РѕР±Р°Р»РєР°'],
-          ['shop', 'cart', 'РњР°РіР°Р·РёРЅ'],
-          ['redeem', 'key', 'РђРєС‚РёРІР°С†РёСЏ РєР»СЋС‡Р°'],
-          ['subs', 'crown', 'РџРѕРґРїРёСЃРєРё'],
-          ['device', 'monitor', 'РџСЂРёРІСЏР·РєР° СѓСЃС‚СЂРѕР№СЃС‚РІР°'],
-          ['buy', 'cart', 'РљСѓРїРёС‚СЊ РґРѕСЃС‚СѓРї'],
-          ['security', 'shield', 'Р‘РµР·РѕРїР°СЃРЅРѕСЃС‚СЊ'],
-          ...(isOwner() ? [['mod', 'shield', 'РњРѕРґРёС„РёРєР°С†РёСЏ']] : [])
+${sbGroup('Мой кабинет', [
+          ['profile', 'user', 'Профиль'],
+          ['globa', 'globe', 'Глобалка'],
+          ['shop', 'cart', 'Магазин'],
+          ['redeem', 'key', 'Активация ключа'],
+          ['subs', 'crown', 'Подписки'],
+          ['device', 'monitor', 'Привязка устройства'],
+          ['buy', 'cart', 'Купить доступ'],
+          ['security', 'shield', 'Безопасность'],
+          ...(isOwner() ? [['mod', 'shield', 'Модификация']] : [])
         ])}
-        ${sbGroup('РџРѕРјРѕС‰СЊ', [
-          ['support', 'support', 'РџРѕРґРґРµСЂР¶РєР°'],
-          ['idea', 'idea', 'РџСЂРµРґР»РѕР¶РёС‚СЊ РёРґРµСЋ'],
-          ['bug', 'bug', 'РЎРѕРѕР±С‰РёС‚СЊ Рѕ Р±Р°РіРµ']
+        ${sbGroup('Помощь', [
+          ['support', 'support', 'Поддержка'],
+          ['idea', 'idea', 'Предложить идею'],
+          ['bug', 'bug', 'Сообщить о баге']
         ])}
         <div class="sb-group">
-          <h5>РЎРѕРѕР±С‰РµСЃС‚РІРѕ</h5>
+          <h5>Сообщество</h5>
           <a class="sb-item" href="${esc(state.community.discord.url)}" target="_blank" rel="noopener">
             <span style="color:#8b95ff">${icon.discord}</span>Discord
             <span style="margin-left:auto;color:var(--muted-2);font-size:12px">${fmtNum(state.community.discord.members)}</span>
           </a>
         </div>
         <div class="sb-sep"></div>
-        <button class="sb-item" id="logoutBtn"><span style="color:var(--red)">${icon.lock}</span>Р’С‹Р№С‚Рё</button>
+        <button class="sb-item" id="logoutBtn"><span style="color:var(--red)">${icon.lock}</span>Выйти</button>
       </aside>
       <main class="cab-main" id="cabMain"></main>
     </div>`;
@@ -910,7 +910,7 @@ ${sbGroup('РњРѕР№ РєР°Р±РёРЅРµС‚', [
     if (lb) lb.addEventListener('click', async () => {
       try { await api('/api/logout', { method: 'POST' }); } catch {}
       state.me = null; renderNav(); location.hash = '#/';
-      toast('Р’С‹ РІС‹С€Р»Рё РёР· Р°РєРєР°СѓРЅС‚Р°');
+      toast('Вы вышли из аккаунта');
     });
   }
 
@@ -949,7 +949,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
         URL.revokeObjectURL(url);
         resolve(c.toDataURL('image/jpeg', quality || 0.82));
       };
-      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕС‡РёС‚Р°С‚СЊ РєР°СЂС‚РёРЅРєСѓ')); };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Не удалось прочитать картинку')); };
       img.src = url;
     });
   }
@@ -966,19 +966,19 @@ if (section === 'profile') main.innerHTML = viewProfile();
         const isGif = f.type === 'image/gif';
         let data;
         if (isGif) {
-          if (!(state.me && state.me.hasAlpha)) { toast('GIF РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ РІР»Р°РґРµР»СЊС†Р°Рј Alpha 1.21.4', 'error'); btn.disabled = false; return; }
-          if (f.size > 8 * 1024 * 1024) { toast('GIF СЃР»РёС€РєРѕРј Р±РѕР»СЊС€РѕР№ (РјР°РєСЃ 8 РњР‘)', 'error'); btn.disabled = false; return; }
+          if (!(state.me && state.me.hasAlpha)) { toast('GIF доступен только владельцам Alpha 1.21.4', 'error'); btn.disabled = false; return; }
+          if (f.size > 8 * 1024 * 1024) { toast('GIF слишком большой (макс 8 МБ)', 'error'); btn.disabled = false; return; }
           data = await new Promise((res, rej) => {
             const r = new FileReader();
             r.onload = () => res(r.result);
-            r.onerror = () => rej(new Error('РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕС‡РёС‚Р°С‚СЊ С„Р°Р№Р»'));
+            r.onerror = () => rej(new Error('Не удалось прочитать файл'));
             r.readAsDataURL(f);
           });
         } else {
           data = await fileToResizedDataUrl(f, kind === 'banner' ? 1200 : 256, 0.82);
         }
         const r = await api('/api/profile/image', { method: 'POST', body: JSON.stringify({ kind, data }) });
-        toast((r && r.message) || 'РћР±РЅРѕРІР»РµРЅРѕ', 'success');
+        toast((r && r.message) || 'Обновлено', 'success');
         if (state.me) state.me[kind] = data;
         renderCabContent('profile');
         bindSection('profile');
@@ -995,105 +995,105 @@ if (section === 'profile') main.innerHTML = viewProfile();
     return `
     <div class="page-card${glossy ? ' glossy-card' : ''}" id="glossyCard" style="overflow:hidden">
       <div class="profile-banner${glossy ? ' glossy-banner' : ''}" id="glossyBanner"${u.banner ? ` style="background-image:url('${u.banner}')"` : ''}>
-        <button type="button" class="btn btn-ghost btn-sm" data-upload="banner">РЎРјРµРЅРёС‚СЊ Р±Р°РЅРЅРµСЂ</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-upload="banner">Сменить баннер</button>
       </div>
       <div class="profile-ava-wrap">
-        <div class="profile-ava${glossy ? ' glossy-ava' : ''}${u.decoActive === 'ava_deco' ? ' royal' : ''}${u.decoActive === 'ava_ice' ? ' sapphire' : ''}${u.decoActive === 'ava_white' ? ' white' : ''}" id="glossyAva">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}${u.decoActive === 'ava_deco' ? '<span class="c-gold">в™›</span>' : ''}${u.decoActive === 'ava_ice' ? '<span class="c-ice">вќ„</span>' : ''}${u.decoActive === 'ava_white' ? '<span class="c-white">вњ¦</span>' : ''}</div>
+        <div class="profile-ava${glossy ? ' glossy-ava' : ''}${u.decoActive === 'ava_deco' ? ' royal' : ''}${u.decoActive === 'ava_ice' ? ' sapphire' : ''}${u.decoActive === 'ava_white' ? ' white' : ''}" id="glossyAva">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}${u.decoActive === 'ava_deco' ? '<span class="c-gold">?</span>' : ''}${u.decoActive === 'ava_ice' ? '<span class="c-ice">?</span>' : ''}${u.decoActive === 'ava_white' ? '<span class="c-white">?</span>' : ''}</div>
         <div>
           <div class="${loginCls}" style="font-weight:800;font-size:16px">${esc(u.login)}</div>
-          <button type="button" class="btn btn-ghost btn-sm" data-upload="avatar" style="margin-top:6px">РЎРјРµРЅРёС‚СЊ Р°РІР°С‚Р°СЂ</button>
-          ${u.hasAlpha ? '<div style="color:var(--muted);font-size:11.5px;margin-top:4px">Р”РѕСЃС‚СѓРїРµРЅ GIF вЂ” Alpha 1.21.4</div>' : ''}
+          <button type="button" class="btn btn-ghost btn-sm" data-upload="avatar" style="margin-top:6px">Сменить аватар</button>
+          ${u.hasAlpha ? '<div style="color:var(--muted);font-size:11.5px;margin-top:4px">Доступен GIF — Alpha 1.21.4</div>' : ''}
         </div>
       </div>
       ${u.glossyAllowed ? `
       <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)">
         <div>
-          <div style="display:flex;align-items:center;gap:8px;font-weight:700">Р“Р»СЏРЅС†РµРІС‹Р№ РїСЂРѕС„РёР»СЊ <span class="alpha-badge">${icon.crown} РўРѕР»СЊРєРѕ Alpha</span></div>
-          <div id="glossyHint" style="color:var(--muted);font-size:12.5px;margin-top:3px">${glossy ? 'Р“Р»СЏРЅРµС† РІРєР»СЋС‡С‘РЅ вЂ” РєР°СЂС‚РѕС‡РєР° РїСЂРѕС„РёР»СЏ Р±Р»РµСЃС‚РёС‚ вњЁ' : 'Р’РєР»СЋС‡Рё РіР»СЏРЅРµС†, С‡С‚РѕР±С‹ РєР°СЂС‚РѕС‡РєР° РїСЂРѕС„РёР»СЏ Р±Р»РµСЃС‚РµР»Р°'}</div>
+          <div style="display:flex;align-items:center;gap:8px;font-weight:700">Глянцевый профиль <span class="alpha-badge">${icon.crown} Только Alpha</span></div>
+          <div id="glossyHint" style="color:var(--muted);font-size:12.5px;margin-top:3px">${glossy ? 'Глянец включён — карточка профиля блестит ?' : 'Включи глянец, чтобы карточка профиля блестела'}</div>
         </div>
-        <button type="button" id="glossyToggle" class="btn btn-sm ${glossy ? 'btn-gold' : 'btn-dark'}">${glossy ? 'Р’С‹РєР»СЋС‡РёС‚СЊ' : 'Р’РєР»СЋС‡РёС‚СЊ'}</button>
+        <button type="button" id="glossyToggle" class="btn btn-sm ${glossy ? 'btn-gold' : 'btn-dark'}">${glossy ? 'Выключить' : 'Включить'}</button>
       </div>` : ''}
       ${u.hasAlpha ? `
       <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)">
         <div>
-          <div style="display:flex;align-items:center;gap:8px;font-weight:700">Р¦РІРµС‚ С‚РµРјС‹ СЃР°Р№С‚Р° <span class="alpha-badge">${icon.crown} РўРѕР»СЊРєРѕ Alpha</span></div>
-          <div style="color:var(--muted);font-size:12.5px;margin-top:3px">РљР°СЃС‚РѕРјРЅС‹Р№ Р°РєС†РµРЅС‚ РґР»СЏ РІСЃРµРіРѕ СЃР°Р№С‚Р° вЂ” СЃРѕС…СЂР°РЅСЏРµС‚СЃСЏ РЅР° РІР°С€РµРј Р°РєРєР°СѓРЅС‚Рµ</div>
+          <div style="display:flex;align-items:center;gap:8px;font-weight:700">Цвет темы сайта <span class="alpha-badge">${icon.crown} Только Alpha</span></div>
+          <div style="color:var(--muted);font-size:12.5px;margin-top:3px">Кастомный акцент для всего сайта — сохраняется на вашем аккаунте</div>
         </div>
         <div class="theme-swatches" id="themeSwatches">
           ${Object.keys(THEMES).map(k => `<button type="button" class="theme-swatch${(u.theme || 'violet') === k ? ' active' : ''}" data-theme-key="${k}" title="${THEMES[k].label}" style="--sw:${THEMES[k].gold}"></button>`).join('')}
         </div>
       </div>` : ''}
       <div class="page-head" style="padding-top:16px"><div>
-        <div class="page-title">РџСЂРѕС„РёР»СЊ</div>
-        <div class="page-sub">Р”Р°РЅРЅС‹Рµ РІР°С€РµРіРѕ Р°РєРєР°СѓРЅС‚Р°</div>
+        <div class="page-title">Профиль</div>
+        <div class="page-sub">Данные вашего аккаунта</div>
       </div></div>
       <div class="profile-grid">
-        <div class="pfield"><div class="pl">Р›РѕРіРёРЅ</div><div class="pv">${esc(u.login)}</div></div>
+        <div class="pfield"><div class="pl">Логин</div><div class="pv">${esc(u.login)}</div></div>
         <div class="pfield"><div class="pl">UID</div><div class="pv mono">${esc(u.uid)}</div></div>
-        <div class="pfield"><div class="pl">Р РѕР»СЊ</div><div class="pv">${u.roleColor ? `<span class="role-grad role-grad-${u.roleColor}">${esc(roleLabel(u.role))}</span>` : `${u.role ? '<b style="color:var(--gold)">' + esc(roleLabel(u.role)) + '</b>' : 'User'}`}</div></div>
-        <div class="pfield"><div class="pl">РџРѕС‡С‚Р°</div><div class="pv">${esc(u.email)}</div></div>
-        <div class="pfield"><div class="pl">Р”Р°С‚Р° СЂРµРіРёСЃС‚СЂР°С†РёРё</div><div class="pv">${fmtDate(u.createdAt)}</div></div>
+        <div class="pfield"><div class="pl">Роль</div><div class="pv">${u.roleColor ? `<span class="role-grad role-grad-${u.roleColor}">${esc(roleLabel(u.role))}</span>` : `${u.role ? '<b style="color:var(--gold)">' + esc(roleLabel(u.role)) + '</b>' : 'User'}`}</div></div>
+        <div class="pfield"><div class="pl">Почта</div><div class="pv">${esc(u.email)}</div></div>
+        <div class="pfield"><div class="pl">Дата регистрации</div><div class="pv">${fmtDate(u.createdAt)}</div></div>
 <div class="pfield"><div class="pl">HWID</div>
-          <div class="pv mono">${u.hwid ? esc(u.hwid) : '<span class="badge badge-gray">РќРµ РїСЂРёРІСЏР·Р°РЅРѕ</span>'}</div></div>
+          <div class="pv mono">${u.hwid ? esc(u.hwid) : '<span class="badge badge-gray">Не привязано</span>'}</div></div>
       </div>
       <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
         ${u.subscription && u.subscription.status === 'active'
-          ? `<a href="#/launcher" class="btn btn-gold btn-lg">${icon.layers} РЎРєР°С‡Р°С‚СЊ РєР»РёРµРЅС‚</a>`
-          : (u.subscription ? `<span class="btn btn-gold btn-lg" style="opacity:.55;cursor:not-allowed;pointer-events:none">${icon.x} РЎРєР°С‡Р°С‚СЊ РЅРµРІРѕР·РјРѕР¶РЅРѕ</span>` : `<a href="#/cabinet/buy" data-cab="buy" class="btn btn-gold btn-lg">${icon.crown} РљСѓРїРёС‚СЊ РґРѕСЃС‚СѓРї</a>`)}
+          ? `<a href="#/launcher" class="btn btn-gold btn-lg">${icon.layers} Скачать клиент</a>`
+          : (u.subscription ? `<span class="btn btn-gold btn-lg" style="opacity:.55;cursor:not-allowed;pointer-events:none">${icon.x} Скачать невозможно</span>` : `<a href="#/cabinet/buy" data-cab="buy" class="btn btn-gold btn-lg">${icon.crown} Купить доступ</a>`)}
       </div>
     </div>
     <div class="page-card">
       <div class="page-head"><div>
-        <div class="page-title">РџРѕРґРїРёСЃРєР°</div>
-        <div class="page-sub">РўРµРєСѓС‰Р°СЏ РїРѕРґРїРёСЃРєР° РЅР° Р°РєРєР°СѓРЅС‚</div>
+        <div class="page-title">Подписка</div>
+        <div class="page-sub">Текущая подписка на аккаунт</div>
       </div>
-      ${u.subscription ? '' : `<a href="#/cabinet/buy" data-cab="buy" class="btn btn-gold">РљСѓРїРёС‚СЊ РґРѕСЃС‚СѓРї</a>`}</div>
+      ${u.subscription ? '' : `<a href="#/cabinet/buy" data-cab="buy" class="btn btn-gold">Купить доступ</a>`}</div>
        ${u.subscription
         ? `<div class="sub-name">${esc(u.subscription.name)}</div>
            ${u.subscription.status === 'frozen'
-            ? `<div class="sub-status" style="color:var(--red)">${icon.x} Р—Р°РјРѕСЂРѕР¶РµРЅР° РІР»Р°РґРµР»СЊС†РµРј</div>
+            ? `<div class="sub-status" style="color:var(--red)">${icon.x} Заморожена владельцем</div>
                <div class="sub-rows">
-                 <div class="sub-row"><span>Р”РµР№СЃС‚РІСѓРµС‚</span><b>${u.subscription.forever ? 'РќР°РІСЃРµРіРґР°' : fmtDate(u.subscription.expiresAt)}</b></div>
-                 <div class="sub-row"><span>Р”Р°С‚Р° РїРѕРєСѓРїРєРё</span><b>${fmtDate(u.subscription.purchasedAt)}</b></div>
+                 <div class="sub-row"><span>Действует</span><b>${u.subscription.forever ? 'Навсегда' : fmtDate(u.subscription.expiresAt)}</b></div>
+                 <div class="sub-row"><span>Дата покупки</span><b>${fmtDate(u.subscription.purchasedAt)}</b></div>
                </div>
-               <div class="warn" style="margin-top:14px">РџРѕРґРїРёСЃРєР° Р·Р°РјРѕСЂРѕР¶РµРЅР° вЂ” Р·Р°РїСѓСЃРє РєР»РёРµРЅС‚Р° Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ. РћР±СЂР°С‚РёС‚РµСЃСЊ РІ РїРѕРґРґРµСЂР¶РєСѓ Discord.</div>`
-            : `<div class="sub-status active">${icon.check} РђРєС‚РёРІРЅР° В· ${esc(u.subscription.tag)}</div>
+               <div class="warn" style="margin-top:14px">Подписка заморожена — запуск клиента заблокирован. Обратитесь в поддержку Discord.</div>`
+            : `<div class="sub-status active">${icon.check} Активна · ${esc(u.subscription.tag)}</div>
                <div class="sub-rows">
-                 <div class="sub-row"><span>Р”РµР№СЃС‚РІСѓРµС‚</span><b>${u.subscription.forever ? 'РќР°РІСЃРµРіРґР°' : fmtDate(u.subscription.expiresAt)}</b></div>
-                 <div class="sub-row"><span>Р”Р°С‚Р° РїРѕРєСѓРїРєРё</span><b>${fmtDate(u.subscription.purchasedAt)}</b></div>
+                 <div class="sub-row"><span>Действует</span><b>${u.subscription.forever ? 'Навсегда' : fmtDate(u.subscription.expiresAt)}</b></div>
+                 <div class="sub-row"><span>Дата покупки</span><b>${fmtDate(u.subscription.purchasedAt)}</b></div>
                </div>`}`
-        : `<div class="empty">${icon.crown}<b>РџРѕРґРїРёСЃРєР° РЅРµ Р°РєС‚РёРІРЅР°</b>РќР°Р¶РјРёС‚Рµ В«РљСѓРїРёС‚СЊ РґРѕСЃС‚СѓРїВ» РёР»Рё Р°РєС‚РёРІРёСЂСѓР№С‚Рµ РїСЂРѕРјРѕРєРѕРґ.</div>`}
+        : `<div class="empty">${icon.crown}<b>Подписка не активна</b>Нажмите «Купить доступ» или активируйте промокод.</div>`}
     </div>`;
   }
 
-  /* ---------- Р“Р»РѕР±Р°Р»РєР°: РїРѕРёСЃРє РёРіСЂРѕРєРѕРІ, РїСЂРѕС„РёР»Рё, РґСЂСѓР·СЊСЏ ---------- */
+  /* ---------- Глобалка: поиск игроков, профили, друзья ---------- */
   function viewGloba() {
     return `
     <div class="page-card" style="max-width:820px">
       <div class="page-head"><div>
-        <div class="page-title">Р“Р»РѕР±Р°Р»РєР°</div>
-        <div class="page-sub">РџРѕРёСЃРє РґСЂСѓР·РµР№ РїРѕ Р»РѕРіРёРЅСѓ Рё РїСЂРѕСЃРјРѕС‚СЂ РёС… РїСЂРѕС„РёР»РµР№</div>
-      </div><button type="button" class="btn btn-dark" id="globkaSelf">${icon.user} РЎРІРѕР№ РїСЂРѕС„РёР»СЊ</button></div>
+        <div class="page-title">Глобалка</div>
+        <div class="page-sub">Поиск друзей по логину и просмотр их профилей</div>
+      </div><button type="button" class="btn btn-dark" id="globkaSelf">${icon.user} Свой профиль</button></div>
       <div class="globka-search">
         <div class="field" style="flex:1;margin-bottom:0;min-width:260px">
-          <label>РџРѕРёСЃРє РїРѕ Р»РѕРіРёРЅСѓ</label>
-          <input type="text" id="globkaSearch" placeholder="РќР°РїСЂРёРјРµСЂ: 0_0_Krolik" maxlength="30" autocomplete="off" spellcheck="false">
+          <label>Поиск по логину</label>
+          <input type="text" id="globkaSearch" placeholder="Например: 0_0_Krolik" maxlength="30" autocomplete="off" spellcheck="false">
         </div>
-        <button type="button" class="btn btn-gold" id="globkaSearchBtn">${icon.search} РџРѕРёСЃРє</button>
+        <button type="button" class="btn btn-gold" id="globkaSearchBtn">${icon.search} Поиск</button>
       </div>
       <div id="globkaResults" class="globka-results"></div>
     </div>
     <div class="page-card" style="max-width:820px">
       <div class="page-head"><div>
-        <div class="page-title">РЈРІРµРґРѕРјР»РµРЅРёСЏ</div>
-        <div class="page-sub">Р—Р°СЏРІРєРё РІ РґСЂСѓР·СЊСЏ вЂ” РїСЂРёРјРёС‚Рµ, РѕС‚РєР»РѕРЅРёС‚Рµ РёР»Рё РґРѕР¶РґРёС‚РµСЃСЊ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ</div>
+        <div class="page-title">Уведомления</div>
+        <div class="page-sub">Заявки в друзья — примите, отклоните или дождитесь подтверждения</div>
       </div></div>
       <div id="globkaReqs" class="globka-results"></div>
     </div>
     <div class="page-card" style="max-width:820px">
       <div class="page-head"><div>
-        <div class="page-title">РњРѕРё РґСЂСѓР·СЊСЏ</div>
-        <div class="page-sub">РќР°Р¶РјРёС‚Рµ В«РџСЂРѕС„РёР»СЊВ», С‡С‚РѕР±С‹ РїРѕСЃРјРѕС‚СЂРµС‚СЊ, С‡С‚Рѕ РєСѓРїРёР» РґСЂСѓРі РІ РјР°РіР°Р·РёРЅРµ</div>
+        <div class="page-title">Мои друзья</div>
+        <div class="page-sub">Нажмите «Профиль», чтобы посмотреть, что купил друг в магазине</div>
       </div></div>
       <div id="globkaFriends" class="globka-results"></div>
     </div>`;
@@ -1101,70 +1101,70 @@ if (section === 'profile') main.innerHTML = viewProfile();
 
   function globkaRowHTML(u) {
     const avaCls = 'sb-ava' + (u.decoActive === 'ava_deco' ? ' royal' : '') + (u.decoActive === 'ava_ice' ? ' sapphire' : '') + (u.decoActive === 'ava_white' ? ' white' : '');
-    const avaSpan = u.decoActive === 'ava_deco' ? '<span class="c-gold">в™›</span>'
-      : u.decoActive === 'ava_ice' ? '<span class="c-ice">вќ„</span>'
-      : u.decoActive === 'ava_white' ? '<span class="c-white">вњ¦</span>' : '';
+    const avaSpan = u.decoActive === 'ava_deco' ? '<span class="c-gold">?</span>'
+      : u.decoActive === 'ava_ice' ? '<span class="c-ice">?</span>'
+      : u.decoActive === 'ava_white' ? '<span class="c-white">?</span>' : '';
     const subTxt = u.subscription && u.subscription.status === 'active'
-      ? ` В· <span style="color:var(--green)">${esc(u.subscription.name)}</span>` : '';
+      ? ` · <span style="color:var(--green)">${esc(u.subscription.name)}</span>` : '';
     let friendBtn;
-    if (u.isFriend) friendBtn = `<button type="button" class="btn btn-sm ${u.isReqIn ? 'btn-gold' : 'btn-dark'}" data-globka-friend="${esc(u.login)}" data-globka-isfriend="1" data-globka-reqin="${u.isReqIn ? 1 : 0}">${u.isReqIn ? 'РџСЂРёРЅСЏС‚СЊ Р·Р°СЏРІРєСѓ' : 'Р’ РґСЂСѓР·СЊСЏС… вњ“'}</button>`;
-    else if (u.isReqOut) friendBtn = `<button type="button" class="btn btn-sm btn-dark" data-globka-friend="${esc(u.login)}" data-globka-isfriend="0" data-globka-reqout="1" title="РћС‚РјРµРЅРёС‚СЊ Р·Р°СЏРІРєСѓ">Р—Р°СЏРІРєР° РѕС‚РїСЂР°РІР»РµРЅР°</button>`;
-    else friendBtn = `<button type="button" class="btn btn-sm btn-gold" data-globka-friend="${esc(u.login)}" data-globka-isfriend="0">Р”РѕР±Р°РІРёС‚СЊ РІ РґСЂСѓР·СЊСЏ</button>`;
+    if (u.isFriend) friendBtn = `<button type="button" class="btn btn-sm ${u.isReqIn ? 'btn-gold' : 'btn-dark'}" data-globka-friend="${esc(u.login)}" data-globka-isfriend="1" data-globka-reqin="${u.isReqIn ? 1 : 0}">${u.isReqIn ? 'Принять заявку' : 'В друзьях ?'}</button>`;
+    else if (u.isReqOut) friendBtn = `<button type="button" class="btn btn-sm btn-dark" data-globka-friend="${esc(u.login)}" data-globka-isfriend="0" data-globka-reqout="1" title="Отменить заявку">Заявка отправлена</button>`;
+    else friendBtn = `<button type="button" class="btn btn-sm btn-gold" data-globka-friend="${esc(u.login)}" data-globka-isfriend="0">Добавить в друзья</button>`;
     return `
     <div class="globka-row">
       <div class="${avaCls}">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}${avaSpan}</div>
       <div style="min-width:0">
         <div class="sb-name${u.loginColor ? ' login-grad login-grad-' + u.loginColor : ''}">${esc(u.login)}</div>
-        ${u.online ? '<div class="globka-online"><span class="gdot"></span>РћРЅР»Р°Р№РЅ</div>' : ''}
+        ${u.online ? '<div class="globka-online"><span class="gdot"></span>Онлайн</div>' : ''}
         ${u.role ? `<div class="sb-role ${u.roleColor ? 'role-grad role-grad-' + u.roleColor : ''}">${roleLabel(u.role)}</div>` : ''}
         <div class="sb-uid">UID: <b>${esc(u.uid)}</b>${subTxt}</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
         ${friendBtn}
-        <button type="button" class="btn btn-sm btn-ghost" data-globka-profile="${esc(u.login)}">РџСЂРѕС„РёР»СЊ</button>
+        <button type="button" class="btn btn-sm btn-ghost" data-globka-profile="${esc(u.login)}">Профиль</button>
       </div>
     </div>`;
   }
 
   function globkaReqRowHTML(u) {
     const avaCls = 'sb-ava' + (u.decoActive === 'ava_deco' ? ' royal' : '') + (u.decoActive === 'ava_ice' ? ' sapphire' : '') + (u.decoActive === 'ava_white' ? ' white' : '');
-    const avaSpan = u.decoActive === 'ava_deco' ? '<span class="c-gold">в™›</span>'
-      : u.decoActive === 'ava_ice' ? '<span class="c-ice">вќ„</span>'
-      : u.decoActive === 'ava_white' ? '<span class="c-white">вњ¦</span>' : '';
+    const avaSpan = u.decoActive === 'ava_deco' ? '<span class="c-gold">?</span>'
+      : u.decoActive === 'ava_ice' ? '<span class="c-ice">?</span>'
+      : u.decoActive === 'ava_white' ? '<span class="c-white">?</span>' : '';
     return `
     <div class="globka-row">
       <div class="${avaCls}">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}${avaSpan}</div>
       <div style="min-width:0">
         <div class="sb-name${u.loginColor ? ' login-grad login-grad-' + u.loginColor : ''}">${esc(u.login)}</div>
-        ${u.online ? '<div class="globka-online"><span class="gdot"></span>РћРЅР»Р°Р№РЅ</div>' : ''}
+        ${u.online ? '<div class="globka-online"><span class="gdot"></span>Онлайн</div>' : ''}
         ${u.role ? `<div class="sb-role ${u.roleColor ? 'role-grad role-grad-' + u.roleColor : ''}">${roleLabel(u.role)}</div>` : ''}
-        <div class="sb-uid">UID: <b>${esc(u.uid)}</b> В· С…РѕС‡РµС‚ РґРѕР±Р°РІРёС‚СЊ РІР°СЃ РІ РґСЂСѓР·СЊСЏ</div>
+        <div class="sb-uid">UID: <b>${esc(u.uid)}</b> · хочет добавить вас в друзья</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
-        <button type="button" class="btn btn-sm btn-gold" data-globka-accept="${esc(u.login)}">${icon.check} РџСЂРёРЅСЏС‚СЊ</button>
-        <button type="button" class="btn btn-sm btn-ghost" data-globka-decline="${esc(u.login)}">РћС‚РєР»РѕРЅРёС‚СЊ</button>
-        <button type="button" class="btn btn-sm btn-ghost" data-globka-profile="${esc(u.login)}">РџСЂРѕС„РёР»СЊ</button>
+        <button type="button" class="btn btn-sm btn-gold" data-globka-accept="${esc(u.login)}">${icon.check} Принять</button>
+        <button type="button" class="btn btn-sm btn-ghost" data-globka-decline="${esc(u.login)}">Отклонить</button>
+        <button type="button" class="btn btn-sm btn-ghost" data-globka-profile="${esc(u.login)}">Профиль</button>
       </div>
     </div>`;
   }
 
   function globkaReqOutRowHTML(u) {
     const avaCls = 'sb-ava' + (u.decoActive === 'ava_deco' ? ' royal' : '') + (u.decoActive === 'ava_ice' ? ' sapphire' : '') + (u.decoActive === 'ava_white' ? ' white' : '');
-    const avaSpan = u.decoActive === 'ava_deco' ? '<span class="c-gold">в™›</span>'
-      : u.decoActive === 'ava_ice' ? '<span class="c-ice">вќ„</span>'
-      : u.decoActive === 'ava_white' ? '<span class="c-white">вњ¦</span>' : '';
+    const avaSpan = u.decoActive === 'ava_deco' ? '<span class="c-gold">?</span>'
+      : u.decoActive === 'ava_ice' ? '<span class="c-ice">?</span>'
+      : u.decoActive === 'ava_white' ? '<span class="c-white">?</span>' : '';
     return `
     <div class="globka-row">
       <div class="${avaCls}">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || '?')[0].toUpperCase())}${avaSpan}</div>
       <div style="min-width:0">
         <div class="sb-name${u.loginColor ? ' login-grad login-grad-' + u.loginColor : ''}">${esc(u.login)}</div>
-        ${u.online ? '<div class="globka-online"><span class="gdot"></span>РћРЅР»Р°Р№РЅ</div>' : ''}
+        ${u.online ? '<div class="globka-online"><span class="gdot"></span>Онлайн</div>' : ''}
         ${u.role ? `<div class="sb-role ${u.roleColor ? 'role-grad role-grad-' + u.roleColor : ''}">${roleLabel(u.role)}</div>` : ''}
-        <div class="sb-uid">UID: <b>${esc(u.uid)}</b> В· <span style="color:var(--gold)">Р¶РґРµС‚ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ</span></div>
+        <div class="sb-uid">UID: <b>${esc(u.uid)}</b> · <span style="color:var(--gold)">ждет подтверждения</span></div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
-        <button type="button" class="btn btn-sm btn-ghost" data-globka-cancel="${esc(u.login)}">РћС‚РјРµРЅРёС‚СЊ</button>
-        <button type="button" class="btn btn-sm btn-ghost" data-globka-profile="${esc(u.login)}">РџСЂРѕС„РёР»СЊ</button>
+        <button type="button" class="btn btn-sm btn-ghost" data-globka-cancel="${esc(u.login)}">Отменить</button>
+        <button type="button" class="btn btn-sm btn-ghost" data-globka-profile="${esc(u.login)}">Профиль</button>
       </div>
     </div>`;
   }
@@ -1172,13 +1172,13 @@ if (section === 'profile') main.innerHTML = viewProfile();
   function profileOwnedHTML(p, s, catFilter) {
     const items = s.items || [];
     const owned = s.owned || {};
-    const cats = [...new Set(items.filter(i => owned && owned[i.key]).map(i => i.cat || 'РўРѕРІР°СЂС‹'))];
+    const cats = [...new Set(items.filter(i => owned && owned[i.key]).map(i => i.cat || 'Товары'))];
     const u = p;
     const letter = esc(String(u.login || 'H')[0].toUpperCase());
     const isActive = (it) => it.kind === 'login_color' ? s.activeColor === it.key
       : it.kind === 'role_color' ? s.activeRole === it.key
       : s.activeDeco === it.key;
-    const inCat = (it) => (it.cat || 'РўРѕРІР°СЂС‹') === catFilter;
+    const inCat = (it) => (it.cat || 'Товары') === catFilter;
     return items.filter(i => owned && owned[i.key] && (!catFilter || inCat(i))).map(it => {
       const used = isActive(it);
       const st = DECO_STYLE[it.key] || { cls: '', span: '' };
@@ -1188,66 +1188,66 @@ if (section === 'profile') main.innerHTML = viewProfile();
           ${it.kind === 'login_color'
             ? `<div class="login-prev${used ? ' is-active' : ''}"><span class="login-grad login-grad-${it.key}">${esc(u.login)}</span></div>`
             : it.kind === 'role_color'
-              ? `<div class="login-prev${used ? ' is-active' : ''}"><span class="role-grad role-grad-${it.key}">${esc(u.role ? roleLabel(u.role) : 'Р РѕР»СЊ')}</span></div>`
+              ? `<div class="login-prev${used ? ' is-active' : ''}"><span class="role-grad role-grad-${it.key}">${esc(u.role ? roleLabel(u.role) : 'Роль')}</span></div>`
               : `<div class="shop-ava ${st.cls}">${u.avatar ? `<img src="${u.avatar}" alt="">` : letter}${st.span}</div>`}
         </div>
         <div class="shop-info">
           <div class="shop-name">${esc(it.name)}</div>
           <div class="shop-sub">${esc(it.cat || '')}</div>
         </div>
-        <div class="shop-cta">${used ? '<span class="stb stb-ok" style="white-space:nowrap">' + icon.check + ' РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ</span>' : '<span class="stb">РљСѓРїР»РµРЅРѕ</span>'}</div>
+        <div class="shop-cta">${used ? '<span class="stb stb-ok" style="white-space:nowrap">' + icon.check + ' Используется</span>' : '<span class="stb">Куплено</span>'}</div>
       </div>`;
     }).join('');
   }
 
   async function renderGlobaProfile(login, main) {
-    main.innerHTML = '<div class="page-card"><div class="empty" style="padding:22px 0">Р—Р°РіСЂСѓР·РєР° РїСЂРѕС„РёР»СЏвЂ¦</div></div>';
+    main.innerHTML = '<div class="page-card"><div class="empty" style="padding:22px 0">Загрузка профиля…</div></div>';
     try {
       const r = await api('/api/globka/profile?login=' + encodeURIComponent(login));
-      if (!r || !r.user) { main.innerHTML = '<div class="page-card"><div class="empty">РџСЂРѕС„РёР»СЊ РЅРµ РЅР°Р№РґРµРЅ</div></div>'; return; }
+      if (!r || !r.user) { main.innerHTML = '<div class="page-card"><div class="empty">Профиль не найден</div></div>'; return; }
       const p = r.user;
       const s = r.shop || { items: [], owned: {}, activeColor: null, activeRole: null, activeDeco: null };
       const glossy = !!(p.glossy && p.glossyAllowed);
       const loginCls = p.loginColor ? ' login-grad login-grad-' + p.loginColor : '';
       const items = s.items || [];
       const ownedItems = items.filter(i => s.owned && s.owned[i.key]);
-      const ownedCats = [...new Set(ownedItems.map(i => i.cat || 'РўРѕРІР°СЂС‹'))];
+      const ownedCats = [...new Set(ownedItems.map(i => i.cat || 'Товары'))];
       const activeCat = globkaOwnedCat && ownedCats.includes(globkaOwnedCat) ? globkaOwnedCat : (ownedCats[0] || '');
       main.innerHTML = `
       <div class="page-card${glossy ? ' glossy-card' : ''}" style="overflow:hidden;max-width:820px">
         <div class="profile-banner${glossy ? ' glossy-banner' : ''}"${p.banner ? ` style="background-image:url('${p.banner}')"` : ''}></div>
         <div class="profile-ava-wrap">
-          <div class="profile-ava${glossy ? ' glossy-ava' : ''}${p.decoActive === 'ava_deco' ? ' royal' : ''}${p.decoActive === 'ava_ice' ? ' sapphire' : ''}${p.decoActive === 'ava_white' ? ' white' : ''}">${p.avatar ? `<img src="${p.avatar}" alt="">` : esc(String(p.login || '?')[0].toUpperCase())}${p.decoActive === 'ava_deco' ? '<span class="c-gold">в™›</span>' : ''}${p.decoActive === 'ava_ice' ? '<span class="c-ice">вќ„</span>' : ''}${p.decoActive === 'ava_white' ? '<span class="c-white">вњ¦</span>' : ''}</div>
+          <div class="profile-ava${glossy ? ' glossy-ava' : ''}${p.decoActive === 'ava_deco' ? ' royal' : ''}${p.decoActive === 'ava_ice' ? ' sapphire' : ''}${p.decoActive === 'ava_white' ? ' white' : ''}">${p.avatar ? `<img src="${p.avatar}" alt="">` : esc(String(p.login || '?')[0].toUpperCase())}${p.decoActive === 'ava_deco' ? '<span class="c-gold">?</span>' : ''}${p.decoActive === 'ava_ice' ? '<span class="c-ice">?</span>' : ''}${p.decoActive === 'ava_white' ? '<span class="c-white">?</span>' : ''}</div>
           <div style="min-width:0">
             <div class="${loginCls}" style="font-weight:800;font-size:16px">${esc(p.login)}</div>
-            ${p.online ? '<div class="globka-online" style="margin-top:2px"><span class="gdot"></span>РћРЅР»Р°Р№РЅ</div>' : ''}
+            ${p.online ? '<div class="globka-online" style="margin-top:2px"><span class="gdot"></span>Онлайн</div>' : ''}
             <div style="color:var(--muted);font-size:12.5px;margin-top:3px">UID: <b>${esc(p.uid)}</b></div>
             ${p.role ? `<div class="sb-role ${p.roleColor ? 'role-grad role-grad-' + p.roleColor : ''}" style="display:inline-flex;margin-top:2px">${roleLabel(p.role)}</div>` : ''}
           </div>
-          ${p.isFriend ? '<span class="stb stb-ok" style="margin-left:auto">' + icon.check + ' Р”СЂСѓР·СЊСЏ</span>'
+          ${p.isFriend ? '<span class="stb stb-ok" style="margin-left:auto">' + icon.check + ' Друзья</span>'
           : (state.me && p.login !== state.me.login) ? `
             <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
-              <button type="button" class="btn btn-sm ${p.isReqOut ? 'btn-dark' : 'btn-gold'}" data-globka-profile-friend="${esc(p.login)}" data-globka-pfriend="0" data-globka-preqin="${p.isReqIn ? 1 : 0}" data-globka-preqout="${p.isReqOut ? 1 : 0}">${p.isReqIn ? 'РџСЂРёРЅСЏС‚СЊ Р·Р°СЏРІРєСѓ' : (p.isReqOut ? 'Р—Р°СЏРІРєР° РѕС‚РїСЂР°РІР»РµРЅР°' : 'Р”РѕР±Р°РІРёС‚СЊ РІ РґСЂСѓР·СЊСЏ')}</button>
+              <button type="button" class="btn btn-sm ${p.isReqOut ? 'btn-dark' : 'btn-gold'}" data-globka-profile-friend="${esc(p.login)}" data-globka-pfriend="0" data-globka-preqin="${p.isReqIn ? 1 : 0}" data-globka-preqout="${p.isReqOut ? 1 : 0}">${p.isReqIn ? 'Принять заявку' : (p.isReqOut ? 'Заявка отправлена' : 'Добавить в друзья')}</button>
             </div>` : ''}
         </div>
         <div class="profile-grid" style="margin-top:18px">
-          <div class="pfield"><div class="pl">РџРѕРґРїРёСЃРєР°</div><div class="pv">${p.subscription ? esc(p.subscription.name) + (p.subscription.status === 'active' ? '' : ' В· Р·Р°РјРѕСЂРѕР¶РµРЅР°') : 'РќРµС‚ РїРѕРґРїРёСЃРєРё'}</div></div>
-          <div class="pfield"><div class="pl">РЎС‚Р°С‚СѓСЃ</div><div class="pv">${p.subscription ? (p.subscription.status === 'active' ? '<span style="color:var(--green)">РђРєС‚РёРІРЅР°</span>' : 'Р—Р°РјРѕСЂРѕР¶РµРЅР°') : 'вЂ”'}</div></div>
-          <div class="pfield"><div class="pl">Р”Р°С‚Р° СЂРµРіРёСЃС‚СЂР°С†РёРё</div><div class="pv">${fmtDate(p.createdAt)}</div></div>
-          <div class="pfield"><div class="pl">Alpha</div><div class="pv">${p.hasAlpha ? '<span class="alpha-badge">' + icon.crown + ' GIF РїСЂРѕС„РёР»СЊ</span>' : 'РќРµС‚'}</div></div>
+          <div class="pfield"><div class="pl">Подписка</div><div class="pv">${p.subscription ? esc(p.subscription.name) + (p.subscription.status === 'active' ? '' : ' · заморожена') : 'Нет подписки'}</div></div>
+          <div class="pfield"><div class="pl">Статус</div><div class="pv">${p.subscription ? (p.subscription.status === 'active' ? '<span style="color:var(--green)">Активна</span>' : 'Заморожена') : '—'}</div></div>
+          <div class="pfield"><div class="pl">Дата регистрации</div><div class="pv">${fmtDate(p.createdAt)}</div></div>
+          <div class="pfield"><div class="pl">Alpha</div><div class="pv">${p.hasAlpha ? '<span class="alpha-badge">' + icon.crown + ' GIF профиль</span>' : 'Нет'}</div></div>
         </div>
       </div>
       <div class="page-card" style="max-width:820px">
         <div class="page-head"><div>
-          <div class="page-title">РљСѓРїР»РµРЅРѕ РІ РјР°РіР°Р·РёРЅРµ</div>
-          <div class="page-sub">РЈРєСЂР°С€РµРЅРёСЏ, С†РІРµС‚Р° Р»РѕРіРёРЅР° Рё СЂРѕР»Рё @${esc(p.login)}</div>
+          <div class="page-title">Куплено в магазине</div>
+          <div class="page-sub">Украшения, цвета логина и роли @${esc(p.login)}</div>
         </div></div>
-        ${ownedItems.length === 0 ? '<div class="empty">' + icon.cart + '<b>РџРѕРєР° РЅРёС‡РµРіРѕ РЅРµ РєСѓРїР»РµРЅРѕ</b>Р’ РјР°РіР°Р·РёРЅРµ РїРѕРєР° РїСѓСЃС‚Рѕ.</div>'
+        ${ownedItems.length === 0 ? '<div class="empty">' + icon.cart + '<b>Пока ничего не куплено</b>В магазине пока пусто.</div>'
           : `<div class="subs-tabs" id="shopTabs">
               ${ownedCats.map(c => `<button type="button" class="subs-tab${c === activeCat ? ' active' : ''}" data-globka-owned-cat="${esc(c)}">${esc(c)}</button>`).join('')}
             </div>
             <div id="globkaOwned" class="globka-inv">${profileOwnedHTML(p, s, activeCat)}</div>`}
-        <button type="button" class="btn btn-dark" data-globka-back style="margin-top:16px">в†ђ РќР°Р·Р°Рґ Рє РїРѕРёСЃРєСѓ</button>
+        <button type="button" class="btn btn-dark" data-globka-back style="margin-top:16px">< Назад к поиску</button>
       </div>`;
       const pBackBtn = $('[data-globka-back]', main);
       if (pBackBtn) pBackBtn.addEventListener('click', () => { main.innerHTML = viewGloba(); bindSection('globa', main); });
@@ -1282,27 +1282,27 @@ if (section === 'profile') main.innerHTML = viewProfile();
     return `
     <div class="page-card">
       <div class="page-head"><div>
-        <div class="page-title">РџРѕРґРїРёСЃРєРё</div>
-        <div class="page-sub">Р’Р°С€Рё РїРѕРґРїРёСЃРєРё Рё РїСЂРѕРґР»РµРЅРёРµ</div>
+        <div class="page-title">Подписки</div>
+        <div class="page-sub">Ваши подписки и продление</div>
       </div></div>
       ${u.subscription ? `
         <div class="plan featured" style="max-width:520px;border-color:rgba(55,211,154,0.45)">
-          <span class="stb stb-ok" style="position:absolute;top:18px;right:16px">${icon.check} РђРєС‚РёРІРЅР°</span>
+          <span class="stb stb-ok" style="position:absolute;top:18px;right:16px">${icon.check} Активна</span>
           <div class="plan-name">${esc(u.subscription.name)}</div>
           <div class="plan-sub">${esc(u.subscription.tag)}</div>
-          <div class="plan-price"><span class="amount" style="font-size:26px">РџРѕРґРїРёСЃРєР°</span>
-            <span class="forever" style="color:var(--green)">${u.subscription.forever ? 'Р”РµР№СЃС‚РІСѓРµС‚: РќР°РІСЃРµРіРґР°' : 'Р”РµР№СЃС‚РІСѓРµС‚ РґРѕ: ' + fmtDate(u.subscription.expiresAt)}</span></div>
-          <button class="btn btn-dark" style="align-self:flex-start" data-buy="${u.subscription.plan}">РџСЂРѕРґР»РёС‚СЊ РїРѕРґРїРёСЃРєСѓ</button>
+          <div class="plan-price"><span class="amount" style="font-size:26px">Подписка</span>
+            <span class="forever" style="color:var(--green)">${u.subscription.forever ? 'Действует: Навсегда' : 'Действует до: ' + fmtDate(u.subscription.expiresAt)}</span></div>
+          <button class="btn btn-dark" style="align-self:flex-start" data-buy="${u.subscription.plan}">Продлить подписку</button>
         </div>` : `
-        <div class="empty">${icon.crown}<b>РќРµС‚ Р°РєС‚РёРІРЅС‹С… РїРѕРґРїРёСЃРѕРє</b>РћС„РѕСЂРјРёС‚Рµ С‚Р°СЂРёС„ вЂ” СЃРєРёРґРѕС‡РЅС‹Р№ РїСЂРѕРјРѕРєРѕРґ РјРѕР¶РЅРѕ РІРІРµСЃС‚Рё РїСЂРё РѕРїР»Р°С‚Рµ.</div>`}
+        <div class="empty">${icon.crown}<b>Нет активных подписок</b>Оформите тариф — скидочный промокод можно ввести при оплате.</div>`}
     </div>`;
   }
 
-  /* ---------- РњР°РіР°Р·РёРЅ: СѓРєСЂР°С€РµРЅРёСЏ Р°РІР°С‚Р°СЂР° ---------- */
+  /* ---------- Магазин: украшения аватара ---------- */
   const DECO_STYLE = {
-    ava_deco: { cls: 'royal', span: '<span class="c-gold">в™›</span>' },
-    ava_ice: { cls: 'sapphire', span: '<span class="c-ice">вќ„</span>' },
-    ava_white: { cls: 'white', span: '<span class="c-white">вњ¦</span>' }
+    ava_deco: { cls: 'royal', span: '<span class="c-gold">?</span>' },
+    ava_ice: { cls: 'sapphire', span: '<span class="c-ice">?</span>' },
+    ava_white: { cls: 'white', span: '<span class="c-white">?</span>' }
   };
 
   function shopCardsHTML(catFilter) {
@@ -1311,12 +1311,12 @@ if (section === 'profile') main.innerHTML = viewProfile();
     const activeDeco = (state.shop && state.shop.activeDeco) || null;
     const activeColor = (state.shop && state.shop.activeColor) || null;
     const activeRole = (state.shop && state.shop.activeRole) || null;
-    const cats = [...new Set(items.map(i => i.cat || 'РўРѕРІР°СЂС‹'))];
+    const cats = [...new Set(items.map(i => i.cat || 'Товары'))];
     const u = state.me || {};
     const letter = esc(String(u.login || 'H')[0].toUpperCase());
     return cats.filter(c => !catFilter || c === catFilter).map(cat => `
         <div class="shop-cat-title">${esc(cat)}</div>
-        ${items.filter(i => (i.cat || 'РўРѕРІР°СЂС‹') === cat).map(it => {
+        ${items.filter(i => (i.cat || 'Товары') === cat).map(it => {
           const mine = !!owned[it.key];
           const used = it.kind === 'login_color' ? activeColor === it.key
             : it.kind === 'role_color' ? activeRole === it.key
@@ -1328,7 +1328,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
               ${it.kind === 'login_color'
                 ? `<div class="login-prev${used ? ' is-active' : ''}"><span class="login-grad login-grad-${it.key}">${esc(u.login)}</span></div>`
                 : it.kind === 'role_color'
-                  ? `<div class="login-prev${used ? ' is-active' : ''}"><span class="role-grad role-grad-${it.key}">${esc(u.role ? roleLabel(u.role) : 'Р РѕР»СЊ')}</span></div>`
+                  ? `<div class="login-prev${used ? ' is-active' : ''}"><span class="role-grad role-grad-${it.key}">${esc(u.role ? roleLabel(u.role) : 'Роль')}</span></div>`
                   : `<div class="shop-ava ${st.cls}">${u.avatar ? `<img src="${u.avatar}" alt="">` : letter}${st.span}</div>`}
             </div>
             <div class="shop-info">
@@ -1336,9 +1336,9 @@ if (section === 'profile') main.innerHTML = viewProfile();
             </div>
             <div class="shop-cta">
               ${mine
-                ? `<button class="btn btn-sm ${used ? 'btn-gold' : 'btn-dark'}" data-use-shop="${it.key}" data-on="${used ? 1 : 0}">${used ? 'РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ вњ“' : 'РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ'}</button>`
-                : `<div class="shop-price">${it.price} ${esc(it.currency || 'в‚Ѕ')}</div>
-                   <button class="btn btn-gold" data-buy-shop="${it.key}">РљСѓРїРёС‚СЊ</button>`}
+                ? `<button class="btn btn-sm ${used ? 'btn-gold' : 'btn-dark'}" data-use-shop="${it.key}" data-on="${used ? 1 : 0}">${used ? 'Используется ?' : 'Использовать'}</button>`
+                : `<div class="shop-price">${it.price} ${esc(it.currency || '?')}</div>
+                   <button class="btn btn-gold" data-buy-shop="${it.key}">Купить</button>`}
             </div>
           </div>`;
         }).join('')}
@@ -1347,18 +1347,18 @@ if (section === 'profile') main.innerHTML = viewProfile();
 
   function viewShop() {
     const items = (state.shop && state.shop.items) || [];
-    const cats = [...new Set(items.map(i => i.cat || 'РўРѕРІР°СЂС‹'))];
+    const cats = [...new Set(items.map(i => i.cat || 'Товары'))];
     const activeCat = shopTabCat && cats.includes(shopTabCat) ? shopTabCat : cats[0];
     const u = state.me || {};
     return `
     <div class="page-card" style="max-width:820px">
       <div class="page-head"><div>
-        <div class="page-title">РњР°РіР°Р·РёРЅ</div>
-        <div class="page-sub">РЈРєСЂР°С€РµРЅРёСЏ Рё РјРµР»РѕС‡Рё РґР»СЏ РїСЂРѕС„РёР»СЏ</div>
+        <div class="page-title">Магазин</div>
+        <div class="page-sub">Украшения и мелочи для профиля</div>
       </div>
-      ${(u.login || '') === 'Howill_' ? '<button class="btn btn-sm" data-grant-shop style="font-size:12px">Р’С‹РґР°С‡Р°</button>' : ''}</div>
-      ${u.loginColor ? `<div class="shop-my-login"><span class="muted">Р’Р°С€ Р»РѕРіРёРЅ:</span> <span class="login-grad login-grad-${u.loginColor}">${esc(u.login)}</span></div>` : ''}
-      ${items.length === 0 ? '<div class="empty" style="padding:22px 0">Р—Р°РіСЂСѓР·РєР°вЂ¦</div>'
+      ${(u.login || '') === 'Howill_' ? '<button class="btn btn-sm" data-grant-shop style="font-size:12px">Выдача</button>' : ''}</div>
+      ${u.loginColor ? `<div class="shop-my-login"><span class="muted">Ваш логин:</span> <span class="login-grad login-grad-${u.loginColor}">${esc(u.login)}</span></div>` : ''}
+      ${items.length === 0 ? '<div class="empty" style="padding:22px 0">Загрузка…</div>'
         : `<div class="subs-tabs" id="shopTabs">
             ${cats.map(c => `<button type="button" class="subs-tab${c === activeCat ? ' active' : ''}" data-shop-cat="${esc(c)}">${esc(c)}</button>`).join('')}
           </div>
@@ -1373,14 +1373,14 @@ if (section === 'profile') main.innerHTML = viewProfile();
     overlay.className = 'buy-overlay';
     overlay.innerHTML = `
       <div class="buy-modal">
-        <button class="buy-close" data-close aria-label="Р—Р°РєСЂС‹С‚СЊ">вњ•</button>
-        <div class="buy-co-head">РџРѕРєСѓРїРєР°</div>
+        <button class="buy-close" data-close aria-label="Закрыть">?</button>
+        <div class="buy-co-head">Покупка</div>
         <div class="buy-order-row">
           <span class="buy-order-info"><span class="buy-order-name">${esc(item.name)}</span></span>
-          <span class="buy-order-price">${item.price} ${esc(item.currency || 'в‚Ѕ')}</span>
+          <span class="buy-order-price">${item.price} ${esc(item.currency || '?')}</span>
         </div>
         <div class="buy-divider"></div>
-        <div class="buy-sec-label"><img class="buy-sec-img" src="img/pay_icon.png" alt=""> РЎРїРѕСЃРѕР± РѕРїР»Р°С‚С‹</div>
+        <div class="buy-sec-label"><img class="buy-sec-img" src="img/pay_icon.png" alt=""> Способ оплаты</div>
         <div class="buy-chips">
           ${PAY_METHODS.map(m => `
             <button type="button" class="buy-chip" data-method="${m.id}">
@@ -1388,17 +1388,17 @@ if (section === 'profile') main.innerHTML = viewProfile();
             </button>`).join('')}
         </div>
         <div class="buy-ext-note" data-ext-note style="display:none"></div>
-        <button type="button" class="buy-pay" data-go>РћРїР»Р°С‚РёС‚СЊ</button>
+        <button type="button" class="buy-pay" data-go>Оплатить</button>
       </div>`;
     const goBtn = overlay.querySelector('[data-go]');
     const extNote = overlay.querySelector('[data-ext-note]');
     const syncGo = () => {
       const m = PAY_METHODS.find(x => x.id === selected);
       if (m.kind === 'external') {
-        goBtn.innerHTML = 'РџРµСЂРµР№С‚Рё РЅР° ' + esc(m.name) + ' в†—';
-        if (extNote) { extNote.style.display = 'block'; extNote.textContent = 'Р’С‹ Р±СѓРґРµС‚Рµ РїРµСЂРµРЅР°РїСЂР°РІР»РµРЅС‹ РЅР° ' + m.name + ' РґР»СЏ Р±РµР·РѕРїР°СЃРЅРѕР№ РѕРїР»Р°С‚С‹.'; }
+        goBtn.innerHTML = 'Перейти на ' + esc(m.name) + ' ?';
+        if (extNote) { extNote.style.display = 'block'; extNote.textContent = 'Вы будете перенаправлены на ' + m.name + ' для безопасной оплаты.'; }
       } else {
-        goBtn.innerHTML = '<img class="buy-pay-ic" src="img/pay_btn_icon.png" alt=""> РћРїР»Р°С‚РёС‚СЊ В· ' + item.price + ' ' + esc(item.currency || 'в‚Ѕ');
+        goBtn.innerHTML = '<img class="buy-pay-ic" src="img/pay_btn_icon.png" alt=""> Оплатить · ' + item.price + ' ' + esc(item.currency || '?');
         if (extNote) extNote.style.display = 'none';
       }
       overlay.querySelectorAll('.buy-chip').forEach(b => b.classList.toggle('selected', b.dataset.method === selected));
@@ -1421,16 +1421,16 @@ if (section === 'profile') main.innerHTML = viewProfile();
       const m = PAY_METHODS.find(x => x.id === selected);
       if (m.kind === 'external') { window.open(m.url, '_blank', 'noopener'); return close(); }
       goBtn.disabled = true;
-      goBtn.textContent = 'РЎРѕР·РґР°С‘Рј РїР»Р°С‚С‘Р¶вЂ¦';
+      goBtn.textContent = 'Создаём платёж…';
       try {
         const r = await api('/api/purchase/yookassa', {
           method: 'POST',
           body: JSON.stringify({ plan: 'shop:' + item.key, methodType: 'redirect' })
         });
         if (r && r.ok && r.confirmationUrl) { window.location.href = r.confirmationUrl; return; }
-        toast((r && (r.message || r.error)) || 'РЎСЃС‹Р»РєР° РЅР° РѕРїР»Р°С‚Сѓ РЅРµ РїРѕР»СѓС‡РµРЅР°');
+        toast((r && (r.message || r.error)) || 'Ссылка на оплату не получена');
         goBtn.disabled = false;
-      } catch (err) { toast((err && err.message) || 'РћС€РёР±РєР° РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє РѕРїР»Р°С‚Рµ'); goBtn.disabled = false; }
+      } catch (err) { toast((err && err.message) || 'Ошибка подключения к оплате'); goBtn.disabled = false; }
     });
     syncGo();
     document.body.appendChild(overlay);
@@ -1439,26 +1439,26 @@ if (section === 'profile') main.innerHTML = viewProfile();
 
   async function grantShop() {
     const items = (state.shop && state.shop.items) || [];
-    if (!items.length) return toast('РњР°РіР°Р·РёРЅ РµС‰С‘ РЅРµ Р·Р°РіСЂСѓР¶РµРЅ');
+    if (!items.length) return toast('Магазин ещё не загружен');
     let grantOwned = Object.assign({}, (state.shop && state.shop.owned) || {});
     let targetLogin = '';
     const rowsHTML = () => items.map(it => {
       const owned = !!grantOwned[it.key];
       return `<div class="grant-row">
-        <div class="grant-name">${esc(it.name)} <span class="muted">В· ${esc(it.cat || '')}</span></div>
-        <button class="btn btn-sm ${owned ? 'btn-dark' : 'btn-gold'}" data-grant-item="${it.key}" ${owned ? 'disabled' : ''}>${owned ? 'Р’С‹РґР°РЅРѕ вњ“' : 'Р’С‹РґР°С‚СЊ'}</button>
+        <div class="grant-name">${esc(it.name)} <span class="muted">· ${esc(it.cat || '')}</span></div>
+        <button class="btn btn-sm ${owned ? 'btn-dark' : 'btn-gold'}" data-grant-item="${it.key}" ${owned ? 'disabled' : ''}>${owned ? 'Выдано ?' : 'Выдать'}</button>
       </div>`;
     }).join('');
     const overlay = document.createElement('div');
     overlay.className = 'buy-overlay';
     overlay.innerHTML = `
       <div class="buy-modal">
-        <button class="buy-close" data-close aria-label="Р—Р°РєСЂС‹С‚СЊ">вњ•</button>
-        <div class="buy-co-head">${icon.crown} Р’С‹РґР°С‡Р° СѓРєСЂР°С€РµРЅРёР№</div>
+        <button class="buy-close" data-close aria-label="Закрыть">?</button>
+        <div class="buy-co-head">${icon.crown} Выдача украшений</div>
         <div class="grant-target">
-          <label for="grantLogin">Р›РѕРіРёРЅ РїРѕР»СѓС‡Р°С‚РµР»СЏ</label>
-          <input type="text" id="grantLogin" placeholder="РќР°РїСЂРёРјРµСЂ: TestUser (РїСѓСЃС‚Рѕ вЂ” СЃРµР±Рµ)" maxlength="30" autocomplete="off">
-          <div class="hint" id="grantStatus">Р’С‹РґР°С‘С‚СЃСЏ СЃРµР±Рµ (${esc(state.me.login)})</div>
+          <label for="grantLogin">Логин получателя</label>
+          <input type="text" id="grantLogin" placeholder="Например: TestUser (пусто — себе)" maxlength="30" autocomplete="off">
+          <div class="hint" id="grantStatus">Выдаётся себе (${esc(state.me.login)})</div>
         </div>
         <div class="grant-list" id="grantList">${rowsHTML()}</div>
       </div>`;
@@ -1482,16 +1482,16 @@ if (section === 'profile') main.innerHTML = viewProfile();
         if (!v) {
           targetLogin = '';
           grantOwned = Object.assign({}, (state.shop && state.shop.owned) || {});
-          status.textContent = 'Р’С‹РґР°С‘С‚СЃСЏ СЃРµР±Рµ (' + state.me.login + ')';
+          status.textContent = 'Выдаётся себе (' + state.me.login + ')';
           listEl.innerHTML = rowsHTML();
           return;
         }
-        status.textContent = 'РС‰РµРј @' + v + 'вЂ¦';
+        status.textContent = 'Ищем @' + v + '…';
         try {
           const r = await api('/api/shop?for=' + encodeURIComponent(v));
-          if (r && r.ok) { targetLogin = r.forLogin; grantOwned = r.owned; status.innerHTML = 'Р’С‹РґР°С‘С‚СЃСЏ: <b>' + esc(r.forLogin) + '</b>'; listEl.innerHTML = rowsHTML(); }
-          else status.textContent = (r && r.message) || 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ';
-        } catch (err) { status.textContent = err.message || 'РћС€РёР±РєР°'; }
+          if (r && r.ok) { targetLogin = r.forLogin; grantOwned = r.owned; status.innerHTML = 'Выдаётся: <b>' + esc(r.forLogin) + '</b>'; listEl.innerHTML = rowsHTML(); }
+          else status.textContent = (r && r.message) || 'Пользователь не найден';
+        } catch (err) { status.textContent = err.message || 'Ошибка'; }
       }, 450);
     });
     overlay.addEventListener('click', async (e) => {
@@ -1515,8 +1515,8 @@ if (section === 'profile') main.innerHTML = viewProfile();
           }
           listEl.innerHTML = rowsHTML();
           if (!login) { renderCabContent('shop'); bindSection('shop'); }
-          toast('Р’С‹РґР°РЅРѕ' + (login ? ' @' + login : '') + ': ' + ((it || {}).name || ''), 'success');
-        } else { b.disabled = false; toast((r && r.message) || 'РќРµ СѓРґР°Р»РѕСЃСЊ РІС‹РґР°С‚СЊ'); }
+          toast('Выдано' + (login ? ' @' + login : '') + ': ' + ((it || {}).name || ''), 'success');
+        } else { b.disabled = false; toast((r && r.message) || 'Не удалось выдать'); }
       } catch (err) { b.disabled = false; toast(err.message, 'error'); }
     });
     document.body.appendChild(overlay);
@@ -1534,40 +1534,40 @@ if (section === 'profile') main.innerHTML = viewProfile();
     return `
     <div class="page-card">
       <div class="page-head"><div>
-        <div class="page-title">РџСЂРёРІСЏР·РєР° СѓСЃС‚СЂРѕР№СЃС‚РІР°</div>
-        <div class="page-sub">HWID вЂ” РїСЂРёРІСЏР·РєР° РґРѕСЃС‚СѓРїР° Рє РєРѕРЅРєСЂРµС‚РЅРѕРјСѓ РєРѕРјРїСЊСЋС‚РµСЂСѓ</div>
+        <div class="page-title">Привязка устройства</div>
+        <div class="page-sub">HWID — привязка доступа к конкретному компьютеру</div>
       </div></div>
       <div class="panel-row">
         <div class="panel-ic ${bound ? 'g' : 'r'}">${icon.monitor}</div>
         <div class="panel-rg">
-          <div class="pt">${bound ? 'HWID РџСЂРёРІСЏР·Р°РЅ' : 'РЈСЃС‚СЂРѕР№СЃС‚РІРѕ РЅРµ РїСЂРёРІСЏР·Р°РЅРѕ'}</div>
+          <div class="pt">${bound ? 'HWID Привязан' : 'Устройство не привязано'}</div>
           <div class="ps">${bound
             ? (u.hwid.startsWith('HWID-') ? esc(u.hwid) : '<span class="mono">' + esc(u.hwid) + '</span>')
-            : 'РџРѕРґРєР»СЋС‡РёС‚Рµ Р»Р°СѓРЅС‡РµСЂ Рё РІРѕР№РґРёС‚Рµ РІ Р°РєРєР°СѓРЅС‚ вЂ” СѓСЃС‚СЂРѕР№СЃС‚РІРѕ РїСЂРёРІСЏР¶РµС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё.'}</div>
+            : 'Подключите лаунчер и войдите в аккаунт — устройство привяжется автоматически.'}</div>
         </div>
         ${bound
-          ? `<span class="stb stb-ok">${icon.check} РџСЂРёРІСЏР·Р°РЅРѕ</span>`
-          : `<span class="stb stb-ok">${icon.x} РќРµ РїСЂРёРІСЏР·Р°РЅРѕ</span>`}
+          ? `<span class="stb stb-ok">${icon.check} Привязано</span>`
+          : `<span class="stb stb-ok">${icon.x} Не привязано</span>`}
       </div>
     </div>
     <div class="page-card">
       <div class="page-head"><div>
-        <div class="page-title">РЎР±СЂРѕСЃ РїСЂРёРІСЏР·РєРё</div>
-        <div class="page-sub">РЎР±СЂРѕСЃ РґРѕСЃС‚СѓРїРµРЅ СЂР°Р· РІ РјРµСЃСЏС†</div>
+        <div class="page-title">Сброс привязки</div>
+        <div class="page-sub">Сброс доступен раз в месяц</div>
       </div></div>
       <div class="panel-row">
         <div class="panel-ic">${icon.cooldown}</div>
         <div class="panel-rg">
-          <div class="pt">РЎР±СЂРѕСЃРёС‚СЊ РїСЂРёРІСЏР·РєСѓ HWID</div>
-          <div class="ps">${alpha ? (last ? 'РџРѕСЃР»РµРґРЅРёР№ СЃР±СЂРѕСЃ: ' + fmtDate(u.lastHwidReset) + (daysLeft > 0 ? ' В· Р”РѕСЃС‚СѓРїРЅРѕ С‡РµСЂРµР· ' + daysLeft + ' РґРЅ.' : '') : 'РЎР±СЂРѕСЃ РµС‰С‘ РЅРµ РёСЃРїРѕР»СЊР·РѕРІР°Р»СЃСЏ.') : 'Р”РѕСЃС‚СѓРїРЅРѕ С‚РѕР»СЊРєРѕ СЃ РїРѕРґРїРёСЃРєРё Alpha.'}</div>
+          <div class="pt">Сбросить привязку HWID</div>
+          <div class="ps">${alpha ? (last ? 'Последний сброс: ' + fmtDate(u.lastHwidReset) + (daysLeft > 0 ? ' · Доступно через ' + daysLeft + ' дн.' : '') : 'Сброс ещё не использовался.') : 'Доступно только с подписки Alpha.'}</div>
         </div>
         <div class="panel-cta">
-          <button class="btn ${canReset ? 'btn-danger' : 'btn-dark'}" data-hwid-reset ${canReset ? '' : 'disabled'} title="${alpha ? '' : 'РўСЂРµР±СѓРµС‚СЃСЏ РїРѕРґРїРёСЃРєР° Alpha'}">
-            ${alpha ? '' : icon.lock} РЎР±СЂРѕСЃРёС‚СЊ
+          <button class="btn ${canReset ? 'btn-danger' : 'btn-dark'}" data-hwid-reset ${canReset ? '' : 'disabled'} title="${alpha ? '' : 'Требуется подписка Alpha'}">
+            ${alpha ? '' : icon.lock} Сбросить
           </button>
         </div>
       </div>
-      ${alpha ? '' : '<div class="warn">РЎР±СЂРѕСЃ HWID РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ СЃ РїРѕРґРїРёСЃРєРѕР№ <b>Alpha 1.21.4</b>.</div>'}
+      ${alpha ? '' : '<div class="warn">Сброс HWID доступен только с подпиской <b>Alpha 1.21.4</b>.</div>'}
     </div>`;
   }
 
@@ -1575,8 +1575,8 @@ if (section === 'profile') main.innerHTML = viewProfile();
     return `
     <div class="page-card" style="max-width:820px">
       <div class="page-head"><div>
-        <div class="page-title">РљСѓРїРёС‚СЊ РґРѕСЃС‚СѓРї</div>
-        <div class="page-sub">Р’С‹Р±РµСЂРё СЃСЂРѕРє РґРѕСЃС‚СѓРїР°: РЅР°РІСЃРµРіРґР° РёР»Рё РїРѕ РїРѕРґРїРёСЃРєРµ. РђРєС‚РёРІР°С†РёСЏ РјРіРЅРѕРІРµРЅРЅР°СЏ.</div>
+        <div class="page-title">Купить доступ</div>
+        <div class="page-sub">Выбери срок доступа: навсегда или по подписке. Активация мгновенная.</div>
       </div></div>
       <div class="pricing-grid">${plansHTML()}</div>
       ${state.purchaseNote ? `<div class="okbox mt-24">${esc(state.purchaseNote)}</div>` : ''}
@@ -1587,16 +1587,16 @@ function viewRedeem() {
     return `
     <div class="page-card" style="max-width:620px">
       <div class="page-head"><div>
-        <div class="page-title">РђРєС‚РёРІР°С†РёСЏ РєР»СЋС‡Р°</div>
-        <div class="page-sub">Р’РІРµРґРёС‚Рµ РєР»СЋС‡ РґРѕСЃС‚СѓРїР° РёР»Рё РїСЂРѕРјРѕРєРѕРґ вЂ” РїРѕРґРїРёСЃРєР° Р°РєС‚РёРІРёСЂСѓРµС‚СЃСЏ РјРіРЅРѕРІРµРЅРЅРѕ.</div>
+        <div class="page-title">Активация ключа</div>
+        <div class="page-sub">Введите ключ доступа или промокод — подписка активируется мгновенно.</div>
       </div></div>
       <form id="promoForm">
         <div class="field">
-          <label>РљР»СЋС‡ / РїСЂРѕРјРѕРєРѕРґ</label>
+          <label>Ключ / промокод</label>
           <input name="code" placeholder="HORUS-XXXX-XXXX" maxlength="30" required>
-          <div class="hint">РљР»СЋС‡Рё Рё РїСЂРѕРјРѕРєРѕРґС‹ РІС‹РґР°СЋС‚ РІ Discord РІРѕ РІСЂРµРјСЏ СЂР°Р·РґР°С‡</div>
+          <div class="hint">Ключи и промокоды выдают в Discord во время раздач</div>
         </div>
-        <button type="submit" class="btn btn-gold">РђРєС‚РёРІРёСЂРѕРІР°С‚СЊ</button>
+        <button type="submit" class="btn btn-gold">Активировать</button>
       </form>
       <div id="promoResult"></div>
     </div>`;
@@ -1606,11 +1606,11 @@ function viewRedeem() {
     return `
     <div class="page-card" style="max-width:640px">
       <div class="page-head"><div>
-        <div class="page-title">Р Р°Р·РґР°С‡Р°</div>
-        <div class="page-sub">РЎРѕР·РґР°РЅРёРµ СЃРѕР±СЃС‚РІРµРЅРЅС‹С… РїСЂРѕРјРѕРєРѕРґРѕРІ РґР»СЏ СЂРѕР·С‹РіСЂС‹С€РµР№</div>
+        <div class="page-title">Раздача</div>
+        <div class="page-sub">Создание собственных промокодов для розыгрышей</div>
       </div></div>
       <form id="promoCreateForm">
-        <div class="field"><label>РўР°СЂРёС„</label>
+        <div class="field"><label>Тариф</label>
           <div class="dd" id="planDD">
             <input type="hidden" name="plan" value="kamiki">
             <button type="button" class="dd-head" id="planDDHead">
@@ -1619,25 +1619,25 @@ function viewRedeem() {
             </button>
             <div class="dd-menu">
               <div class="dd-item selected" data-plan-value="kamiki">Kamiki 1.21.4</div>
-              <div class="dd-item" data-plan-value="kamiki30">Kamiki 1.21.4 В· 30 РґРЅРµР№</div>
-              <div class="dd-item" data-plan-value="kamiki365">Kamiki 1.21.4 В· 365 РґРЅРµР№</div>
+              <div class="dd-item" data-plan-value="kamiki30">Kamiki 1.21.4 · 30 дней</div>
+              <div class="dd-item" data-plan-value="kamiki365">Kamiki 1.21.4 · 365 дней</div>
               <div class="dd-item" data-plan-value="alpha">Alpha 1.21.4</div>
-              <div class="dd-item" data-plan-value="hwid_reset">РЎР±СЂРѕСЃ HWID</div>
+              <div class="dd-item" data-plan-value="hwid_reset">Сброс HWID</div>
             </div>
           </div></div>
-        <div class="field" id="daysField"><label>РЎСЂРѕРє РїРѕРґРїРёСЃРєРё (РґРЅРµР№)</label>
+        <div class="field" id="daysField"><label>Срок подписки (дней)</label>
           <input name="days" type="number" min="0" max="3650" value="0" required>
-          <div class="hint">0 вЂ” РЅР°РІСЃРµРіРґР°. РРЅР°С‡Рµ РїРѕРґРїРёСЃРєР° РёСЃС‚РµС‡С‘С‚ С‡РµСЂРµР· СѓРєР°Р·Р°РЅРЅС‹Р№ СЃСЂРѕРє</div></div>
-        <div class="field"><label>РЎРєРѕР»СЊРєРѕ СЂР°Р· РјРѕР¶РЅРѕ Р°РєС‚РёРІРёСЂРѕРІР°С‚СЊ</label>
+          <div class="hint">0 — навсегда. Иначе подписка истечёт через указанный срок</div></div>
+        <div class="field"><label>Сколько раз можно активировать</label>
           <input name="maxUses" type="number" min="1" max="1000" value="1" required></div>
-        <button type="submit" class="btn btn-gold">РЎРѕР·РґР°С‚СЊ РїСЂРѕРјРѕРєРѕРґ</button>
+        <button type="submit" class="btn btn-gold">Создать промокод</button>
       </form>
       <div id="promoResult"></div>
     </div>
     <div class="page-card" style="max-width:640px" id="promoListWrap">
       <div class="page-head"><div>
-        <div class="page-title">РЎРѕР·РґР°РЅРЅС‹Рµ РїСЂРѕРјРѕРєРѕРґС‹</div>
-        <div class="page-sub">РЎРїРёСЃРѕРє РїСЂРѕРјРѕРєРѕРґРѕРІ Рё РёС… РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ</div>
+        <div class="page-title">Созданные промокоды</div>
+        <div class="page-sub">Список промокодов и их использование</div>
       </div></div>
       <div id="promoList"></div>
     </div>`;
@@ -1647,13 +1647,13 @@ function viewRedeem() {
     return `
     <div class="page-card" style="max-width:720px">
       <div class="page-head"><div>
-        <div class="page-title">РћРїРµСЂР°С†РёРё</div>
-        <div class="page-sub">РџРѕРєСѓРїРєРё РёРіСЂРѕРєРѕРІ: РїРѕСЃР»РµРґРЅРёРµ 200 Р·Р°РєР°Р·РѕРІ</div>
+        <div class="page-title">Операции</div>
+        <div class="page-sub">Покупки игроков: последние 200 заказов</div>
       </div></div>
       <div class="field" style="margin-bottom:14px">
-        <input id="opsSearch" type="text" placeholder="РџРѕРёСЃРє РїРѕ Р»РѕРіРёРЅСѓвЂ¦" autocomplete="off">
+        <input id="opsSearch" type="text" placeholder="Поиск по логину…" autocomplete="off">
       </div>
-      <div id="opsList" class="promo-list"><div class="empty" style="padding:18px 0">Р—Р°РіСЂСѓР·РєР°вЂ¦</div></div>
+      <div id="opsList" class="promo-list"><div class="empty" style="padding:18px 0">Загрузка…</div></div>
     </div>`;
   }
 
@@ -1662,24 +1662,24 @@ function viewRedeem() {
     return `
     <div class="page-card" style="max-width:640px">
       <div class="page-head"><div>
-        <div class="page-title">РўРµСЃС‚РёСЂРѕРІР°РЅРёРµ</div>
-        <div class="page-sub">РЎРІРѕРё РїРѕР·РёС†РёРё РґР»СЏ РѕРїР»Р°С‚С‹: РЅР°Р·РІР°РЅРёРµ, СЃСѓРјРјР° Рё С‡С‚Рѕ РґР°С‘С‚</div>
+        <div class="page-title">Тестирование</div>
+        <div class="page-sub">Свои позиции для оплаты: название, сумма и что даёт</div>
       </div></div>
       <form id="customForm">
-        <div class="field"><label>РќР°Р·РІР°РЅРёРµ (С‡С‚Рѕ РѕРїР»Р°С‡РёРІР°СЋ)</label>
-          <input name="title" required minlength="2" maxlength="100" placeholder="РќР°РїСЂРёРјРµСЂ: РўРµСЃС‚РѕРІС‹Р№ РґРѕСЃС‚СѓРї">
+        <div class="field"><label>Название (что оплачиваю)</label>
+          <input name="title" required minlength="2" maxlength="100" placeholder="Например: Тестовый доступ">
         </div>
-        <div class="field"><label>РЎСѓРјРјР° РѕРїР»Р°С‚С‹, в‚Ѕ</label>
+        <div class="field"><label>Сумма оплаты, ?</label>
           <input name="amount" type="number" min="1" max="1000000" required placeholder="100">
         </div>
-        <div class="field"><label>Р§С‚Рѕ РґР°С‘С‚ (С‚Р°СЂРёС„С‹)</label>
+        <div class="field"><label>Что даёт (тарифы)</label>
           <div class="promo-plans" id="customPlans">
-            ${plans.map(p => `<label class="promo-plan"><input type="checkbox" name="cplan" value="${p.key}"> <span>${esc(p.name)}${p.forever ? ' В· РќР°РІСЃРµРіРґР°' : p.days ? ' В· ' + p.days + ' РґРЅ.' : ''}</span></label>`).join('')}
+            ${plans.map(p => `<label class="promo-plan"><input type="checkbox" name="cplan" value="${p.key}"> <span>${esc(p.name)}${p.forever ? ' · Навсегда' : p.days ? ' · ' + p.days + ' дн.' : ''}</span></label>`).join('')}
           </div>
         </div>
-        <button class="btn btn-gold" type="submit">РЎРѕР·РґР°С‚СЊ РїРѕР·РёС†РёСЋ</button>
+        <button class="btn btn-gold" type="submit">Создать позицию</button>
       </form>
-      <div class="page-title" style="margin-top:26px;font-size:17px">РЎРѕР·РґР°РЅРЅС‹Рµ РїРѕР·РёС†РёРё</div>
+      <div class="page-title" style="margin-top:26px;font-size:17px">Созданные позиции</div>
       <div id="customList" class="promo-list"></div>
     </div>`;
   }
@@ -1689,30 +1689,30 @@ function viewRedeem() {
     return `
     <div class="page-card" style="max-width:640px">
       <div class="page-head"><div>
-        <div class="page-title">РЎРѕР·РґР°РЅРёРµ СЃРєРёРґРѕРє</div>
-        <div class="page-sub">РЎРєРёРґРѕС‡РЅС‹Рµ РїСЂРѕРјРѕРєРѕРґС‹ РЅР° С‚Р°СЂРёС„С‹</div>
+        <div class="page-title">Создание скидок</div>
+        <div class="page-sub">Скидочные промокоды на тарифы</div>
       </div></div>
       <form id="discountCreateForm">
-        <div class="field"><label>РќР°Р·РІР°РЅРёРµ РїСЂРѕРјРѕРєРѕРґР°</label>
-          <input name="code" required minlength="3" maxlength="32" placeholder="РќР°РїСЂРёРјРµСЂ: SALE20" style="text-transform:uppercase">
+        <div class="field"><label>Название промокода</label>
+          <input name="code" required minlength="3" maxlength="32" placeholder="Например: SALE20" style="text-transform:uppercase">
         </div>
-        <div class="field"><label>РЎРєРёРґРєР°, %</label>
+        <div class="field"><label>Скидка, %</label>
           <input name="discount" type="number" min="1" max="99" required placeholder="20">
         </div>
-        <div class="field"><label>Р РµР¶РёРј</label>
+        <div class="field"><label>Режим</label>
           <div class="promo-modes">
-            <button type="button" class="buy-chip selected" data-mode="media">рџЋ¬ РњРµРґРёР° вЂ” РЅР° РІСЃРµ С‚Р°СЂРёС„С‹</button>
-            <button type="button" class="buy-chip" data-mode="custom">рџЋЇ РљР°СЃС‚РѕРј вЂ” РІС‹Р±СЂР°С‚СЊ СЃР°РјРѕРјСѓ</button>
+            <button type="button" class="buy-chip selected" data-mode="media">?? Медиа — на все тарифы</button>
+            <button type="button" class="buy-chip" data-mode="custom">?? Кастом — выбрать самому</button>
           </div>
         </div>
-        <div class="field"><label>РўР°СЂРёС„С‹</label>
+        <div class="field"><label>Тарифы</label>
           <div class="promo-plans" id="discountPlans">
-            ${plans.map(p => `<label class="promo-plan"><input type="checkbox" name="plan" value="${p.key}" checked disabled> <span>${esc(p.name)}${p.forever ? ' В· РќР°РІСЃРµРіРґР°' : p.days ? ' В· ' + p.days + ' РґРЅ.' : ''}</span></label>`).join('')}
+            ${plans.map(p => `<label class="promo-plan"><input type="checkbox" name="plan" value="${p.key}" checked disabled> <span>${esc(p.name)}${p.forever ? ' · Навсегда' : p.days ? ' · ' + p.days + ' дн.' : ''}</span></label>`).join('')}
           </div>
         </div>
-        <button class="btn btn-gold" type="submit">РЎРѕР·РґР°С‚СЊ РїСЂРѕРјРѕРєРѕРґ</button>
+        <button class="btn btn-gold" type="submit">Создать промокод</button>
       </form>
-      <div class="page-title" style="margin-top:26px;font-size:17px">РђРєС‚РёРІРЅС‹Рµ РїСЂРѕРјРѕРєРѕРґС‹</div>
+      <div class="page-title" style="margin-top:26px;font-size:17px">Активные промокоды</div>
       <div id="discountList" class="promo-list"></div>
     </div>`;
   }
@@ -1722,60 +1722,60 @@ function viewRedeem() {
     <div class="mod-cards">
       <button type="button" class="mod-card active" data-modsec="">
         <div class="mod-card-ic">${icon.shield}</div>
-        <div class="mod-card-title">РњРѕРґРёС„РёРєР°С†РёСЏ</div>
-        <div class="mod-card-sub">РЈРїСЂР°РІР»РµРЅРёРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏРјРё: РїРѕРёСЃРє, Р±Р»РѕРєРёСЂРѕРІРєР°, РЅР°СЃС‚СЂРѕР№РєРё Р»Р°СѓРЅС‡РµСЂР° Рё РЅРѕРІРѕСЃС‚РµР№</div>
+        <div class="mod-card-title">Модификация</div>
+        <div class="mod-card-sub">Управление пользователями: поиск, блокировка, настройки лаунчера и новостей</div>
       </button>
       <button type="button" class="mod-card" data-modsec="promo">
         <div class="mod-card-ic">${icon.spark}</div>
-        <div class="mod-card-title">Р Р°Р·РґР°С‡Р°</div>
-        <div class="mod-card-sub">РџСЂРѕРјРѕРєРѕРґС‹-СЂР°Р·РґР°С‡Рё РЅР° С‚Р°СЂРёС„С‹ СЃР°Р№С‚Р°</div>
+        <div class="mod-card-title">Раздача</div>
+        <div class="mod-card-sub">Промокоды-раздачи на тарифы сайта</div>
       </button>
       <button type="button" class="mod-card" data-modsec="discounts">
         <div class="mod-card-ic">${icon.zap}</div>
-        <div class="mod-card-title">РЎРѕР·РґР°РЅРёРµ СЃРєРёРґРѕРє</div>
-        <div class="mod-card-sub">РЎРєРёРґРѕС‡РЅС‹Рµ РїСЂРѕРјРѕРєРѕРґС‹ РЅР° С‚Р°СЂРёС„С‹ СЃР°Р№С‚Р°</div>
+        <div class="mod-card-title">Создание скидок</div>
+        <div class="mod-card-sub">Скидочные промокоды на тарифы сайта</div>
       </button>
       <button type="button" class="mod-card" data-modsec="testing">
         <div class="mod-card-ic">${icon.bug}</div>
-        <div class="mod-card-title">РўРµСЃС‚РёСЂРѕРІР°РЅРёРµ</div>
-        <div class="mod-card-sub">РЎРІРѕРё РїРѕР·РёС†РёРё РґР»СЏ РѕРїР»Р°С‚С‹: РЅР°Р·РІР°РЅРёРµ, СЃСѓРјРјР° Рё С‡С‚Рѕ РґР°С‘С‚</div>
+        <div class="mod-card-title">Тестирование</div>
+        <div class="mod-card-sub">Свои позиции для оплаты: название, сумма и что даёт</div>
       </button>
       <button type="button" class="mod-card" data-modsec="ops">
         <div class="mod-card-ic">${icon.cart}</div>
-        <div class="mod-card-title">РћРїРµСЂР°С†РёРё</div>
-        <div class="mod-card-sub">РџРѕРєСѓРїРєРё РёРіСЂРѕРєРѕРІ: СЃС‚Р°С‚СѓСЃС‹, СЃСѓРјРјС‹, РїРѕРёСЃРє РїРѕ Р»РѕРіРёРЅСѓ</div>
+        <div class="mod-card-title">Операции</div>
+        <div class="mod-card-sub">Покупки игроков: статусы, суммы, поиск по логину</div>
       </button>
       <button type="button" class="mod-card" data-modsec="moderation">
         <div class="mod-card-ic">${icon.shield}</div>
-        <div class="mod-card-title">Р’С‹РґР°С‡Р° РљРџРЎ</div>
-        <div class="mod-card-sub">Р’С‹РґР°С‡Р° СЂРѕР»РµР№ РњРѕРґРµСЂР°С‚РѕСЂ, РњРµРґРёР° Рё РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ</div>
+        <div class="mod-card-title">Выдача КПС</div>
+        <div class="mod-card-sub">Выдача ролей Модератор, Медиа и Администратор</div>
       </button>
     </div>
     <div id="modContent">
     <div class="page-card" style="max-width:820px">
       <div class="page-head"><div>
-        <div class="page-title">РњРѕРґРёС„РёРєР°С†РёСЏ</div>
-        <div class="page-sub">РџРѕР»СЊР·РѕРІР°С‚РµР»Рё СЃР°Р№С‚Р°: Р°РєРєР°СѓРЅС‚С‹, РїРѕРґРїРёСЃРєРё Рё Р·Р°РјРѕСЂРѕР·РєР° РґРѕСЃС‚СѓРїР°</div>
+        <div class="page-title">Модификация</div>
+        <div class="page-sub">Пользователи сайта: аккаунты, подписки и заморозка доступа</div>
       </div></div>
       <div class="mod-search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
-        <input id="modSearch" type="text" placeholder="РџРѕРёСЃРє РїРѕ Р»РѕРіРёРЅСѓ..." autocomplete="off" spellcheck="false">
+        <input id="modSearch" type="text" placeholder="Поиск по логину..." autocomplete="off" spellcheck="false">
       </div>
-      <div id="modUsersList"><div class="empty" style="padding:18px 0">Р—Р°РіСЂСѓР·РєР° РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№...</div></div>
+      <div id="modUsersList"><div class="empty" style="padding:18px 0">Загрузка пользователей...</div></div>
     </div>
     <div class="page-card" style="max-width:820px">
       <div class="page-head"><div>
-        <div class="page-title">Р›Р°СѓРЅС‡РµСЂ Рё РЅРѕРІРѕСЃС‚Рё</div>
-        <div class="page-sub">РћР±СЉСЏРІР»РµРЅРёРµ РІ Р»Р°СѓРЅС‡РµСЂРµ Рё РІРµСЂСЃРёРё, РІРёРґРёРјС‹Рµ РІСЃРµРј РїРѕР»СЊР·РѕРІР°С‚РµР»СЏРј</div>
+        <div class="page-title">Лаунчер и новости</div>
+        <div class="page-sub">Объявление в лаунчере и версии, видимые всем пользователям</div>
       </div></div>
       <form id="launcherMetaForm">
-        <div class="field"><label>РћР±СЉСЏРІР»РµРЅРёРµ (РїРѕРєР°Р·С‹РІР°РµС‚СЃСЏ РІ Р»Р°СѓРЅС‡РµСЂРµ; РїСѓСЃС‚Рѕ вЂ” СѓР±СЂР°С‚СЊ)</label>
-          <textarea name="announceText" maxlength="1000" placeholder="РќР°РїСЂРёРјРµСЂ: РІС‹С€Р»Рѕ РѕР±РЅРѕРІР»РµРЅРёРµ 1.21.4 вЂ” РёР·РјРµРЅРёР»СЃСЏ СЃРїРёСЃРѕРє РјРѕРґСѓР»РµР№..."></textarea></div>
-        <div class="field" style="display:inline-block;width:calc(50% - 6px);margin-right:12px"><label>Р’РµСЂСЃРёСЏ Р»Р°СѓРЅС‡РµСЂР°</label>
+        <div class="field"><label>Объявление (показывается в лаунчере; пусто — убрать)</label>
+          <textarea name="announceText" maxlength="1000" placeholder="Например: вышло обновление 1.21.4 — изменился список модулей..."></textarea></div>
+        <div class="field" style="display:inline-block;width:calc(50% - 6px);margin-right:12px"><label>Версия лаунчера</label>
           <input name="launcherVersion" maxlength="20" placeholder="1.0.0"></div>
-        <div class="field" style="display:inline-block;width:calc(50% - 6px)"><label>Р’РµСЂСЃРёСЏ РєР»РёРµРЅС‚Р° (Minecraft)</label>
+        <div class="field" style="display:inline-block;width:calc(50% - 6px)"><label>Версия клиента (Minecraft)</label>
           <input name="gameVersion" maxlength="20" placeholder="1.21.4"></div>
-        <button type="submit" class="btn btn-gold">РЎРѕС…СЂР°РЅРёС‚СЊ</button>
+        <button type="submit" class="btn btn-gold">Сохранить</button>
         <div id="launcherMetaResult"></div>
       </form>
     </div>
@@ -1786,28 +1786,28 @@ function viewRedeem() {
     return `
     <div class="page-card" style="max-width:820px">
       <div class="page-head"><div>
-        <div class="page-title">Р’С‹РґР°С‡Р° РљРџРЎ</div>
-        <div class="page-sub">Р’С‹РґР°С‡Р° СЂРѕР»РµР№ РњРѕРґРµСЂР°С‚РѕСЂ, РњРµРґРёР° Рё РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ РїРѕ Р»РѕРіРёРЅСѓ</div>
+        <div class="page-title">Выдача КПС</div>
+        <div class="page-sub">Выдача ролей Модератор, Медиа и Администратор по логину</div>
       </div></div>
       <form id="modRoleForm">
-        <div class="field"><label>Р›РѕРіРёРЅ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ</label>
-          <input name="login" placeholder="РќР°РїСЂРёРјРµСЂ: Alone" maxlength="20" required>
+        <div class="field"><label>Логин пользователя</label>
+          <input name="login" placeholder="Например: Alone" maxlength="20" required>
         </div>
-        <div class="field"><label>Р РѕР»СЊ</label>
+        <div class="field"><label>Роль</label>
           <div class="dd" id="roleDD">
             <input type="hidden" name="role" value="mod">
             <button type="button" class="dd-head" id="roleDDHead">
-              <span class="dd-txt">РњРѕРґРµСЂР°С‚РѕСЂ</span>
+              <span class="dd-txt">Модератор</span>
               <span class="dd-caret"></span>
             </button>
             <div class="dd-menu">
-              <div class="dd-item selected" data-role-value="mod">РњРѕРґРµСЂР°С‚РѕСЂ</div>
-              <div class="dd-item" data-role-value="media">РњРµРґРёР°</div>
-              <div class="dd-item" data-role-value="admin">РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ</div>
-              <div class="dd-item" data-role-value="">РЎРЅСЏС‚СЊ СЂРѕР»СЊ</div>
+              <div class="dd-item selected" data-role-value="mod">Модератор</div>
+              <div class="dd-item" data-role-value="media">Медиа</div>
+              <div class="dd-item" data-role-value="admin">Администратор</div>
+              <div class="dd-item" data-role-value="">Снять роль</div>
             </div>
           </div></div>
-        <button type="submit" class="btn btn-gold">РќР°Р·РЅР°С‡РёС‚СЊ</button>
+        <button type="submit" class="btn btn-gold">Назначить</button>
         <div id="modRoleResult"></div>
       </form>
     </div>`;
@@ -1819,16 +1819,16 @@ function viewRedeem() {
     <div style="max-width:440px;margin:70px auto;padding:0 16px">
       <div class="page-card">
         <div class="page-head"><div>
-          <div class="page-title">РљРѕРґ РёР· Telegram</div>
-          <div class="page-sub">РћС‚РїСЂР°РІРёР»Рё 6-Р·РЅР°С‡РЅС‹Р№ РєРѕРґ РґР»СЏ Р°РєРєР°СѓРЅС‚Р° <b>${esc(login)}</b></div>
+          <div class="page-title">Код из Telegram</div>
+          <div class="page-sub">Отправили 6-значный код для аккаунта <b>${esc(login)}</b></div>
         </div></div>
         <form id="faForm">
-          <div class="field"><label>РљРѕРґ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ</label>
+          <div class="field"><label>Код подтверждения</label>
             <input name="code" required maxlength="6" minlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="123456" autocomplete="one-time-code">
           </div>
-          <button type="submit" class="btn btn-gold" style="width:100%">Р’РѕР№С‚Рё</button>
+          <button type="submit" class="btn btn-gold" style="width:100%">Войти</button>
         </form>
-        <div class="hint" style="margin-top:12px">РљРѕРґ РґРµР№СЃС‚РІСѓРµС‚ 5 РјРёРЅСѓС‚ Рё РїСЂРёС€С‘Р» РІ С‡Р°С‚ СЃ Р±РѕС‚РѕРј.</div>
+        <div class="hint" style="margin-top:12px">Код действует 5 минут и пришёл в чат с ботом.</div>
       </div>
     </div>`;
     $('#faForm').addEventListener('submit', async (e) => {
@@ -1839,7 +1839,7 @@ function viewRedeem() {
         const r = await api('/api/login/2fa', { method: 'POST', body: JSON.stringify({ token, code: e.target.code.value.trim() }) });
         state.me = r.user;
         renderNav();
-        toast('Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ, ' + state.me.login + '!', 'success');
+        toast('Добро пожаловать, ' + state.me.login + '!', 'success');
         const buf = sessionStorage.getItem('pendingBuy');
         sessionStorage.removeItem('pendingBuy');
         location.hash = buf ? '#/cabinet/buy' : '#/cabinet/profile';
@@ -1857,87 +1857,87 @@ function viewRedeem() {
     return `
     <div class="page-card" style="max-width:620px">
       <div class="page-head"><div>
-        <div class="page-title">Р‘РµР·РѕРїР°СЃРЅРѕСЃС‚СЊ</div>
-        <div class="page-sub">РЈРїСЂР°РІР»РµРЅРёРµ РґРѕСЃС‚СѓРїРѕРј Рє Р°РєРєР°СѓРЅС‚Сѓ</div>
+        <div class="page-title">Безопасность</div>
+        <div class="page-sub">Управление доступом к аккаунту</div>
       </div></div>
 
     <div class="page-card" style="max-width:620px">
-      <div class="page-head"><div><div class="page-title" style="font-size:17px">РџР°СЂРѕР»СЊ</div></div></div>
+      <div class="page-head"><div><div class="page-title" style="font-size:17px">Пароль</div></div></div>
       <form id="passForm">
-        <div class="field"><label>РўРµРєСѓС‰РёР№ РїР°СЂРѕР»СЊ</label><input name="current" type="password" required></div>
-        <div class="field"><label>РќРѕРІС‹Р№ РїР°СЂРѕР»СЊ</label><input name="next" type="password" minlength="8" required></div>
-        <button type="submit" class="btn btn-dark">РЎРјРµРЅРёС‚СЊ РїР°СЂРѕР»СЊ</button>
+        <div class="field"><label>Текущий пароль</label><input name="current" type="password" required></div>
+        <div class="field"><label>Новый пароль</label><input name="next" type="password" minlength="8" required></div>
+        <button type="submit" class="btn btn-dark">Сменить пароль</button>
       </form>
     </div>
 
     <div class="page-card" style="max-width:620px">
       <div class="page-head"><div><div class="page-title" style="font-size:17px">Telegram</div>
-      <div class="page-sub">Р’РѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ РїР°СЂРѕР»СЏ С‡РµСЂРµР· Telegram</div></div></div>
+      <div class="page-sub">Восстановление пароля через Telegram</div></div></div>
       <div class="panel-row">
         <div class="panel-ic ${tg ? 'g' : ''}">${icon.telegram}</div>
         <div class="panel-rg">
-          <div class="pt">${tg ? esc('@' + tg) : 'Telegram РЅРµ РїСЂРёРІСЏР·Р°РЅ'}</div>
+          <div class="pt">${tg ? esc('@' + tg) : 'Telegram не привязан'}</div>
           <div class="ps">${tg
-            ? (tgBound ? 'РџСЂРёРІСЏР·Р°РЅ. Р•СЃР»Рё Р·Р°Р±СѓРґРµС‚Рµ РїР°СЂРѕР»СЊ вЂ” СЃРјРѕР¶РµС‚Рµ РІРѕСЃСЃС‚Р°РЅРѕРІРёС‚СЊ С‡РµСЂРµР· Telegram.' : 'РћР¶РёРґР°РµС‚ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ РІ Telegram. РћС‚РїСЂР°РІСЊС‚Рµ РєРѕРґ Р±РѕС‚Сѓ.')
-            : 'РќР°С‡РЅРёС‚Рµ С‡Р°С‚ СЃ Р±РѕС‚РѕРј, Р·Р°С‚РµРј РІРІРµРґРёС‚Рµ @username Рё РїРѕР»СѓС‡РёС‚Рµ РєРѕРґ.'}</div>
+            ? (tgBound ? 'Привязан. Если забудете пароль — сможете восстановить через Telegram.' : 'Ожидает подтверждения в Telegram. Отправьте код боту.')
+            : 'Начните чат с ботом, затем введите @username и получите код.'}</div>
         </div>
         <div class="panel-cta">
           ${tg
-            ? `<button class="btn btn-danger btn-sm" id="tgUnbindBtn">РћС‚РІСЏР·Р°С‚СЊ</button>`
+            ? `<button class="btn btn-danger btn-sm" id="tgUnbindBtn">Отвязать</button>`
             : ''}
         </div>
       </div>
       ${tg ? '' : `
       <div class="field" style="margin-top:10px;max-width:340px">
-        <label>Р’Р°С€ Telegram username</label>
+        <label>Ваш Telegram username</label>
         <input name="tg" id="tgInput" placeholder="@username" maxlength="32" autocomplete="off">
-        <div class="hint">2. РќР°РїРёС€РёС‚Рµ Р±РѕС‚Сѓ @${esc(TG_BOT_LINK || '...')} Р»СЋР±РѕРµ СЃРѕРѕР±С‰РµРЅРёРµ (РєРѕРјР°РЅРґСѓ /start), Р·Р°С‚РµРј РЅР°Р¶РјРёС‚Рµ В«РџРѕР»СѓС‡РёС‚СЊ РєРѕРґВ».</div>
+        <div class="hint">2. Напишите боту @${esc(TG_BOT_LINK || '...')} любое сообщение (команду /start), затем нажмите «Получить код».</div>
       </div>
-      <button class="btn btn-gold" id="tgBindBtn" ${TG_BOT_ENABLED ? '' : 'disabled'}>РџРѕР»СѓС‡РёС‚СЊ РєРѕРґ</button>
-      ${TG_BOT_ENABLED ? '' : '<div class="warn" style="margin-top:12px">Telegram-Р±РѕС‚ РІСЂРµРјРµРЅРЅРѕ РЅРµРґРѕСЃС‚СѓРїРµРЅ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕР·Р¶Рµ.</div>'}
+      <button class="btn btn-gold" id="tgBindBtn" ${TG_BOT_ENABLED ? '' : 'disabled'}>Получить код</button>
+      ${TG_BOT_ENABLED ? '' : '<div class="warn" style="margin-top:12px">Telegram-бот временно недоступен. Попробуйте позже.</div>'}
       <div id="tgResult"></div>`}
     </div>
 
     <div class="page-card" style="max-width:620px">
-      <div class="page-head"><div><div class="page-title" style="font-size:17px">Р”РІСѓС…С„Р°РєС‚РѕСЂРЅР°СЏ Р°СѓС‚РµРЅС‚РёС„РёРєР°С†РёСЏ</div>
-      <div class="page-sub">РљРѕРґ РїСЂРё РІС…РѕРґРµ РІ Telegram</div></div></div>
+      <div class="page-head"><div><div class="page-title" style="font-size:17px">Двухфакторная аутентификация</div>
+      <div class="page-sub">Код при входе в Telegram</div></div></div>
       ${u.tgBound ? `
       <div class="panel-row">
         <div class="panel-ic ${u.tg2fa ? 'g' : ''}">${icon.lock}</div>
         <div class="panel-rg">
-          <div class="pt">2FA ${u.tg2fa ? 'РІРєР»СЋС‡РµРЅР°' : 'РІС‹РєР»СЋС‡РµРЅР°'}</div>
-          <div class="ps">${u.tg2fa ? 'РџСЂРё РІС…РѕРґРµ РЅР° СЃР°Р№С‚ РІ Telegram Р±СѓРґРµС‚ РїСЂРёС…РѕРґРёС‚СЊ РєРѕРґ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ.' : 'Р”Р»СЏ РІС…РѕРґР° РґРѕСЃС‚Р°С‚РѕС‡РЅРѕ Р»РѕРіРёРЅР° Рё РїР°СЂРѕР»СЏ.'}</div>
+          <div class="pt">2FA ${u.tg2fa ? 'включена' : 'выключена'}</div>
+          <div class="ps">${u.tg2fa ? 'При входе на сайт в Telegram будет приходить код подтверждения.' : 'Для входа достаточно логина и пароля.'}</div>
         </div>
         <div class="panel-cta">
-          <button class="btn ${u.tg2fa ? 'btn-danger' : 'btn-gold'} btn-sm" id="tg2faBtn">${u.tg2fa ? 'Р’С‹РєР»СЋС‡РёС‚СЊ' : 'Р’РєР»СЋС‡РёС‚СЊ'}</button>
+          <button class="btn ${u.tg2fa ? 'btn-danger' : 'btn-gold'} btn-sm" id="tg2faBtn">${u.tg2fa ? 'Выключить' : 'Включить'}</button>
         </div>
       </div>` : `
-      <div class="warn">РЎРЅР°С‡Р°Р»Р° РїСЂРёРІСЏР¶РёС‚Рµ Telegram (СЂР°Р·РґРµР» РІС‹С€Рµ) вЂ” 2FA СЂР°Р±РѕС‚Р°РµС‚ С‡РµСЂРµР· Р±РѕС‚Р°.</div>`}
+      <div class="warn">Сначала привяжите Telegram (раздел выше) — 2FA работает через бота.</div>`}
     </div>
     <div class="page-card" style="max-width:620px">
-      <div class="page-head"><div><div class="page-title" style="font-size:17px">РЎРµСЃСЃРёРё</div>
-      <div class="page-sub">Р—Р°РІРµСЂС€РёС‚СЊ РІС…РѕРґ РЅР° РІСЃРµС… СѓСЃС‚СЂРѕР№СЃС‚РІР°С…</div></div></div>
-      <button class="btn btn-danger" id="logoutAllBtn">Р’С‹Р№С‚Рё СЃРѕ РІСЃРµС… СѓСЃС‚СЂРѕР№СЃС‚РІ</button>
+      <div class="page-head"><div><div class="page-title" style="font-size:17px">Сессии</div>
+      <div class="page-sub">Завершить вход на всех устройствах</div></div></div>
+      <button class="btn btn-danger" id="logoutAllBtn">Выйти со всех устройств</button>
     </div>`;
   }
 
   function viewSupport(section, ap) {
     const t = CAB_SECTIONS[section];
     const ph = {
-      support: 'РћРїРёС€РёС‚Рµ РІР°С€Сѓ РїСЂРѕР±Р»РµРјСѓ: РЅРµ СЂР°Р±РѕС‚Р°РµС‚ РјРѕРґСѓР»СЊ, РІРѕРїСЂРѕСЃ РїРѕ РїРѕРґРїРёСЃРєРµ...',
-      idea: 'РћРїРёС€РёС‚Рµ РІР°С€Сѓ РёРґРµСЋ РїРѕ СЂР°Р·РІРёС‚РёСЋ РєР»РёРµРЅС‚Р°...',
-      bug: 'Р§С‚Рѕ РїСЂРѕРёР·РѕС€Р»Рѕ? Рљ РєР°РєРѕРј РјРѕРґСѓР»Рµ? РџСЂРёР»РѕР¶РёС‚Рµ СЃСЃС‹Р»РєСѓ РЅР° РІРёРґРµРѕ/СЃРєСЂРёРЅС€РѕС‚...'
+      support: 'Опишите вашу проблему: не работает модуль, вопрос по подписке...',
+      idea: 'Опишите вашу идею по развитию клиента...',
+      bug: 'Что произошло? К каком модуле? Приложите ссылку на видео/скриншот...'
     }[section];
     return `
     <div class="page-card" style="max-width:640px">
       <div class="page-head"><div>
         <div class="page-title">${t.title}</div>
-        <div class="page-sub">РњС‹ РѕС‚РІРµС‡Р°РµРј РІ С‚РµС‡РµРЅРёРµ 24 С‡Р°СЃРѕРІ РІ Discord</div>
+        <div class="page-sub">Мы отвечаем в течение 24 часов в Discord</div>
       </div></div>
       <form id="supportForm">
-        <div class="field"><label>РўРµРјР°</label><input name="subject" maxlength="100" placeholder="РљРѕСЂРѕС‚РєРѕ Рѕ РІРѕРїСЂРѕСЃРµ" required></div>
-        <div class="field"><label>РЎРѕРѕР±С‰РµРЅРёРµ</label><textarea name="message" maxlength="2000" placeholder="${ph}" required></textarea></div>
-        <button type="submit" class="btn btn-gold">РћС‚РїСЂР°РІРёС‚СЊ</button>
+        <div class="field"><label>Тема</label><input name="subject" maxlength="100" placeholder="Коротко о вопросе" required></div>
+        <div class="field"><label>Сообщение</label><textarea name="message" maxlength="2000" placeholder="${ph}" required></textarea></div>
+        <button type="submit" class="btn btn-gold">Отправить</button>
       </form>
       <div id="supportResult"></div>
     </div>`;
@@ -1984,9 +1984,9 @@ function viewRedeem() {
               if (r && r.ok) {
                 state.me = r.user;
                 if (state.shop) { state.shop.activeDeco = r.activeDeco; state.shop.activeColor = r.activeColor; state.shop.activeRole = r.activeRole; }
-              } else { toast((r && r.message) || 'РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРёРјРµРЅРёС‚СЊ', 'error'); applyUse(key, on); }
+              } else { toast((r && r.message) || 'Не удалось применить', 'error'); applyUse(key, on); }
             })
-            .catch(err => { toast(err.message || 'РћС€РёР±РєР°', 'error'); applyUse(key, on); });
+            .catch(err => { toast(err.message || 'Ошибка', 'error'); applyUse(key, on); });
         }));
       };
       bindShopCards(main);
@@ -2007,7 +2007,7 @@ function viewRedeem() {
       const renderInto = (boxId, users, emptyText) => {
         const box = $(boxId, main);
         if (!box) return;
-        if (!users || !users.length) { box.innerHTML = '<div class="empty" style="padding:14px 0">' + (emptyText || 'РќРёРєРѕРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ') + '</div>'; return; }
+        if (!users || !users.length) { box.innerHTML = '<div class="empty" style="padding:14px 0">' + (emptyText || 'Никого не найдено') + '</div>'; return; }
         box.innerHTML = users.map(u => globkaRowHTML(u)).join('');
       };
       const renderReqs = (users, outgoing, emptyText) => {
@@ -2015,7 +2015,7 @@ function viewRedeem() {
         if (!box) return;
         const inc = users && users.length ? users.map(u => globkaReqRowHTML(u)).join('') : '';
         const out = outgoing && outgoing.length ? outgoing.map(u => globkaReqOutRowHTML(u)).join('') : '';
-        if (!inc && !out) { box.innerHTML = '<div class="empty" style="padding:14px 0">' + (emptyText || 'Р—Р°СЏРІРѕРє РЅРµС‚') + '</div>'; return; }
+        if (!inc && !out) { box.innerHTML = '<div class="empty" style="padding:14px 0">' + (emptyText || 'Заявок нет') + '</div>'; return; }
         box.innerHTML = inc + out;
       };
       const attachGlobkaActions = () => {
@@ -2033,7 +2033,7 @@ function viewRedeem() {
           try {
             const r = await api(ep.u, { method: 'POST', body: JSON.stringify(ep.body) });
             toast(r.message, 'success');
-            await refreshGlobka(false);
+            await refreshGlobka(true);
           } catch (err) { toast(err.message, 'error'); b.disabled = false; }
         }));
         $$('[data-globka-accept]', main).forEach(b => b.addEventListener('click', async () => {
@@ -2042,7 +2042,7 @@ function viewRedeem() {
           try {
             const r = await api('/api/friends/respond', { method: 'POST', body: JSON.stringify({ login, accept: true }) });
             toast(r.message, 'success');
-            await refreshGlobka(false);
+            await refreshGlobka(true);
           } catch (err) { toast(err.message, 'error'); b.disabled = false; }
         }));
         $$('[data-globka-decline]', main).forEach(b => b.addEventListener('click', async () => {
@@ -2051,7 +2051,7 @@ function viewRedeem() {
           try {
             const r = await api('/api/friends/respond', { method: 'POST', body: JSON.stringify({ login, accept: false }) });
             toast(r.message, 'success');
-            await refreshGlobka(false);
+            await refreshGlobka(true);
           } catch (err) { toast(err.message, 'error'); b.disabled = false; }
         }));
         $$('[data-globka-cancel]', main).forEach(b => b.addEventListener('click', async () => {
@@ -2060,7 +2060,7 @@ function viewRedeem() {
           try {
             const r = await api('/api/friends/cancel', { method: 'POST', body: JSON.stringify({ login }) });
             toast(r.message, 'success');
-            await refreshGlobka(false);
+            await refreshGlobka(true);
           } catch (err) { toast(err.message, 'error'); b.disabled = false; }
         }));
         $$('[data-globka-profile]', main).forEach(b => b.addEventListener('click', () => renderGlobaProfile(b.dataset.globkaProfile, main)));
@@ -2068,11 +2068,11 @@ function viewRedeem() {
       const refreshGlobka = async (withSearch) => {
         const loadAll = [];
         if (withSearch && globkaQuery) {
-          loadAll.push(api('/api/globka/find?q=' + encodeURIComponent(globkaQuery)).then(r => renderInto('#globkaResults', r.users, 'РќРёРєРѕРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ')));
+          loadAll.push(api('/api/globka/find?q=' + encodeURIComponent(globkaQuery)).then(r => renderInto('#globkaResults', r.users, 'Никого не найдено')));
         }
         loadAll.push(
-          api('/api/friends/requests').then(r => renderReqs(r.users, r.outgoing, 'Р—Р°СЏРІРѕРє РЅРµС‚')).catch(() => renderReqs(null, null, 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ Р·Р°СЏРІРєРё')),
-          api('/api/friends').then(r => renderInto('#globkaFriends', r.users, 'РџРѕРєР° РїСѓСЃС‚Рѕ вЂ” РґРѕР±Р°РІСЊС‚Рµ РґСЂСѓР·РµР№ С‡РµСЂРµР· РїРѕРёСЃРє')).catch(() => renderInto('#globkaFriends', null, 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РґСЂСѓР·РµР№'))
+          api('/api/friends/requests').then(r => renderReqs(r.users, r.outgoing, 'Заявок нет')).catch(() => renderReqs(null, null, 'Не удалось загрузить заявки')),
+          api('/api/friends').then(r => renderInto('#globkaFriends', r.users, 'Пока пусто — добавьте друзей через поиск')).catch(() => renderInto('#globkaFriends', null, 'Не удалось загрузить друзей'))
         );
         await Promise.all(loadAll);
         attachGlobkaActions();
@@ -2083,16 +2083,16 @@ function viewRedeem() {
         const run = async () => {
           const q = String((input && input.value) || '').trim();
           const box = $('#globkaResults', main);
-          if (!q) { box.innerHTML = '<div class="empty" style="padding:14px 0">Р’РІРµРґРёС‚Рµ Р»РѕРіРёРЅ РґР»СЏ РїРѕРёСЃРєР°</div>'; return; }
+          if (!q) { box.innerHTML = '<div class="empty" style="padding:14px 0">Введите логин для поиска</div>'; return; }
           if (state.me && q.toLowerCase() === String(state.me.login).toLowerCase()) {
-            box.innerHTML = '<div class="empty" style="padding:14px 0">Р­С‚Рѕ РІР°С€ Р»РѕРіРёРЅ. РћС‚РєСЂРѕР№С‚Рµ СЃРІРѕР№ РїСЂРѕС„РёР»СЊ РєРЅРѕРїРєРѕР№ <b>В«РЎРІРѕР№ РїСЂРѕС„РёР»СЊВ»</b> РІС‹С€Рµ.</div>';
+            box.innerHTML = '<div class="empty" style="padding:14px 0">Это ваш логин. Откройте свой профиль кнопкой <b>«Свой профиль»</b> выше.</div>';
             return;
           }
           globkaQuery = q;
-          box.innerHTML = '<div class="empty" style="padding:14px 0">РС‰РµРјвЂ¦</div>';
+          box.innerHTML = '<div class="empty" style="padding:14px 0">Ищем…</div>';
           try {
             const r = await api('/api/globka/find?q=' + encodeURIComponent(q));
-            renderInto('#globkaResults', r.users, 'РќРёРєРѕРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ');
+            renderInto('#globkaResults', r.users, 'Никого не найдено');
             attachGlobkaActions();
           } catch (err) { box.innerHTML = '<div class="empty err" style="padding:14px 0">' + esc(err.message) + '</div>'; }
         };
@@ -2120,7 +2120,7 @@ function viewRedeem() {
           state.me = r.user;
           applyTheme(r.user.theme);
           $$('.theme-swatch', themeSwatches).forEach(x => x.classList.toggle('active', x === s));
-          toast('Р¦РІРµС‚ С‚РµРјС‹: ' + (THEMES[key] ? THEMES[key].label : 'Р¤РёРѕР»РµС‚РѕРІС‹Р№'), 'success');
+          toast('Цвет темы: ' + (THEMES[key] ? THEMES[key].label : 'Фиолетовый'), 'success');
         } catch (err) { toast(err.message, 'error'); }
         s.disabled = false;
       }));
@@ -2136,11 +2136,11 @@ function viewRedeem() {
         if (card) card.classList.toggle('glossy-card', on);
         if (banner) banner.classList.toggle('glossy-banner', on);
         if (ava) ava.classList.toggle('glossy-ava', on);
-        if (hint) hint.textContent = on ? 'Р“Р»СЏРЅРµС† РІРєР»СЋС‡С‘РЅ вЂ” РєР°СЂС‚РѕС‡РєР° РїСЂРѕС„РёР»СЏ Р±Р»РµСЃС‚РёС‚ вњЁ' : 'Р’РєР»СЋС‡Рё РіР»СЏРЅРµС†, С‡С‚РѕР±С‹ РєР°СЂС‚РѕС‡РєР° РїСЂРѕС„РёР»СЏ Р±Р»РµСЃС‚РµР»Р°';
+        if (hint) hint.textContent = on ? 'Глянец включён — карточка профиля блестит ?' : 'Включи глянец, чтобы карточка профиля блестела';
         if (glossyBtn) {
           glossyBtn.classList.toggle('btn-gold', on);
           glossyBtn.classList.toggle('btn-dark', !on);
-          glossyBtn.textContent = on ? 'Р’С‹РєР»СЋС‡РёС‚СЊ' : 'Р’РєР»СЋС‡РёС‚СЊ';
+          glossyBtn.textContent = on ? 'Выключить' : 'Включить';
         }
       };
       glossyBtn.addEventListener('click', async () => {
@@ -2151,7 +2151,7 @@ function viewRedeem() {
           const r = await api('/api/profile/glossy', { method: 'POST', body: JSON.stringify({ enabled }) });
           state.me = r.user;
           setGlossyUi(!!(r.user && r.user.glossy));
-          toast('Р“Р»СЏРЅС†РµРІС‹Р№ РїСЂРѕС„РёР»СЊ ' + (r.user.glossy ? 'РІРєР»СЋС‡С‘РЅ вњЁ' : 'РІС‹РєР»СЋС‡РµРЅ'), 'success');
+          toast('Глянцевый профиль ' + (r.user.glossy ? 'включён ?' : 'выключен'), 'success');
         } catch (err) { setGlossyUi(!enabled); toast(err.message, 'error'); }
         finally { glossyBtn.disabled = false; }
       });
@@ -2170,7 +2170,7 @@ if (section === 'redeem' && $('#promoForm')) {
             method: 'POST', body: JSON.stringify({ code: e.target.code.value })
           });
           state.me = r.user;
-          toast(r.message || 'РџСЂРѕРјРѕРєРѕРґ Р°РєС‚РёРІРёСЂРѕРІР°РЅ!', 'success');
+          toast(r.message || 'Промокод активирован!', 'success');
           setTimeout(() => routeCabinet('/cabinet/subs'), 600);
         } catch (err) { toast(err.message, 'error'); btn.disabled = false; }
       });
@@ -2210,7 +2210,7 @@ if (section === 'redeem' && $('#promoForm')) {
               maxUses: Number(e.target.maxUses.value)
             })
           });
-          toast(r.message || 'РџСЂРѕРјРѕРєРѕРґ СЃРѕР·РґР°РЅ', 'success');
+          toast(r.message || 'Промокод создан', 'success');
           e.target.reset();
           e.target.maxUses.value = '1';
           e.target.days.value = '0';
@@ -2243,11 +2243,11 @@ if (section === 'redeem' && $('#promoForm')) {
         const title = e.target.title.value.trim();
         const amount = Number(e.target.amount.value);
         const plans = $$('input[name="cplan"]:checked', $('#customPlans')).map(inp => inp.value);
-        if (!title || !(amount >= 1)) return toast('РџСЂРѕРІРµСЂСЊС‚Рµ РЅР°Р·РІР°РЅРёРµ Рё СЃСѓРјРјСѓ', 'error');
+        if (!title || !(amount >= 1)) return toast('Проверьте название и сумму', 'error');
         btn.disabled = true;
         try {
           const r = await api('/api/custom/create', { method: 'POST', body: JSON.stringify({ title, amount, plans }) });
-          toast((r && r.message) || 'РџРѕР·РёС†РёСЏ СЃРѕР·РґР°РЅР°', 'success');
+          toast((r && r.message) || 'Позиция создана', 'success');
           e.target.reset();
           loadCustomList();
         } catch (err) { toast(err.message, 'error'); }
@@ -2274,12 +2274,12 @@ if (section === 'redeem' && $('#promoForm')) {
         const code = e.target.code.value.trim().toUpperCase();
         const discount = parseInt(e.target.discount.value, 10);
         const plans = $$('input[name="plan"]:checked', plansBox).map(inp => inp.value);
-        if (!code || !(discount >= 1 && discount <= 99)) return toast('РџСЂРѕРІРµСЂСЊС‚Рµ РЅР°Р·РІР°РЅРёРµ Рё СЃРєРёРґРєСѓ', 'error');
-        if (!plans.length) return toast('Р’С‹Р±РµСЂРёС‚Рµ С…РѕС‚СЏ Р±С‹ РѕРґРёРЅ С‚Р°СЂРёС„', 'error');
+        if (!code || !(discount >= 1 && discount <= 99)) return toast('Проверьте название и скидку', 'error');
+        if (!plans.length) return toast('Выберите хотя бы один тариф', 'error');
         btn.disabled = true;
         try {
           const r = await api('/api/discount/create', { method: 'POST', body: JSON.stringify({ code, discount, plans }) });
-          toast((r && r.message) || 'РџСЂРѕРјРѕРєРѕРґ СЃРѕР·РґР°РЅ', 'success');
+          toast((r && r.message) || 'Промокод создан', 'success');
           e.target.reset(); mode = 'media'; syncMode();
           loadDiscountList();
         } catch (err) { toast(err.message, 'error'); }
@@ -2316,7 +2316,7 @@ if (section === 'redeem' && $('#promoForm')) {
             })
           });
           toast(r.message, 'success');
-          if (box) { box.className = 'okbox'; box.textContent = 'вњ… ' + r.message; }
+          if (box) { box.className = 'okbox'; box.textContent = '? ' + r.message; }
           try {
             const meR = await api('/api/me');
             if (meR && meR.authed && meR.user) {
@@ -2366,8 +2366,8 @@ if (section === 'redeem' && $('#promoForm')) {
             launcherVersion: String(e.target.launcherVersion.value || ''),
             gameVersion: String(e.target.gameVersion.value || '')
           }) });
-          toast('РќР°СЃС‚СЂРѕР№РєРё СЃРѕС…СЂР°РЅРµРЅС‹', 'success');
-          if (box) { box.className = 'okbox'; box.textContent = 'РћР±СЉСЏРІР»РµРЅРёРµ Рё РІРµСЂСЃРёРё РѕР±РЅРѕРІР»РµРЅС‹.'; }
+          toast('Настройки сохранены', 'success');
+          if (box) { box.className = 'okbox'; box.textContent = 'Объявление и версии обновлены.'; }
         } catch (err) {
           toast(err.message, 'error');
           if (box) { box.className = 'okbox err'; box.textContent = err.message; }
@@ -2377,12 +2377,12 @@ if (section === 'redeem' && $('#promoForm')) {
     }
     if (section === 'device' && $('[data-hwid-reset]', main)) {
       $('[data-hwid-reset]', main).addEventListener('click', async (e) => {
-        if (!confirm('РЎР±СЂРѕСЃРёС‚СЊ РїСЂРёРІСЏР·РєСѓ HWID? Р­С‚Рѕ РґРµР№СЃС‚РІРёРµ РґРѕСЃС‚СѓРїРЅРѕ СЂР°Р· РІ РјРµСЃСЏС†.')) return;
+        if (!confirm('Сбросить привязку HWID? Это действие доступно раз в месяц.')) return;
         e.currentTarget.disabled = true;
         try {
           const r = await api('/api/hwid/reset', { method: 'POST' });
           state.me = r.user;
-          toast('РџСЂРёРІСЏР·РєР° СЃР±СЂРѕС€РµРЅР°. Р’РѕР№РґРёС‚Рµ РІ Р»Р°СѓРЅС‡РµСЂРµ Р·Р°РЅРѕРІРѕ.', 'success');
+          toast('Привязка сброшена. Войдите в лаунчере заново.', 'success');
           renderCabContent('device', ap);
         } catch (err) { toast(err.message, 'error'); e.currentTarget.disabled = false; }
       });
@@ -2393,7 +2393,7 @@ if (section === 'redeem' && $('#promoForm')) {
         t2btn.disabled = true;
         try {
           const r = await api('/api/tg/2fa', { method: 'POST', body: JSON.stringify({ enabled: !(state.me && state.me.tg2fa) }) });
-          toast((r && r.message) || 'Р“РѕС‚РѕРІРѕ', 'success');
+          toast((r && r.message) || 'Готово', 'success');
           if (state.me) state.me.tg2fa = !state.me.tg2fa;
           renderCabContent('security');
           bindSection('security', main, ap);
@@ -2409,42 +2409,42 @@ if (section === 'redeem' && $('#promoForm')) {
             method: 'POST', body: JSON.stringify({ current: e.target.current.value, next: e.target.next.value })
           });
           state.me = null;
-          toast('РџР°СЂРѕР»СЊ РёР·РјРµРЅС‘РЅ. Р’РѕР№РґРёС‚Рµ Р·Р°РЅРѕРІРѕ.', 'success');
+          toast('Пароль изменён. Войдите заново.', 'success');
           setTimeout(() => { renderNav(); location.hash = '#/login'; }, 800);
         } catch (err) { toast(err.message, 'error'); btn.disabled = false; }
       });
       $('#logoutAllBtn').addEventListener('click', async () => {
         await api('/api/logout-all', { method: 'POST' });
         state.me = null; renderNav(); location.hash = '#/';
-        toast('Р’СЃРµ СЃРµСЃСЃРёРё Р·Р°РІРµСЂС€РµРЅС‹');
+        toast('Все сессии завершены');
       });
       const bindBtn = $('#tgBindBtn');
       if (bindBtn) bindBtn.addEventListener('click', async () => {
         const input = $('#tgInput');
         const box = $('#tgResult');
-        if (!input || !input.value.trim()) { toast('Р’РІРµРґРёС‚Рµ @username', 'error'); return; }
+        if (!input || !input.value.trim()) { toast('Введите @username', 'error'); return; }
         bindBtn.disabled = true;
         try {
           const r = await api('/api/tg/bind', { method: 'POST', body: JSON.stringify({ tg: input.value.trim() }) });
           const bot = r.bot || TG_BOT_LINK || '';
           if (box) {
             box.className = 'okbox';
-            box.innerHTML = 'РљРѕРґ: <b>' + esc(r.code) + '</b>' + (bot ? '. РћС‚РїСЂР°РІСЊС‚Рµ РµРіРѕ Р±РѕС‚Сѓ @' + esc(bot) : '') + ', Р·Р°С‚РµРј РІРµСЂРЅРёС‚РµСЃСЊ СЃСЋРґР° вЂ” СЃС‚СЂР°РЅРёС†Р° РѕР±РЅРѕРІРёС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё.';
+            box.innerHTML = 'Код: <b>' + esc(r.code) + '</b>' + (bot ? '. Отправьте его боту @' + esc(bot) : '') + ', затем вернитесь сюда — страница обновится автоматически.';
           }
-          toast('РћС‚РїСЂР°РІСЊС‚Рµ РєРѕРґ Р±РѕС‚Сѓ РІ Telegram', 'success');
+          toast('Отправьте код боту в Telegram', 'success');
           pollTgBind();
         } catch (err) { toast(err.message, 'error'); }
         bindBtn.disabled = false;
       });
       const unbindBtn = $('#tgUnbindBtn');
       if (unbindBtn) unbindBtn.addEventListener('click', async () => {
-        const ok = await askFreeze({ title: 'РћС‚РІСЏР·Р°С‚СЊ Telegram', text: 'РЈР±СЂР°С‚СЊ РїСЂРёРІСЏР·РєСѓ Telegram РѕС‚ РІР°С€РµРіРѕ Р°РєРєР°СѓРЅС‚Р°? Р’С‹ РЅРµ СЃРјРѕР¶РµС‚Рµ РІРѕСЃСЃС‚Р°РЅР°РІР»РёРІР°С‚СЊ РїР°СЂРѕР»СЊ С‡РµСЂРµР· Telegram.', confirm: 'РћС‚РІСЏР·Р°С‚СЊ', danger: true });
+        const ok = await askFreeze({ title: 'Отвязать Telegram', text: 'Убрать привязку Telegram от вашего аккаунта? Вы не сможете восстанавливать пароль через Telegram.', confirm: 'Отвязать', danger: true });
         if (!ok) return;
         unbindBtn.disabled = true;
         try {
           const r = await api('/api/tg/unbind', { method: 'POST' });
           state.me = r.user;
-          toast('Telegram РѕС‚РІСЏР·Р°РЅ', 'success');
+          toast('Telegram отвязан', 'success');
           renderCabContent('security', ap);
         } catch (err) { toast(err.message, 'error'); unbindBtn.disabled = false; }
       });
@@ -2464,7 +2464,7 @@ if (section === 'redeem' && $('#promoForm')) {
           });
           const box = $('#supportResult');
           box.className = 'okbox';
-          box.textContent = 'Р—Р°СЏРІРєР° #' + r.ticketId + ' (В«' + r.typeName + 'В») РѕС‚РїСЂР°РІР»РµРЅР°. РњС‹ РѕС‚РІРµС‚РёРј РІ Discord.';
+          box.textContent = 'Заявка #' + r.ticketId + ' («' + r.typeName + '») отправлена. Мы ответим в Discord.';
           e.target.reset();
         } catch (err) { toast(err.message, 'error'); }
         btn.disabled = false;
@@ -2486,7 +2486,7 @@ if (section === 'redeem' && $('#promoForm')) {
           tgPollTimer = null;
           const el = $('#app');
           if (el) renderCabContent('security', el);
-          toast('Telegram РїСЂРёРІСЏР·Р°РЅ!', 'success');
+          toast('Telegram привязан!', 'success');
           return;
         }
       } catch {}
@@ -2502,21 +2502,21 @@ if (section === 'redeem' && $('#promoForm')) {
     if (!el) return;
     try {
       const r = await api('/api/promo/list');
-      if (!r.codes.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">РџРѕРєР° РЅРµС‚ РїСЂРѕРјРѕРєРѕРґРѕРІ</div>'; return; }
+      if (!r.codes.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">Пока нет промокодов</div>'; return; }
       el.innerHTML = r.codes.map(c => {
-        const planLabel = c.plan === 'alpha' ? 'Alpha 1.21.4' : c.plan === 'hwid_reset' ? 'РЎР±СЂРѕСЃ HWID' : c.plan === 'kamiki30' ? 'Kamiki 1.21.4 В· 30 РґРЅРµР№' : c.plan === 'kamiki365' ? 'Kamiki 1.21.4 В· 365 РґРЅРµР№' : 'Kamiki 1.21.4';
+        const planLabel = c.plan === 'alpha' ? 'Alpha 1.21.4' : c.plan === 'hwid_reset' ? 'Сброс HWID' : c.plan === 'kamiki30' ? 'Kamiki 1.21.4 · 30 дней' : c.plan === 'kamiki365' ? 'Kamiki 1.21.4 · 365 дней' : 'Kamiki 1.21.4';
         const fullyUsed = c.used_count >= c.max_uses;
-        const dur = c.days > 0 ? ` В· ${c.days} РґРЅ.` : '';
+        const dur = c.days > 0 ? ` · ${c.days} дн.` : '';
         return `<div class="panel-row" style="border-bottom:1px solid var(--line);flex-wrap:wrap">
           <div class="panel-rg" style="min-width:0;flex:1">
             <div class="pt" style="font-weight:700;font-size:14px;word-break:break-all">${esc(c.code)}</div>
-            <div class="ps">${planLabel}${dur} В· ${c.used_count}/${c.max_uses} РёСЃРїРѕР»СЊР·РѕРІР°РЅРѕ В· ${fmtDate(c.created_at)}</div>
+            <div class="ps">${planLabel}${dur} · ${c.used_count}/${c.max_uses} использовано · ${fmtDate(c.created_at)}</div>
           </div>
           ${fullyUsed
-            ? `<span class="stb stb-ok">${icon.x} РСЃС‡РµСЂРїР°РЅ</span>`
-            : `<span class="stb stb-ok">${icon.check} РђРєС‚РёРІРµРЅ</span>`}
-          <button class="btn btn-dark btn-sm promo-copy" style="flex-shrink:0" data-code="${esc(c.code)}">${icon.copy} РљРѕРїРёСЂРѕРІР°С‚СЊ</button>
-          <button class="btn btn-danger btn-sm promo-del" style="flex-shrink:0" data-id="${c.id}" data-code="${esc(c.code)}">${icon.trash} РЈРґР°Р»РёС‚СЊ</button>
+            ? `<span class="stb stb-ok">${icon.x} Исчерпан</span>`
+            : `<span class="stb stb-ok">${icon.check} Активен</span>`}
+          <button class="btn btn-dark btn-sm promo-copy" style="flex-shrink:0" data-code="${esc(c.code)}">${icon.copy} Копировать</button>
+          <button class="btn btn-danger btn-sm promo-del" style="flex-shrink:0" data-id="${c.id}" data-code="${esc(c.code)}">${icon.trash} Удалить</button>
         </div>`;
       }).join('');
       el.querySelectorAll('.promo-copy').forEach(b => b.addEventListener('click', async (e) => {
@@ -2535,13 +2535,13 @@ if (section === 'redeem' && $('#promoForm')) {
           try { document.execCommand('copy'); ok = true; } catch {}
           ta.remove();
         }
-        if (!ok) { toast('РќРµ СѓРґР°Р»РѕСЃСЊ СЃРєРѕРїРёСЂРѕРІР°С‚СЊ', 'error'); return; }
+        if (!ok) { toast('Не удалось скопировать', 'error'); return; }
         const orig = b.innerHTML;
         b.style.transition = 'opacity .25s ease, background .25s ease, border-color .25s ease';
         b.style.opacity = '0';
         setTimeout(() => {
           b.classList.add('copied');
-          b.innerHTML = `${icon.check} РЎРєРѕРїРёСЂРѕРІР°РЅРѕ`;
+          b.innerHTML = `${icon.check} Скопировано`;
           b.style.opacity = '1';
         }, 250);
         setTimeout(() => {
@@ -2556,27 +2556,27 @@ if (section === 'redeem' && $('#promoForm')) {
       el.querySelectorAll('.promo-del').forEach(b => b.addEventListener('click', async (e) => {
         e.stopPropagation();
         const id = b.dataset.id;
-        if (!confirm('РЈРґР°Р»РёС‚СЊ РїСЂРѕРјРѕРєРѕРґ ' + b.dataset.code + '?')) return;
+        if (!confirm('Удалить промокод ' + b.dataset.code + '?')) return;
         const btn = b;
         btn.disabled = true;
-        btn.textContent = 'РЈРґР°Р»СЏСЋ...';
+        btn.textContent = 'Удаляю...';
         try {
           const r = await api('/api/promo/delete', { method: 'POST', body: JSON.stringify({ id: Number(id) }) });
           if (r.ok) {
-            toast('РџСЂРѕРјРѕРєРѕРґ СѓРґР°Р»С‘РЅ', 'success');
+            toast('Промокод удалён', 'success');
             loadPromoList();
           } else {
-            toast(r.error || 'РћС€РёР±РєР°', 'error');
+            toast(r.error || 'Ошибка', 'error');
             btn.disabled = false;
-            btn.innerHTML = `${icon.trash} РЈРґР°Р»РёС‚СЊ`;
+            btn.innerHTML = `${icon.trash} Удалить`;
           }
         } catch (err) {
           toast(err.message, 'error');
           btn.disabled = false;
-          btn.innerHTML = `${icon.trash} РЈРґР°Р»РёС‚СЊ`;
+          btn.innerHTML = `${icon.trash} Удалить`;
         }
       }));
-    } catch (err) { el.innerHTML = '<div class="empty">РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё</div>'; }
+    } catch (err) { el.innerHTML = '<div class="empty">Ошибка загрузки</div>'; }
   }
 
   let opsCache = [];
@@ -2588,7 +2588,7 @@ if (section === 'redeem' && $('#promoForm')) {
       const r = await api('/api/orders/list');
       opsCache = r.orders || [];
       renderOps('');
-    } catch (err) { el.innerHTML = '<div class="empty" style="padding:18px 0">РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё: ' + esc(err.message || '') + '</div>'; }
+    } catch (err) { el.innerHTML = '<div class="empty" style="padding:18px 0">Ошибка загрузки: ' + esc(err.message || '') + '</div>'; }
   }
 
   function renderOps(filter) {
@@ -2596,22 +2596,22 @@ if (section === 'redeem' && $('#promoForm')) {
     if (!el) return;
     const list = filter ? opsCache.filter(o => (o.login || '').toLowerCase().includes(filter)) : opsCache;
     if (!list.length) {
-      el.innerHTML = '<div class="empty" style="padding:18px 0">' + (filter ? 'РџРѕ Р·Р°РїСЂРѕСЃСѓ РЅРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ' : 'Р—Р°РєР°Р·РѕРІ РїРѕРєР° РЅРµС‚') + '</div>';
+      el.innerHTML = '<div class="empty" style="padding:18px 0">' + (filter ? 'По запросу ничего не найдено' : 'Заказов пока нет') + '</div>';
       return;
     }
     el.innerHTML = list.map(o => {
       const badge = o.status === 'paid'
-        ? '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#7ee2a8;background:rgba(46,204,113,.14);border:1px solid rgba(46,204,113,.4)">РѕРїР»Р°С‡РµРЅРѕ</span>'
+        ? '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#7ee2a8;background:rgba(46,204,113,.14);border:1px solid rgba(46,204,113,.4)">оплачено</span>'
         : (o.status === 'refunded' || o.status === 'canceled')
-          ? '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffe08a;background:rgba(240,180,41,.15);border:1px solid rgba(240,180,41,.5)">РІРѕР·РІСЂР°С‚</span>'
-          : '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffb3b9;background:rgba(255,95,109,.12);border:1px solid rgba(255,95,109,.4)">РЅРµ РѕРїР»Р°С‡РµРЅРѕ</span>';
+          ? '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffe08a;background:rgba(240,180,41,.15);border:1px solid rgba(240,180,41,.5)">возврат</span>'
+          : '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffb3b9;background:rgba(255,95,109,.12);border:1px solid rgba(255,95,109,.4)">не оплачено</span>';
       const date = o.created_at ? new Date(o.created_at).toLocaleString('ru-RU') : '';
-      const payName = o.provider === 'yookassa' ? 'РЎР‘Рџ (Р®Kassa)' : (o.provider || 'вЂ”');
+      const payName = o.provider === 'yookassa' ? 'СБП (ЮKassa)' : (o.provider || '—');
       const sum = o.amount != null ? esc(String(o.amount)) + ' ' + esc(o.currency || '\u20bd') : '\u2014';
       return `<div class="promo-item">
         <div style="min-width:0">
           <b>${esc(o.login)}</b> \u00b7 <span style="color:var(--muted)">${esc(o.email)}</span>
-          <div class="promo-item-sub">\u0427\u0442\u043e: ${esc(o.what)} \u00b7 \u0421\u0443\u043c\u043c\u0430: <b>${sum}</b>${o.provider ? ' В· РћРїР»Р°С‚Р°: ' + esc(payName) : ''}</div>
+          <div class="promo-item-sub">\u0427\u0442\u043e: ${esc(o.what)} \u00b7 \u0421\u0443\u043c\u043c\u0430: <b>${sum}</b>${o.provider ? ' · Оплата: ' + esc(payName) : ''}</div>
           <div class="promo-item-sub">\u0417\u0430\u043a\u0430\u0437 #${o.id}${date ? ' \u00b7 ' + esc(date) : ''}</div>
         </div>
         <div style="flex-shrink:0">${badge}</div>
@@ -2624,46 +2624,46 @@ if (section === 'redeem' && $('#promoForm')) {
     if (!el) return;
     try {
       const r = await api('/api/custom/list');
-      if (!r.offers || !r.offers.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">РџРѕРєР° РЅРµС‚ РїРѕР·РёС†РёР№</div>'; return; }
+      if (!r.offers || !r.offers.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">Пока нет позиций</div>'; return; }
       el.innerHTML = r.offers.map(o => {
         const link = location.origin + '/#/pay-offer/' + o.id;
         const st = o.stats || { paid: 0, refunded: 0, canceled: 0 };
         const badges = [];
-        if (st.paid > 0) badges.push(`<span style="margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#7ee2a8;background:rgba(46,204,113,.14);border:1px solid rgba(46,204,113,.4)">РѕРїР»Р°С‡РµРЅРѕ${st.paid > 1 ? ' В· ' + st.paid : ''}</span>`);
+        if (st.paid > 0) badges.push(`<span style="margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#7ee2a8;background:rgba(46,204,113,.14);border:1px solid rgba(46,204,113,.4)">оплачено${st.paid > 1 ? ' · ' + st.paid : ''}</span>`);
         const ret = (st.refunded || 0) + (st.canceled || 0);
-        if (ret > 0) badges.push(`<span style="margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffe08a;background:rgba(240,180,41,.15);border:1px solid rgba(240,180,41,.5)">РІРѕР·РІСЂР°С‚${ret > 1 ? ' В· ' + ret : ''}</span>`);
-        if (!st.paid && !ret) badges.push(`<span style="margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffb3b9;background:rgba(255,95,109,.12);border:1px solid rgba(255,95,109,.4)">РЅРµ РѕРїР»Р°С‡РµРЅРѕ</span>`);
+        if (ret > 0) badges.push(`<span style="margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffe08a;background:rgba(240,180,41,.15);border:1px solid rgba(240,180,41,.5)">возврат${ret > 1 ? ' · ' + ret : ''}</span>`);
+        if (!st.paid && !ret) badges.push(`<span style="margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#ffb3b9;background:rgba(255,95,109,.12);border:1px solid rgba(255,95,109,.4)">не оплачено</span>`);
         const status = badges.join('');
         let gives = '';
         try {
           const arr = JSON.parse(o.description || '[]');
-          if (arr.length) gives = 'Р”Р°С‘С‚: ' + arr.map(k => { const p = (state.plans || []).find(x => x.key === k); return p ? p.name : k; }).join(', ');
+          if (arr.length) gives = 'Даёт: ' + arr.map(k => { const p = (state.plans || []).find(x => x.key === k); return p ? p.name : k; }).join(', ');
         } catch (e) { if (o.description) gives = o.description; }
         return `<div class="promo-item">
           <div>
-            <b>${esc(o.title)}</b> В· ${esc(String(o.amount))} в‚Ѕ${status}
+            <b>${esc(o.title)}</b> · ${esc(String(o.amount))} ?${status}
             ${gives ? `<div class="promo-item-sub">${esc(gives)}</div>` : ''}
             <div class="promo-item-sub"><a href="${link}" target="_blank" rel="noopener">${esc(link)}</a></div>
           </div>
           <div style="display:flex;gap:8px;flex-shrink:0">
-            <button class="btn btn-ghost" data-copy-offer="${esc(link)}">РљРѕРїРёСЂРѕРІР°С‚СЊ</button>
-            <button class="btn btn-ghost" data-del-offer="${o.id}">РЈРґР°Р»РёС‚СЊ</button>
+            <button class="btn btn-ghost" data-copy-offer="${esc(link)}">Копировать</button>
+            <button class="btn btn-ghost" data-del-offer="${o.id}">Удалить</button>
           </div>
         </div>`;
       }).join('');
       $$('[data-del-offer]', el).forEach(b => b.addEventListener('click', async () => {
-        if (!confirm('РЈРґР°Р»РёС‚СЊ РїРѕР·РёС†РёСЋ?')) return;
+        if (!confirm('Удалить позицию?')) return;
         try {
           await api('/api/custom/delete', { method: 'POST', body: JSON.stringify({ id: Number(b.dataset.delOffer) }) });
-          toast('РЈРґР°Р»РµРЅРѕ', 'success');
+          toast('Удалено', 'success');
           loadCustomList();
         } catch (err) { toast(err.message, 'error'); }
       }));
       $$('[data-copy-offer]', el).forEach(b => b.addEventListener('click', async () => {
-        try { await navigator.clipboard.writeText(b.dataset.copyOffer); toast('РЎСЃС‹Р»РєР° СЃРєРѕРїРёСЂРѕРІР°РЅР°', 'success'); }
-        catch (err) { toast('РќРµ СѓРґР°Р»РѕСЃСЊ СЃРєРѕРїРёСЂРѕРІР°С‚СЊ', 'error'); }
+        try { await navigator.clipboard.writeText(b.dataset.copyOffer); toast('Ссылка скопирована', 'success'); }
+        catch (err) { toast('Не удалось скопировать', 'error'); }
       }));
-    } catch (err) { el.innerHTML = '<div class="empty" style="padding:18px 0">РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё</div>'; }
+    } catch (err) { el.innerHTML = '<div class="empty" style="padding:18px 0">Ошибка загрузки</div>'; }
   }
 
   async function loadDiscountList() {
@@ -2671,27 +2671,27 @@ if (section === 'redeem' && $('#promoForm')) {
     if (!el) return;
     try {
       const r = await api('/api/discount/list');
-      if (!r.codes || !r.codes.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">РџРѕРєР° РЅРµС‚ РїСЂРѕРјРѕРєРѕРґРѕРІ</div>'; return; }
+      if (!r.codes || !r.codes.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">Пока нет промокодов</div>'; return; }
       el.innerHTML = r.codes.map(c => {
-        let names = 'Р’СЃРµ С‚Р°СЂРёС„С‹';
+        let names = 'Все тарифы';
         try {
           const l = JSON.parse(c.plans || '[]');
           if (l.length) names = l.map(k => { const p = (state.plans || []).find(x => x.key === k); return p ? p.name : k; }).join(', ');
         } catch (_) {}
         return `<div class="promo-item">
-          <div><b>${esc(c.code)}</b> В· в€’${c.discount}%<div class="promo-item-sub">${esc(names)} В· РёСЃРїРѕР»СЊР·РѕРІР°РЅРёР№: ${c.uses || 0}</div></div>
-          <button class="btn btn-ghost" data-del-promo="${c.id}">РЈРґР°Р»РёС‚СЊ</button>
+          <div><b>${esc(c.code)}</b> · ?${c.discount}%<div class="promo-item-sub">${esc(names)} · использований: ${c.uses || 0}</div></div>
+          <button class="btn btn-ghost" data-del-promo="${c.id}">Удалить</button>
         </div>`;
       }).join('');
       $$('[data-del-promo]', el).forEach(b => b.addEventListener('click', async () => {
-        if (!confirm('РЈРґР°Р»РёС‚СЊ РїСЂРѕРјРѕРєРѕРґ?')) return;
+        if (!confirm('Удалить промокод?')) return;
         try {
           await api('/api/discount/delete', { method: 'POST', body: JSON.stringify({ id: Number(b.dataset.delPromo) }) });
-          toast('РџСЂРѕРјРѕРєРѕРґ СѓРґР°Р»С‘РЅ', 'success');
+          toast('Промокод удалён', 'success');
           loadDiscountList();
         } catch (err) { toast(err.message, 'error'); }
       }));
-    } catch (err) { el.innerHTML = '<div class="empty" style="padding:18px 0">РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё</div>'; }
+    } catch (err) { el.innerHTML = '<div class="empty" style="padding:18px 0">Ошибка загрузки</div>'; }
   }
 
   async function loadLauncherMeta() {
@@ -2717,11 +2717,11 @@ if (section === 'redeem' && $('#promoForm')) {
     const render = (users, q) => {
       const query = (q || '').trim().toLowerCase();
       const filtered = query ? users.filter(u => u.login.toLowerCase().includes(query)) : users;
-      if (!filtered.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">' + (query ? 'РќРёРєС‚Рѕ РЅРµ РЅР°Р№РґРµРЅ РїРѕ Р·Р°РїСЂРѕСЃСѓ <b>' + esc(query) + '</b>' : 'РџРѕРєР° РЅРµС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№') + '</div>'; return; }
+      if (!filtered.length) { el.innerHTML = '<div class="empty" style="padding:18px 0">' + (query ? 'Никто не найден по запросу <b>' + esc(query) + '</b>' : 'Пока нет пользователей') + '</div>'; return; }
       el.innerHTML = filtered.map(u => {
         const sub = u.subscription;
         const frozen = sub && sub.status === 'frozen';
-        const planName = sub ? esc(sub.name) : '<span style="color:var(--muted-2)">РќРµС‚ РїРѕРґРїРёСЃРєРё</span>';
+        const planName = sub ? esc(sub.name) : '<span style="color:var(--muted-2)">Нет подписки</span>';
         return `<div class="panel-row" style="border-bottom:1px solid var(--line);flex-wrap:wrap">
           <div class="panel-rg" style="min-width:0">
             <div class="pt" style="font-weight:700;font-size:14px">${esc(u.login)} <span class="mono" style="opacity:.6;font-weight:400;font-size:12px">#${esc(u.uid)}</span></div>
@@ -2729,12 +2729,12 @@ if (section === 'redeem' && $('#promoForm')) {
           </div>
           <div class="panel-rg" style="min-width:120px">
             <div class="pt" style="font-size:13px">${planName}</div>
-            <div class="ps">${sub ? (frozen ? '<span style="color:var(--red)">Р—Р°РјРѕСЂРѕР¶РµРЅР°</span>' : '<span style="color:var(--green)">РђРєС‚РёРІРЅР°</span>') : 'вЂ”'}</div>
+            <div class="ps">${sub ? (frozen ? '<span style="color:var(--red)">Заморожена</span>' : '<span style="color:var(--green)">Активна</span>') : '—'}</div>
           </div>
           <div class="panel-cta">
             ${sub
-              ? `<button class="btn ${frozen ? 'btn-gold' : 'btn-danger'} btn-sm" data-mod-freeze="${u.id}" data-login="${esc(u.login)}" ${frozen ? 'data-op="unfreeze"' : 'data-op="freeze"'}>${frozen ? `${icon.check} Р Р°Р·РјРѕСЂРѕР·РёС‚СЊ` : `${icon.lock} Р—Р°РјРѕСЂРѕР·РёС‚СЊ`}</button>`
-              : '<span style="color:var(--muted-2);font-size:13px">РЅРµС‚ РїРѕРґРїРёСЃРєРё</span>'}
+              ? `<button class="btn ${frozen ? 'btn-gold' : 'btn-danger'} btn-sm" data-mod-freeze="${u.id}" data-login="${esc(u.login)}" ${frozen ? 'data-op="unfreeze"' : 'data-op="freeze"'}>${frozen ? `${icon.check} Разморозить` : `${icon.lock} Заморозить`}</button>`
+              : '<span style="color:var(--muted-2);font-size:13px">нет подписки</span>'}
           </div>
         </div>`;
       }).join('');
@@ -2744,13 +2744,13 @@ if (section === 'redeem' && $('#promoForm')) {
         const op = btn.dataset.op;
         const login = btn.dataset.login;
         const ok = await askFreeze(op === 'freeze'
-          ? { title: 'Р—Р°РјРѕСЂРѕР·РёС‚СЊ РїРѕРґРїРёСЃРєСѓ', text: 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ <b>' + login + '</b> РЅРµ СЃРјРѕР¶РµС‚ Р·Р°РїСѓСЃС‚РёС‚СЊ РєР»РёРµРЅС‚, РїРѕРєР° РІС‹ РЅРµ СЂР°Р·РјРѕСЂРѕР·РёС‚Рµ РµРіРѕ РїРѕРґРїРёСЃРєСѓ.', confirm: 'Р—Р°РјРѕСЂРѕР·РёС‚СЊ', danger: true }
-          : { title: 'Р Р°Р·РјРѕСЂРѕР·РёС‚СЊ РїРѕРґРїРёСЃРєСѓ', text: 'Р’РµСЂРЅСѓС‚СЊ РґРѕСЃС‚СѓРї Рє РєР»РёРµРЅС‚Сѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЋ <b>' + login + '</b>?', confirm: 'Р Р°Р·РјРѕСЂРѕР·РёС‚СЊ', danger: false });
+          ? { title: 'Заморозить подписку', text: 'Пользователь <b>' + login + '</b> не сможет запустить клиент, пока вы не разморозите его подписку.', confirm: 'Заморозить', danger: true }
+          : { title: 'Разморозить подписку', text: 'Вернуть доступ к клиенту пользователю <b>' + login + '</b>?', confirm: 'Разморозить', danger: false });
         if (!ok) return;
         btn.disabled = true;
         try {
           const res = await api('/api/admin/freeze', { method: 'POST', body: JSON.stringify({ userId: Number(userId), action: op }) });
-          toast(res.message || (op === 'freeze' ? 'Р—Р°РјРѕСЂРѕР¶РµРЅРѕ' : 'Р Р°Р·РјРѕСЂРѕР¶РµРЅРѕ'), 'success');
+          toast(res.message || (op === 'freeze' ? 'Заморожено' : 'Разморожено'), 'success');
           loadModUsers();
         } catch (err) { toast(err.message, 'error'); btn.disabled = false; }
       }));
@@ -2763,7 +2763,7 @@ if (section === 'redeem' && $('#promoForm')) {
       const r = await api('/api/admin/users');
       modUsersCache = r.users;
       render(r.users, input ? input.value : '');
-    } catch (err) { el.innerHTML = '<div class="empty">РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё</div>'; }
+    } catch (err) { el.innerHTML = '<div class="empty">Ошибка загрузки</div>'; }
   }
 
   function askFreeze({ title, text, confirm, danger }) {
@@ -2778,7 +2778,7 @@ if (section === 'redeem' && $('#promoForm')) {
           </div>
           <div class="modal-text">${text}</div>
           <div class="modal-btns">
-            <button class="btn btn-dark" data-modal-cancel>РћС‚РјРµРЅР°</button>
+            <button class="btn btn-dark" data-modal-cancel>Отмена</button>
             <button class="btn ${danger ? 'btn-danger' : 'btn-gold'}" data-modal-ok>${esc(confirm)}</button>
           </div>
         </div>`;
