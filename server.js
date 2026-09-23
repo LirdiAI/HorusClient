@@ -193,7 +193,13 @@ const SHOP_ITEMS = [
   { key: 'lc_aurora', kind: 'login_color', cat: 'Цвет логина', name: 'Аврора', price: 49, currency: '₽', forever: true,
     desc: ['Радужный перелив всех цветов', 'Переливающийся градиент', 'Навсегда'] },
   { key: 'lc_white', kind: 'login_color', cat: 'Цвет логина', name: 'Белый', price: 49, currency: '₽', forever: true,
-    desc: ['Белоснежный серебристый перелив', 'Переливающийся градиент', 'Навсегда'] }
+    desc: ['Белоснежный серебристый перелив', 'Переливающийся градиент', 'Навсегда'] },
+  { key: 'rc_white', kind: 'role_color', cat: 'Цвет роли', name: 'Белый', price: 24, currency: '₽', forever: true,
+    desc: ['Белый перелив с ноткой чёрного', 'Переливающийся градиент', 'Навсегда'] },
+  { key: 'rc_red', kind: 'role_color', cat: 'Цвет роли', name: 'Красный', price: 24, currency: '₽', forever: true,
+    desc: ['Алый с белым бликом', 'Переливающийся градиент', 'Навсегда'] },
+  { key: 'rc_blue', kind: 'role_color', cat: 'Цвет роли', name: 'Синий', price: 24, currency: '₽', forever: true,
+    desc: ['Синий перелив с фиолетовым', 'Переливающийся градиент', 'Навсегда'] }
 ];
 
 async function publicUser(u) {
@@ -227,6 +233,8 @@ async function publicUser(u) {
     decos,
     decoActive: (await D.getActiveDeco(u.id)) || null,
     loginColor: await D.getLoginColor(u.id),
+    roleColor: await D.getRoleColor(u.id),
+    role: await D.getUserRole(u.id),
     subscription: plan ? {
       plan: plan.key,
       name: plan.name,
@@ -848,30 +856,38 @@ app.get('/api/shop', requireAuth, ah(async (req, res) => {
   const owned = {};
   const activeDeco = await D.getActiveDeco(forId);
   const activeColor = await D.getLoginColor(forId);
+  const activeRole = await D.getRoleColor(forId);
   for (const it of SHOP_ITEMS) {
-    owned[it.key] = it.kind === 'login_color' ? activeColor === it.key : await D.getDeco(forId, it.key);
+    owned[it.key] = (await D.getDeco(forId, it.key))
+      || (it.kind === 'login_color' ? activeColor === it.key
+        : it.kind === 'role_color' ? activeRole === it.key
+        : false);
   }
-  send(res, 200, { ok: true, items: SHOP_ITEMS, owned, activeDeco, activeColor, forLogin });
+  send(res, 200, { ok: true, items: SHOP_ITEMS, owned, activeDeco, activeColor, activeRole, forLogin });
 }));
 
-// Использовать / убрать украшение или цвет логина (включает только если куплено)
+// Использовать / убрать украшение, цвет логина или цвет роли (включает только если куплено)
 app.post('/api/shop/use', requireAuth, ah(async (req, res) => {
   const { key, on } = req.body || {};
   const item = SHOP_ITEMS.find(i => i.key === key);
   if (!item) return send(res, 400, { ok: false, message: 'Товар не найден' });
-  const owned = item.kind === 'login_color'
-    ? (await D.getLoginColor(req.user.id)) === key
-    : await D.getDeco(req.user.id, key);
+  const owned = (await D.getDeco(req.user.id, key))
+    || (item.kind === 'login_color' && (await D.getLoginColor(req.user.id)) === key)
+    || (item.kind === 'role_color' && (await D.getRoleColor(req.user.id)) === key);
   if (!owned) return send(res, 403, { ok: false, message: 'Украшение не куплено' });
   const onState = on !== false;
   if (item.kind === 'login_color') {
     await D.setLoginColor(req.user.id, onState ? key : null);
+  } else if (item.kind === 'role_color') {
+    await D.setRoleColor(req.user.id, onState ? key : null);
   } else {
     await D.setActiveDeco(req.user.id, onState ? key : null);
   }
   const my = await publicUser(req.user);
   send(res, 200, { ok: true, user: my,
-    activeDeco: await D.getActiveDeco(req.user.id), activeColor: await D.getLoginColor(req.user.id) });
+    activeDeco: await D.getActiveDeco(req.user.id),
+    activeColor: await D.getLoginColor(req.user.id),
+    activeRole: await D.getRoleColor(req.user.id) });
 }));
 
 // Выдача украшений (только для Howill_)
@@ -889,10 +905,26 @@ app.post('/api/shop/grant', requireAuth, ah(async (req, res) => {
   if (item.kind === 'login_color') {
     await D.setDeco(targetId, item.key);
     await D.setLoginColor(targetId, item.key);
+  } else if (item.kind === 'role_color') {
+    await D.setDeco(targetId, item.key);
+    await D.setRoleColor(targetId, item.key);
   } else {
     await D.setDeco(targetId, item.key);
   }
   send(res, 200, { ok: true, item: item.key });
+}));
+
+// Модерация: выдача/снятие ролей (только для Howill_)
+app.post('/api/admin/role', requireAuth, ah(async (req, res) => {
+  if (!requireOwner(req, res)) return;
+  const { login, role } = req.body || {};
+  const target = await D.getUserByLogin(String(login || '').trim());
+  if (!target) return fail(res, 'Пользователь не найден');
+  const allowed = ['', 'mod', 'admin'];
+  const val = allowed.includes(String(role)) ? String(role) : '';
+  await D.setUserRole(target.id, val);
+  const label = val === 'admin' ? 'Администратор' : val === 'mod' ? 'Модератор' : 'снята';
+  send(res, 200, { ok: true, login: target.login, role: val, message: `Роль ${label} — @${target.login}` });
 }));
 
 app.post('/api/purchase', requireAuth, ah(async (req, res) => {
@@ -1044,8 +1076,9 @@ app.post('/api/yookassa/webhook', async (req, res) => {
         if (order.status === 'pending') {
           await D.setOrderPaid(orderId, now(), 'yookassa');
           if (shopItem) {
+            await D.setDeco(order.user_id, shopItem.key);
             if (shopItem.kind === 'login_color') await D.setLoginColor(order.user_id, shopItem.key);
-            else await D.setDeco(order.user_id, shopItem.key);
+            else if (shopItem.kind === 'role_color') await D.setRoleColor(order.user_id, shopItem.key);
           }
         }
         return send(res, 200, { ok: true, shop: true });
@@ -1241,10 +1274,27 @@ app.get(/^\/(?!api\/).*/, (req, res) => {
 });
 
 if (require.main === module) {
+  migrateOwnedColors().catch(e => console.error('[migrate]', e));
   app.listen(PORT, () => {
     console.log(`[HorusWebsite] запущен: http://${HOST}:${PORT}`);
     TGBot.start();
   });
+}
+
+// Однократная миграция: помечаем владение (deco:<key>) для ранее купленных цветов логина/роли
+async function migrateOwnedColors() {
+  try {
+    const rows = await D.getAllCfg();
+    let n = 0;
+    for (const r of rows || []) {
+      const m = /^(login_color|role_color):(\d+)$/.exec(r.key);
+      if (m && r.value && !(await D.getDeco(m[2], r.value))) {
+        await D.setDeco(m[2], r.value);
+        n += 1;
+      }
+    }
+    if (n) console.log(`[migrate] отмечены владения цветов: ${n}`);
+  } catch (e) { console.error('[migrate] не удалось:', e && e.message); }
 }
 
 module.exports = app;

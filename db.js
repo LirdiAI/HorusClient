@@ -352,6 +352,26 @@ async function setActiveDeco(userId, key) {
   await setCfg(`deco_active:${userId}`, key);
 }
 
+/* ---------------- цвет роли (магазин) ---------------- */
+
+async function getRoleColor(userId) {
+  return (await getCfg(`role_color:${userId}`)) || null;
+}
+
+async function setRoleColor(userId, key) {
+  await setCfg(`role_color:${userId}`, key);
+}
+
+/* ---------------- роли модерации ---------------- */
+
+async function getUserRole(userId) {
+  return (await getCfg(`role:${userId}`)) || null;
+}
+
+async function setUserRole(userId, role) {
+  await setCfg(`role:${userId}`, role);
+}
+
 async function setTg2fa(userId, enabled) {
   const raw = await getCfg(`tg_userid:${userId}`);
   if (!raw) return false;
@@ -636,7 +656,7 @@ module.exports = {
   getPromoByCode, promoCodeExists, insertPromo, listPromos, bumpPromoUsed, deletePromo,
   getDiscountPromoByCode, insertDiscountPromo, listDiscountPromos, deleteDiscountPromo, bumpDiscountPromoByCode,
   getCustomOfferById, insertCustomOffer, listCustomOffers, deleteCustomOffer, listCustomOrderStatuses, updateOrderStatus, getOrderByPaymentId,
-  listRecentOrders, getUsersByIds, setUserAvatar, setUserBanner, setTg2fa, getGlossy, setGlossy, getAvaDeco, setAvaDeco, getDeco, setDeco, getLoginColor, setLoginColor, getActiveDeco, setActiveDeco,
+  listRecentOrders, getUsersByIds, setUserAvatar, setUserBanner, setTg2fa, getGlossy, setGlossy, getAvaDeco, setAvaDeco, getDeco, setDeco, getLoginColor, setLoginColor, getActiveDeco, setActiveDeco, getRoleColor, setRoleColor, getUserRole, setUserRole,
   insertOrder, getOrderById, setOrderPaid, saveOrderPayment, insertTicket,
   getAllCfg, getCfg, setCfg, deleteCfg,
   getTgByUserId, getUserIdByTg, checkTgTaken, bindTg, unbindTg,

@@ -578,6 +578,24 @@ button { font-family: inherit; cursor: pointer; }
 .login-grad-lc_kings   { background-image: linear-gradient(90deg, #ffd977, #ff8ac2, #ff5d8f, #ffd977); }
 .login-grad-lc_aurora  { background-image: linear-gradient(90deg, #ff5d8f, #b44dff, #38d5ff, #3affa0, #ffd000, #ff5d8f); }
 .login-grad-lc_white   { background-image: linear-gradient(90deg, #ffffff, #d7e1f0, #9fb2cc, #ffffff); }
+
+/* ---------- переливающиеся цвета роли ---------- */
+.role-grad {
+  background-clip: text; -webkit-background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+  background-size: 220% 100%;
+  animation: loginFlow 2.4s linear infinite;
+}
+.role-grad-rc_white { background-image: linear-gradient(90deg, #ffffff, #e7e7ef, #3a3a44, #ffffff); }
+.role-grad-rc_red   { background-image: linear-gradient(90deg, #ff2e2e, #ffffff, #ff2e2e); }
+.role-grad-rc_blue  { background-image: linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6); }
+.role-badge {
+  display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; letter-spacing: .4px;
+  padding: 3px 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,.22);
+  background: rgba(255,255,255,.06);
+}
+.sb-role { font-size: 10.5px; font-weight: 700; letter-spacing: .4px; margin-top: 2px; text-transform: uppercase; color: var(--gold); }
+.sb-role.role-grad { color: transparent; -webkit-text-fill-color: transparent; }
 .login-prev {
   min-width: 118px; height: 72px; border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
@@ -586,7 +604,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .login-prev.is-active { border-style: solid; border-color: rgba(62,195,244,.5); }
 .shop-item.used { border-color: rgba(62,195,244,.35); }
-.grant-list { display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow:hidden; }
+.grant-list { display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow-y: auto; padding-right: 4px; }
 .grant-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.02);

@@ -825,6 +825,7 @@ function bindLanding(app) {
   };
 
   const isOwner = () => state.me && state.me.login === 'Howill_';
+  const roleLabel = (r) => r === 'admin' ? 'Администратор' : r === 'mod' ? 'Модератор' : 'User';
 
   function routeCabinet(path) {
     if (!state.me) {
@@ -855,6 +856,7 @@ function bindLanding(app) {
         <div class="sb-user">
           <div class="sb-ava${u.decoActive === 'ava_deco' ? ' royal' : ''}${u.decoActive === 'ava_ice' ? ' sapphire' : ''}${u.decoActive === 'ava_white' ? ' white' : ''}">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc(String(u.login || 'H')[0].toUpperCase())}${u.decoActive === 'ava_deco' ? '<span class="c-gold">♛</span>' : ''}${u.decoActive === 'ava_ice' ? '<span class="c-ice">❄</span>' : ''}${u.decoActive === 'ava_white' ? '<span class="c-white">✦</span>' : ''}</div>
           <div style="min-width:0"><div class="sb-name${u.loginColor ? ' login-grad login-grad-' + u.loginColor : ''}">${esc(u.login)}</div>
+          ${u.role ? `<div class="sb-role ${u.roleColor ? 'role-grad role-grad-' + u.roleColor : ''}">${roleLabel(u.role)}</div>` : ''}
           <div class="sb-uid">UID: <b>${esc(u.uid)}</b></div></div>
         </div>
 ${sbGroup('Мой кабинет', [
@@ -1006,6 +1008,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
       <div class="profile-grid">
         <div class="pfield"><div class="pl">Логин</div><div class="pv">${esc(u.login)}</div></div>
         <div class="pfield"><div class="pl">UID</div><div class="pv mono">${esc(u.uid)}</div></div>
+        <div class="pfield"><div class="pl">Роль</div><div class="pv">${u.roleColor ? `<span class="role-grad role-grad-${u.roleColor}">${esc(roleLabel(u.role))}</span>` : `${u.role ? '<b style="color:var(--gold)">' + esc(roleLabel(u.role)) + '</b>' : 'User'}`}</div></div>
         <div class="pfield"><div class="pl">Почта</div><div class="pv">${esc(u.email)}</div></div>
         <div class="pfield"><div class="pl">Дата регистрации</div><div class="pv">${fmtDate(u.createdAt)}</div></div>
 <div class="pfield"><div class="pl">HWID</div>
@@ -1076,6 +1079,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
     const owned = (state.shop && state.shop.owned) || {};
     const activeDeco = (state.shop && state.shop.activeDeco) || null;
     const activeColor = (state.shop && state.shop.activeColor) || null;
+    const activeRole = (state.shop && state.shop.activeRole) || null;
     const cats = [...new Set(items.map(i => i.cat || 'Товары'))];
     const u = state.me || {};
     const letter = esc(String(u.login || 'H')[0].toUpperCase());
@@ -1083,14 +1087,18 @@ if (section === 'profile') main.innerHTML = viewProfile();
         <div class="shop-cat-title">${esc(cat)}</div>
         ${items.filter(i => (i.cat || 'Товары') === cat).map(it => {
           const mine = !!owned[it.key];
-          const used = it.kind === 'login_color' ? activeColor === it.key : activeDeco === it.key;
+          const used = it.kind === 'login_color' ? activeColor === it.key
+            : it.kind === 'role_color' ? activeRole === it.key
+            : activeDeco === it.key;
           const st = DECO_STYLE[it.key] || { cls: '', span: '' };
           return `
           <div class="shop-item${mine ? ' owned' : ''}${used ? ' used' : ''}">
             <div class="shop-prev">
               ${it.kind === 'login_color'
                 ? `<div class="login-prev${used ? ' is-active' : ''}"><span class="login-grad login-grad-${it.key}">${esc(u.login)}</span></div>`
-                : `<div class="shop-ava ${st.cls}">${u.avatar ? `<img src="${u.avatar}" alt="">` : letter}${st.span}</div>`}
+                : it.kind === 'role_color'
+                  ? `<div class="login-prev${used ? ' is-active' : ''}"><span class="role-grad role-grad-${it.key}">${esc(u.role ? roleLabel(u.role) : 'Роль')}</span></div>`
+                  : `<div class="shop-ava ${st.cls}">${u.avatar ? `<img src="${u.avatar}" alt="">` : letter}${st.span}</div>`}
             </div>
             <div class="shop-info">
               <div class="shop-name">${esc(it.name)}</div>
@@ -1115,7 +1123,7 @@ if (section === 'profile') main.innerHTML = viewProfile();
         <div class="page-title">Магазин</div>
         <div class="page-sub">Украшения и мелочи для профиля</div>
       </div>
-      ${(u.login || '') === 'Howill_' ? '<button class="btn btn-sm" data-grant-shop style="font-size:12px">${icon.crown} Выдача</button>' : ''}</div>
+      ${(u.login || '') === 'Howill_' ? '<button class="btn btn-sm" data-grant-shop style="font-size:12px">Выдача</button>' : ''}</div>
       ${u.loginColor ? `<div class="shop-my-login"><span class="muted">Ваш логин:</span> <span class="login-grad login-grad-${u.loginColor}">${esc(u.login)}</span></div>` : ''}
       ${items.length === 0 ? '<div class="empty" style="padding:22px 0">Загрузка…</div>' : `<div id="shopItems">${shopCardsHTML()}</div>`}
     </div>`;
@@ -1255,21 +1263,22 @@ if (section === 'profile') main.innerHTML = viewProfile();
       if (!b) return;
       b.disabled = true;
       const login = targetLogin || input.value.trim() || '';
+      const key = b.dataset.grantItem;
+      const it = items.find(i => i.key === key);
       try {
-        const r = await api('/api/shop/grant', { method: 'POST', body: JSON.stringify({ key: b.dataset.grantItem, target: login || undefined }) });
+        const r = await api('/api/shop/grant', { method: 'POST', body: JSON.stringify({ key, target: login || undefined }) });
         if (r && r.ok) {
-          grantOwned[b.dataset.grantItem] = true;
-          listEl.innerHTML = rowsHTML();
-          toast('Выдано' + (login ? ' @' + login : '') + ': ' + ((items.find(i => i.key === b.dataset.grantItem) || {}).name || ''), 'success');
-          if (login) {
-            try { const rr = await api('/api/shop?for=' + encodeURIComponent(login)); if (rr && rr.ok) { grantOwned = rr.owned; listEl.innerHTML = rowsHTML(); } } catch (_) {}
-          } else {
-            state.shop = await api('/api/shop');
-            const meR = await api('/api/me');
-            if (meR && meR.authed && meR.user) state.me = meR.user;
-            renderCabContent('shop');
-            bindSection('shop');
+          grantOwned[key] = true;
+          if (!login && state.shop) {
+            state.shop.owned = Object.assign({}, grantOwned);
+            if (it) {
+              if (it.kind === 'login_color') { state.shop.activeColor = key; if (state.me) state.me.loginColor = key; }
+              else if (it.kind === 'role_color') { state.shop.activeRole = key; if (state.me) state.me.roleColor = key; }
+            }
           }
+          listEl.innerHTML = rowsHTML();
+          if (!login) { renderCabContent('shop'); bindSection('shop'); }
+          toast('Выдано' + (login ? ' @' + login : '') + ': ' + ((it || {}).name || ''), 'success');
         } else { b.disabled = false; toast((r && r.message) || 'Не удалось выдать'); }
       } catch (err) { b.disabled = false; toast(err.message, 'error'); }
     });
@@ -1499,6 +1508,11 @@ function viewRedeem() {
         <div class="mod-card-title">Операции</div>
         <div class="mod-card-sub">Покупки игроков: статусы, суммы, поиск по логину</div>
       </button>
+      <button type="button" class="mod-card" data-modsec="moderation">
+        <div class="mod-card-ic">${icon.shield}</div>
+        <div class="mod-card-title">Модерация</div>
+        <div class="mod-card-sub">Выдача ролей Модератор и Администратор</div>
+      </button>
     </div>
     <div id="modContent">
     <div class="page-card" style="max-width:820px">
@@ -1528,6 +1542,36 @@ function viewRedeem() {
         <div id="launcherMetaResult"></div>
       </form>
     </div>
+    </div>`;
+  }
+
+  function viewModeration() {
+    return `
+    <div class="page-card" style="max-width:820px">
+      <div class="page-head"><div>
+        <div class="page-title">Модерация</div>
+        <div class="page-sub">Выдача ролей Модератор и Администратор по логину</div>
+      </div></div>
+      <form id="modRoleForm">
+        <div class="field"><label>Логин пользователя</label>
+          <input name="login" placeholder="Например: Alone" maxlength="20" required>
+        </div>
+        <div class="field"><label>Роль</label>
+          <div class="dd" id="roleDD">
+            <input type="hidden" name="role" value="mod">
+            <button type="button" class="dd-head" id="roleDDHead">
+              <span class="dd-txt">Модератор</span>
+              <span class="dd-caret"></span>
+            </button>
+            <div class="dd-menu">
+              <div class="dd-item selected" data-role-value="mod">Модератор</div>
+              <div class="dd-item" data-role-value="admin">Администратор</div>
+              <div class="dd-item" data-role-value="">Снять роль</div>
+            </div>
+          </div></div>
+        <button type="submit" class="btn btn-gold">Назначить</button>
+        <div id="modRoleResult"></div>
+      </form>
     </div>`;
   }
 
@@ -1679,24 +1723,33 @@ function viewRedeem() {
         return;
       }
       const bindShopCards = (scope) => {
+        const items = () => (state.shop && state.shop.items) || [];
         $$('[data-buy-shop]', scope).forEach(b => b.addEventListener('click', () => {
-          shopBuy(((state.shop && state.shop.items) || []).find(i => i.key === b.dataset.buyShop));
+          shopBuy(items().find(i => i.key === b.dataset.buyShop));
         }));
-        $$('[data-use-shop]', scope).forEach(b => b.addEventListener('click', async () => {
+        const applyUse = (key, target) => {
+          const it = items().find(i => i.key === key);
+          const s = state.shop;
+          const m = state.me;
+          if (it && it.kind === 'login_color') { if (s) s.activeColor = target ? key : null; if (m) m.loginColor = target ? key : null; }
+          else if (it && it.kind === 'role_color') { if (s) s.activeRole = target ? key : null; if (m) m.roleColor = target ? key : null; }
+          else { if (s) s.activeDeco = target ? key : null; if (m) m.decoActive = target ? key : null; }
+          const wrap = $('#shopItems');
+          if (wrap) { wrap.innerHTML = shopCardsHTML(); bindShopCards(wrap.parentElement); }
+        };
+        $$('[data-use-shop]', scope).forEach(b => b.addEventListener('click', () => {
           const on = b.dataset.on === '1';
-          b.disabled = true;
-          try {
-            const r = await api('/api/shop/use', {
-              method: 'POST',
-              body: JSON.stringify({ key: b.dataset.useShop, on: !on })
-            });
-            if (r && r.ok) {
-              state.me = r.user;
-              if (state.shop) { state.shop.activeDeco = r.activeDeco; state.shop.activeColor = r.activeColor; }
-              const wrap = $('#shopItems');
-              if (wrap) { wrap.innerHTML = shopCardsHTML(); bindShopCards(wrap.parentElement); }
-            } else { b.disabled = false; toast((r && r.message) || 'Не удалось применить'); }
-          } catch (err) { b.disabled = false; toast(err.message, 'error'); }
+          const key = b.dataset.useShop;
+          const target = !on;
+          applyUse(key, target);
+          api('/api/shop/use', { method: 'POST', body: JSON.stringify({ key, on: target }) })
+            .then(r => {
+              if (r && r.ok) {
+                state.me = r.user;
+                if (state.shop) { state.shop.activeDeco = r.activeDeco; state.shop.activeColor = r.activeColor; state.shop.activeRole = r.activeRole; }
+              } else { toast((r && r.message) || 'Не удалось применить', 'error'); applyUse(key, on); }
+            })
+            .catch(err => { toast(err.message || 'Ошибка', 'error'); applyUse(key, on); });
         }));
       };
       bindShopCards(main);
@@ -1869,10 +1922,47 @@ if (section === 'redeem' && $('#promoForm')) {
       });
       loadDiscountList();
     }
+    if (section === 'moderation' && isOwner() && $('#modRoleForm')) {
+      const dd = $('#roleDD');
+      if (dd) {
+        $('#roleDDHead').addEventListener('click', (e) => {
+          e.stopPropagation();
+          dd.classList.toggle('open');
+        });
+        $$('.dd-item', dd).forEach(item => item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dd.querySelector('input[name="role"]').value = item.dataset.roleValue;
+          dd.querySelector('.dd-txt').textContent = item.textContent.trim();
+          $$('.dd-item', dd).forEach(i => i.classList.toggle('selected', i === item));
+          dd.classList.remove('open');
+        }));
+      }
+      $('#modRoleForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button');
+        btn.disabled = true;
+        const box = $('#modRoleResult');
+        try {
+          const r = await api('/api/admin/role', {
+            method: 'POST',
+            body: JSON.stringify({
+              login: String(e.target.login.value || '').trim(),
+              role: String((e.target.role && e.target.role.value) || '')
+            })
+          });
+          toast(r.message, 'success');
+          if (box) { box.className = 'okbox'; box.textContent = '✅ ' + r.message; }
+        } catch (err) {
+          toast(err.message, 'error');
+          if (box) { box.className = 'okbox err'; box.textContent = err.message; }
+        }
+        btn.disabled = false;
+      });
+    }
     if (section === 'mod' && isOwner()) {
       const modBox = $('#modContent', main);
       if (modBox && !modDefaultHtmlCache) modDefaultHtmlCache = modBox.innerHTML;
-      const modViews = { promo: viewPromo, discounts: viewDiscounts, testing: viewTesting, ops: viewOps };
+      const modViews = { promo: viewPromo, discounts: viewDiscounts, testing: viewTesting, ops: viewOps, moderation: viewModeration };
       $$('.mod-card', main).forEach(card => {
         card.onclick = () => {
           const key = card.dataset.modsec || '';
