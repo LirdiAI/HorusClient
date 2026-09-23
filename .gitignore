@@ -4,3 +4,4 @@ data/
 *.sqlite
 .env.local
 .DS_Store
+public/files/HorusLauncher.exe
