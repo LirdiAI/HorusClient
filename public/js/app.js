@@ -947,14 +947,13 @@ function bindLanding(app) {
     media: { icon: 'spark', title: 'Медийка' },
     inv: { icon: 'layers', title: 'Инвентарь' },
     partner: { icon: 'spark', title: 'Партнёрка' },
-    support: { icon: 'support', title: 'Поддержка' },
-    idea: { icon: 'idea', title: 'Предложить идею' },
-    bug: { icon: 'bug', title: 'Сообщить о баге' }
+    tickets: { icon: 'support', title: 'Тикеты' }
   };
 
   const isOwner = () => state.me && state.me.login === 'Howill_';
   const isMedia = () => state.me && (state.me.role === 'media' || state.me.role === 'admin' || isOwner());
-  const roleLabel = (r) => r === 'admin' ? 'Администратор' : r === 'mod' ? 'Модератор' : r === 'media' ? 'Медиа' : 'User';
+  const isSupportStaff = () => state.me && (state.me.role === 'support' || state.me.role === 'admin' || isOwner());
+  const roleLabel = (r) => r === 'admin' ? 'Администратор' : r === 'mod' ? 'Модератор' : r === 'media' ? 'Медиа' : r === 'support' ? 'Поддержка' : 'User';
 
   /* ---------- темы сайта (Alpha) ---------- */
   const THEMES = {
@@ -983,6 +982,7 @@ function bindLanding(app) {
     const parts = path.split('/').filter(Boolean);
     let section = parts[1] || 'profile';
     if (section === 'media' && !isMedia()) section = 'profile';
+    if (section === 'support' || section === 'idea' || section === 'bug') section = 'tickets';
     const ap = $('#app');
 
     document.title = (CAB_SECTIONS[section] ? CAB_SECTIONS[section].title + ' — ' : '') + 'HorusClient · Кабинет';
@@ -1023,9 +1023,7 @@ ${sbGroup('Мой кабинет', [
           ...(isOwner() ? [['mod', 'shield', 'Модификация']] : [])
         ])}
         ${sbGroup('Помощь', [
-          ['support', 'support', 'Поддержка'],
-          ['idea', 'idea', 'Предложить идею'],
-          ['bug', 'bug', 'Сообщить о баге']
+          ['tickets', 'support', 'Тикеты']
         ])}
         <div class="sb-group">
           <h5>Сообщество</h5>
@@ -1076,7 +1074,8 @@ if (section === 'profile') main.innerHTML = viewProfile();
     else if (section === 'ops' && isOwner()) main.innerHTML = viewOps();
     else if (section === 'mod' && isOwner()) main.innerHTML = viewMod();
     else if (section === 'security') main.innerHTML = viewSecurity();
-    else main.innerHTML = viewSupport(section, ap);
+    else if (section === 'tickets') main.innerHTML = viewTickets();
+    else main.innerHTML = viewProfile();
     bindSection(section, main, ap);
   }
 
@@ -2202,6 +2201,7 @@ function viewRedeem() {
             <div class="dd-menu">
               <div class="dd-item selected" data-role-value="mod">Модератор</div>
               <div class="dd-item" data-role-value="media">Медиа</div>
+              <div class="dd-item" data-role-value="support">Поддержка</div>
               <div class="dd-item" data-role-value="admin">Администратор</div>
               <div class="dd-item" data-role-value="">Снять роль</div>
             </div>
@@ -2331,26 +2331,40 @@ function viewRedeem() {
     </div>`;
   }
 
-  function viewSupport(section, ap) {
-    const t = CAB_SECTIONS[section];
-    const ph = {
-      support: 'Опишите вашу проблему: не работает модуль, вопрос по подписке...',
-      idea: 'Опишите вашу идею по развитию клиента...',
-      bug: 'Что произошло? К каком модуле? Приложите ссылку на видео/скриншот...'
-    }[section];
+  const TICKET_TOPICS = [
+    { id: 'support', label: 'Поддержка', ph: 'Опишите вашу проблему: не работает модуль, вопрос по подписке...' },
+    { id: 'idea', label: 'Предложить идею', ph: 'Опишите вашу идею по развитию клиента...' },
+    { id: 'bug', label: 'Сообщить о баге', ph: 'Что произошло? В каком модуле? Приложите ссылку на видео/скриншот...' }
+  ];
+
+  function viewTickets() {
+    const ph = TICKET_TOPICS[0].ph;
     return `
     <div class="page-card" style="max-width:640px">
       <div class="page-head"><div>
-        <div class="page-title">${t.title}</div>
-        <div class="page-sub">Мы отвечаем в течение 24 часов в Discord</div>
+        <div class="page-title">Тикеты</div>
+        <div class="page-sub">Обращения: Поддержка, идеи и сообщения о багах. Отвечаем в течение 24 часов в Discord.</div>
       </div></div>
       <form id="supportForm">
-        <div class="field"><label>Тема</label><input name="subject" maxlength="100" placeholder="Коротко о вопросе" required></div>
+        <div class="field"><label>Тема</label>
+          <select name="type" class="ticket-type">
+            ${TICKET_TOPICS.map(t => `<option value="${t.id}">${t.label}</option>`).join('')}
+          </select></div>
+        <div class="field"><label>Заголовок</label><input name="subject" maxlength="100" placeholder="Коротко о вопросе" required></div>
         <div class="field"><label>Сообщение</label><textarea name="message" maxlength="2000" placeholder="${ph}" required></textarea></div>
-        <button type="submit" class="btn btn-gold">Отправить</button>
+        <button type="submit" class="btn btn-gold">Создать тикет</button>
       </form>
       <div id="supportResult"></div>
-    </div>`;
+    </div>
+    ${isSupportStaff() ? `
+    <div class="page-card" style="max-width:820px;margin-top:16px">
+      <div class="page-head"><div>
+        <div class="page-title">Тикеты пользователей</div>
+        <div class="page-sub">Все обращения: Поддержка, идеи, баги</div>
+      </div>
+      <button type="button" class="btn btn-gold" id="ticketsReloadBtn">${icon.search} Посмотреть тикеты</button></div>
+      <div id="ticketsList"><div class="empty" style="padding:14px 0">Нажмите «Посмотреть тикеты», чтобы загрузить обращения.</div></div>
+    </div>` : ''}`;
   }
 
   /* ---------- bind actions ---------- */
@@ -3110,15 +3124,15 @@ if (section === 'redeem' && $('#promoForm')) {
         } catch (err) { toast(err.message, 'error'); unbindBtn.disabled = false; }
       });
     }
-    if (['support', 'idea', 'bug'].includes(section) && $('#supportForm')) {
-      $('#supportForm').addEventListener('submit', async (e) => {
+    if (section === 'tickets') {
+      if ($('#supportForm')) $('#supportForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('button');
         btn.disabled = true;
         try {
           const r = await api('/api/support', {
             method: 'POST', body: JSON.stringify({
-              type: section,
+              type: e.target.type.value,
               subject: e.target.subject.value.trim(),
               message: e.target.message.value.trim()
             })
@@ -3130,6 +3144,34 @@ if (section === 'redeem' && $('#promoForm')) {
         } catch (err) { toast(err.message, 'error'); }
         btn.disabled = false;
       });
+      if (isSupportStaff()) {
+        const renderTickets = (tickets) => {
+          const box = $('#ticketsList', main);
+          if (!box) return;
+          box.innerHTML = tickets && tickets.length
+            ? tickets.map(t => `
+                <div style="padding:12px 14px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px">
+                  <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+                    <div style="font-weight:600">#${t.id} · <b style="color:var(--gold)">${esc(t.typeName)}</b> — ${esc(t.subject)}</div>
+                    <div class="muted" style="font-size:12px">@${esc(t.login || '?')} · ${fmtDate(t.created_at)}</div>
+                  </div>
+                  <div class="muted" style="margin-top:6px;white-space:pre-line;line-height:1.55">${esc(t.message)}</div>
+                </div>`).join('')
+            : '<div class="empty" style="padding:14px 0">Тикетов пока нет</div>';
+        };
+        const loadTickets = async () => {
+          const box = $('#ticketsList', main);
+          if (!box) return;
+          box.innerHTML = '<div class="empty" style="padding:14px 0">Загрузка…</div>';
+          try {
+            const r = await api('/api/support/list');
+            renderTickets(r.tickets || []);
+          } catch (err) { box.innerHTML = '<div class="empty err" style="padding:14px 0">' + esc(err.message) + '</div>'; }
+        };
+        const reloadBtn = $('#ticketsReloadBtn', main);
+        if (reloadBtn) reloadBtn.addEventListener('click', loadTickets);
+        if ($('#ticketsList', main)) loadTickets();
+      }
     }
   }
 

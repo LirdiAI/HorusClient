@@ -958,12 +958,13 @@ app.post('/api/admin/role', requireAuth, ah(async (req, res) => {
   const { login, role } = req.body || {};
   const target = await D.getUserByLogin(String(login || '').trim());
   if (!target) return fail(res, 'Пользователь не найден');
-  const allowed = ['', 'mod', 'media', 'admin'];
+  const allowed = ['', 'mod', 'media', 'support', 'admin'];
   const val = allowed.includes(String(role)) ? String(role) : '';
   await D.setUserRole(target.id, val);
   invalidateGlobkaCaches();
-  await logAction(req, 'role', '@' + target.login, val === '' ? 'Снятие роли' : 'Роль: ' + (val === 'admin' ? 'Администратор' : val === 'mod' ? 'Модератор' : 'Медиа'));
-  const label = val === 'admin' ? 'Администратор' : val === 'mod' ? 'Модератор' : val === 'media' ? 'Медиа' : 'снята';
+  const roleLabel = val === 'admin' ? 'Администратор' : val === 'mod' ? 'Модератор' : val === 'media' ? 'Медиа' : val === 'support' ? 'Поддержка' : '';
+  await logAction(req, 'role', '@' + target.login, val === '' ? 'Снятие роли' : 'Роль: ' + roleLabel);
+  const label = roleLabel || 'снята';
   send(res, 200, { ok: true, login: target.login, role: val, message: `Роль ${label} — @${target.login}` });
 }));
 
@@ -1833,6 +1834,28 @@ app.post('/api/support', requireAuth, ah(async (req, res) => {
   }
 
   send(res, 200, { ok: true, ticketId: ticket.id, typeName: TICKET_TYPES[type] });
+}));
+
+// Список обращений (Поддержка и Администратор)
+app.get('/api/support/list', requireAuth, ah(async (req, res) => {
+  const role = String((await D.getUserRole(req.user.id)) || '');
+  if (!(role === 'support' || role === 'admin' || req.user.login === 'Howill_')) {
+    return fail(res, 'Доступно только Поддержке и Администратору', 403);
+  }
+  const tickets = await D.listTickets();
+  const userIds = [...new Set(tickets.map(t => t.user_id).filter(Boolean))];
+  const users = await D.getUsersByIds(userIds);
+  const byId = new Map(users.map(u => [u.id, u.login]));
+  const out = tickets.map(t => ({
+    id: t.id,
+    type: t.type,
+    typeName: TICKET_TYPES[t.type] || t.type,
+    subject: t.subject,
+    message: t.message,
+    login: byId.get(t.user_id) || null,
+    created_at: t.created_at
+  }));
+  send(res, 200, { ok: true, tickets: out });
 }));
 
 /* ============ STATS ============ */

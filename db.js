@@ -643,6 +643,12 @@ async function insertTicket(t) {
   return data;
 }
 
+async function listTickets() {
+  const { data, error } = await sb.from('tickets').select('*').order('id', { ascending: false }).limit(200);
+  if (error) throw error;
+  return data || [];
+}
+
 /* ---------------- site_cfg ---------------- */
 
 async function getAllCfg() {
@@ -907,7 +913,7 @@ module.exports = {
   getDm, appendDm, markDmRead, getDmNotifs, setDmNotifs, pushDmNotif, clearDmNotifsFrom,
   getMediaPoints, setMediaPoints, getMediaLastBuy, setMediaLastBuy, getMediaItemCd, setMediaItemCd, revokeMediaSubs,
   getInventory, setInventory, addInvItem, removeInvItem, getInvKey, setInvKey, deleteInvKey,
-  insertOrder, getOrderById, setOrderPaid, saveOrderPayment, insertTicket,
+  insertOrder, getOrderById, setOrderPaid, saveOrderPayment, insertTicket, listTickets,
   getAllCfg, getCfg, setCfg, deleteCfg,
   setRefBy, getRefBy, getRefBalance, addRefBalance, addRefInvited, getRefInvited,
   logModAction, getModLog,
